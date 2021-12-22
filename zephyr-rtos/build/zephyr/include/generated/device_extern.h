@@ -68,18 +68,19 @@ extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_timer_e000e010); /* d
 extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_uart_40002000); /* dts_ord_60 */
 extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_uart_40028000); /* dts_ord_61 */
 extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_uicr_10001000); /* dts_ord_62 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_usbd_40027000); /* dts_ord_63 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_watchdog_40010000); /* dts_ord_64 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_crypto_5002a000); /* dts_ord_65 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000); /* dts_ord_66 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000); /* dts_ord_67 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0); /* dts_ord_68 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions); /* dts_ord_69 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000); /* dts_ord_70 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000); /* dts_ord_71 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000); /* dts_ord_72 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000); /* dts_ord_73 */
-extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000); /* dts_ord_74 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_watchdog_40010000); /* dts_ord_63 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_crypto_5002a000); /* dts_ord_64 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000); /* dts_ord_65 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000); /* dts_ord_66 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0); /* dts_ord_67 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions); /* dts_ord_68 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000); /* dts_ord_69 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000); /* dts_ord_70 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000); /* dts_ord_71 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000); /* dts_ord_72 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000); /* dts_ord_73 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_usbd_40027000); /* dts_ord_74 */
+extern const struct device DEVICE_DT_NAME_GET(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0); /* dts_ord_75 */
 
 #ifdef __cplusplus
 }

@@ -71,18 +71,19 @@
  *   60  /soc/uart@40002000
  *   61  /soc/uart@40028000
  *   62  /soc/uicr@10001000
- *   63  /soc/usbd@40027000
- *   64  /soc/watchdog@40010000
- *   65  /soc/crypto@5002a000
- *   66  /soc/crypto@5002a000/crypto@5002b000
- *   67  /soc/flash-controller@4001e000
- *   68  /soc/flash-controller@4001e000/flash@0
- *   69  /soc/flash-controller@4001e000/flash@0/partitions
- *   70  /soc/flash-controller@4001e000/flash@0/partitions/partition@1000
- *   71  /soc/flash-controller@4001e000/flash@0/partitions/partition@10000
- *   72  /soc/flash-controller@4001e000/flash@0/partitions/partition@6e000
- *   73  /soc/flash-controller@4001e000/flash@0/partitions/partition@cc000
- *   74  /soc/flash-controller@4001e000/flash@0/partitions/partition@d0000
+ *   63  /soc/watchdog@40010000
+ *   64  /soc/crypto@5002a000
+ *   65  /soc/crypto@5002a000/crypto@5002b000
+ *   66  /soc/flash-controller@4001e000
+ *   67  /soc/flash-controller@4001e000/flash@0
+ *   68  /soc/flash-controller@4001e000/flash@0/partitions
+ *   69  /soc/flash-controller@4001e000/flash@0/partitions/partition@1000
+ *   70  /soc/flash-controller@4001e000/flash@0/partitions/partition@10000
+ *   71  /soc/flash-controller@4001e000/flash@0/partitions/partition@6e000
+ *   72  /soc/flash-controller@4001e000/flash@0/partitions/partition@cc000
+ *   73  /soc/flash-controller@4001e000/flash@0/partitions/partition@d0000
+ *   74  /soc/usbd@40027000
+ *   75  /soc/usbd@40027000/cdc_acm_uart0
  *
  * Definitions derived from these nodes in dependency order are next,
  * followed by /chosen nodes.
@@ -368,10 +369,10 @@
 	60, /* /soc/uart@40002000 */ \
 	61, /* /soc/uart@40028000 */ \
 	62, /* /soc/uicr@10001000 */ \
-	63, /* /soc/usbd@40027000 */ \
-	64, /* /soc/watchdog@40010000 */ \
-	65, /* /soc/crypto@5002a000 */ \
-	67, /* /soc/flash-controller@4001e000 */
+	63, /* /soc/watchdog@40010000 */ \
+	64, /* /soc/crypto@5002a000 */ \
+	66, /* /soc/flash-controller@4001e000 */ \
+	74, /* /soc/usbd@40027000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_EXISTS 1
@@ -486,9 +487,9 @@
 	58, /* /soc/timer@4001b000 */ \
 	60, /* /soc/uart@40002000 */ \
 	61, /* /soc/uart@40028000 */ \
-	63, /* /soc/usbd@40027000 */ \
-	64, /* /soc/watchdog@40010000 */ \
-	66, /* /soc/crypto@5002a000/crypto@5002b000 */
+	63, /* /soc/watchdog@40010000 */ \
+	65, /* /soc/crypto@5002a000/crypto@5002b000 */ \
+	74, /* /soc/usbd@40027000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_interrupt_controller_e000e100_EXISTS 1
@@ -6888,136 +6889,6 @@
 #define DT_N_S_soc_S_uicr_10001000_P_wakeup_source_EXISTS 1
 
 /*
- * Devicetree node: /soc/usbd@40027000
- *
- * Node identifier: DT_N_S_soc_S_usbd_40027000
- *
- * Binding (compatible = nordic,nrf-usbd):
- *   $ZEPHYR_BASE/dts/bindings/usb/nordic,nrf-usbd.yaml
- *
- * (Descriptions have moved to the Devicetree Bindings Index
- * in the documentation.)
- */
-
-/* Node's full path: */
-#define DT_N_S_soc_S_usbd_40027000_PATH "/soc/usbd@40027000"
-
-/* Node's name with unit-address: */
-#define DT_N_S_soc_S_usbd_40027000_FULL_NAME "usbd@40027000"
-
-/* Node parent (/soc) identifier: */
-#define DT_N_S_soc_S_usbd_40027000_PARENT DT_N_S_soc
-#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD(fn) 
-#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD_VARGS(fn, ...) 
-#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD_STATUS_OKAY(fn) 
-#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
-
-/* Node's dependency ordinal: */
-#define DT_N_S_soc_S_usbd_40027000_ORD 63
-
-/* Ordinals for what this node depends on directly: */
-#define DT_N_S_soc_S_usbd_40027000_REQUIRES_ORDS \
-	4, /* /soc */ \
-	5, /* /soc/interrupt-controller@e000e100 */
-
-/* Ordinals for what depends directly on this node: */
-#define DT_N_S_soc_S_usbd_40027000_SUPPORTS_ORDS /* nothing */
-
-/* Existence and alternate IDs: */
-#define DT_N_S_soc_S_usbd_40027000_EXISTS 1
-#define DT_N_INST_0_nordic_nrf_usbd DT_N_S_soc_S_usbd_40027000
-#define DT_N_NODELABEL_usbd         DT_N_S_soc_S_usbd_40027000
-#define DT_N_NODELABEL_zephyr_udc0  DT_N_S_soc_S_usbd_40027000
-
-/* Macros for properties that are special in the specification: */
-#define DT_N_S_soc_S_usbd_40027000_REG_NUM 1
-#define DT_N_S_soc_S_usbd_40027000_REG_IDX_0_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_REG_IDX_0_VAL_ADDRESS 1073901568 /* 0x40027000 */
-#define DT_N_S_soc_S_usbd_40027000_REG_IDX_0_VAL_SIZE 4096 /* 0x1000 */
-#define DT_N_S_soc_S_usbd_40027000_RANGES_NUM 0
-#define DT_N_S_soc_S_usbd_40027000_FOREACH_RANGE(fn) 
-#define DT_N_S_soc_S_usbd_40027000_IRQ_NUM 1
-#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_irq 39
-#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_irq_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_priority 1
-#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_priority_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_COMPAT_MATCHES_nordic_nrf_usbd 1
-#define DT_N_S_soc_S_usbd_40027000_STATUS_okay 1
-
-/* Pin control (pinctrl-<i>, pinctrl-names) properties: */
-#define DT_N_S_soc_S_usbd_40027000_PINCTRL_NUM 0
-
-/* Generic property macros: */
-#define DT_N_S_soc_S_usbd_40027000_P_reg {1073901568 /* 0x40027000 */, 4096 /* 0x1000 */}
-#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_0 1073901568
-#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_0_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_1 4096
-#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_1_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_reg_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, reg, 0) \
-	fn(DT_N_S_soc_S_usbd_40027000, reg, 1)
-#define DT_N_S_soc_S_usbd_40027000_P_reg_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, reg, 0, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, reg, 1, __VA_ARGS__)
-#define DT_N_S_soc_S_usbd_40027000_P_reg_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts {39 /* 0x27 */, 1 /* 0x1 */}
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_0 39
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_0_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_1 1
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_1_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, interrupts, 0) \
-	fn(DT_N_S_soc_S_usbd_40027000, interrupts, 1)
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, interrupts, 0, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, interrupts, 1, __VA_ARGS__)
-#define DT_N_S_soc_S_usbd_40027000_P_interrupts_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_isoin_endpoints 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_isoin_endpoints_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_isoout_endpoints 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_isoout_endpoints_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_bidir_endpoints 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_bidir_endpoints_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_in_endpoints 7
-#define DT_N_S_soc_S_usbd_40027000_P_num_in_endpoints_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_num_out_endpoints 7
-#define DT_N_S_soc_S_usbd_40027000_P_num_out_endpoints_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_label "USBD"
-#define DT_N_S_soc_S_usbd_40027000_P_label_STRING_TOKEN USBD
-#define DT_N_S_soc_S_usbd_40027000_P_label_STRING_UPPER_TOKEN USBD
-#define DT_N_S_soc_S_usbd_40027000_P_label_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, label, 0) \
-	fn(DT_N_S_soc_S_usbd_40027000, label, 1) \
-	fn(DT_N_S_soc_S_usbd_40027000, label, 2) \
-	fn(DT_N_S_soc_S_usbd_40027000, label, 3)
-#define DT_N_S_soc_S_usbd_40027000_P_label_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, label, 0, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, label, 1, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, label, 2, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, label, 3, __VA_ARGS__)
-#define DT_N_S_soc_S_usbd_40027000_P_label_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_status "okay"
-#define DT_N_S_soc_S_usbd_40027000_P_status_STRING_TOKEN okay
-#define DT_N_S_soc_S_usbd_40027000_P_status_STRING_UPPER_TOKEN OKAY
-#define DT_N_S_soc_S_usbd_40027000_P_status_ENUM_IDX 1
-#define DT_N_S_soc_S_usbd_40027000_P_status_ENUM_TOKEN okay
-#define DT_N_S_soc_S_usbd_40027000_P_status_ENUM_UPPER_TOKEN OKAY
-#define DT_N_S_soc_S_usbd_40027000_P_status_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, status, 0) \
-	fn(DT_N_S_soc_S_usbd_40027000, status, 1) \
-	fn(DT_N_S_soc_S_usbd_40027000, status, 2) \
-	fn(DT_N_S_soc_S_usbd_40027000, status, 3)
-#define DT_N_S_soc_S_usbd_40027000_P_status_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, status, 0, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, status, 1, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, status, 2, __VA_ARGS__) \
-	fn(DT_N_S_soc_S_usbd_40027000, status, 3, __VA_ARGS__)
-#define DT_N_S_soc_S_usbd_40027000_P_status_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_compatible {"nordic,nrf-usbd"}
-#define DT_N_S_soc_S_usbd_40027000_P_compatible_IDX_0 "nordic,nrf-usbd"
-#define DT_N_S_soc_S_usbd_40027000_P_compatible_IDX_0_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_compatible_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, compatible, 0)
-#define DT_N_S_soc_S_usbd_40027000_P_compatible_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, compatible, 0, __VA_ARGS__)
-#define DT_N_S_soc_S_usbd_40027000_P_compatible_LEN 1
-#define DT_N_S_soc_S_usbd_40027000_P_compatible_EXISTS 1
-#define DT_N_S_soc_S_usbd_40027000_P_wakeup_source 0
-#define DT_N_S_soc_S_usbd_40027000_P_wakeup_source_EXISTS 1
-
-/*
  * Devicetree node: /soc/watchdog@40010000
  *
  * Node identifier: DT_N_S_soc_S_watchdog_40010000
@@ -7043,7 +6914,7 @@
 #define DT_N_S_soc_S_watchdog_40010000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_watchdog_40010000_ORD 64
+#define DT_N_S_soc_S_watchdog_40010000_ORD 63
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_watchdog_40010000_REQUIRES_ORDS \
@@ -7161,7 +7032,7 @@
 #define DT_N_S_soc_S_crypto_5002a000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000, __VA_ARGS__) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_crypto_5002a000_ORD 65
+#define DT_N_S_soc_S_crypto_5002a000_ORD 64
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_crypto_5002a000_REQUIRES_ORDS \
@@ -7169,7 +7040,7 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_crypto_5002a000_SUPPORTS_ORDS \
-	66, /* /soc/crypto@5002a000/crypto@5002b000 */
+	65, /* /soc/crypto@5002a000/crypto@5002b000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_crypto_5002a000_EXISTS 1
@@ -7276,12 +7147,12 @@
 #define DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000_ORD 66
+#define DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000_ORD 65
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000_REQUIRES_ORDS \
 	5, /* /soc/interrupt-controller@e000e100 */ \
-	65, /* /soc/crypto@5002a000 */
+	64, /* /soc/crypto@5002a000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_crypto_5002a000_S_crypto_5002b000_SUPPORTS_ORDS /* nothing */
@@ -7398,7 +7269,7 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0, __VA_ARGS__) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_ORD 67
+#define DT_N_S_soc_S_flash_controller_4001e000_ORD 66
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_REQUIRES_ORDS \
@@ -7406,7 +7277,7 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_SUPPORTS_ORDS \
-	68, /* /soc/flash-controller@4001e000/flash@0 */
+	67, /* /soc/flash-controller@4001e000/flash@0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_flash_controller_4001e000_EXISTS 1
@@ -7514,15 +7385,15 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions, __VA_ARGS__) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_ORD 68
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_ORD 67
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_REQUIRES_ORDS \
-	67, /* /soc/flash-controller@4001e000 */
+	66, /* /soc/flash-controller@4001e000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_SUPPORTS_ORDS \
-	69, /* /soc/flash-controller@4001e000/flash@0/partitions */
+	68, /* /soc/flash-controller@4001e000/flash@0/partitions */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_EXISTS 1
@@ -7616,19 +7487,19 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000, __VA_ARGS__) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000, __VA_ARGS__) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000, __VA_ARGS__) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000, __VA_ARGS__) fn(DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000, __VA_ARGS__) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_ORD 69
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_ORD 68
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_REQUIRES_ORDS \
-	68, /* /soc/flash-controller@4001e000/flash@0 */
+	67, /* /soc/flash-controller@4001e000/flash@0 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_SUPPORTS_ORDS \
-	70, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@1000 */ \
-	71, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@10000 */ \
-	72, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@6e000 */ \
-	73, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@cc000 */ \
-	74, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@d0000 */
+	69, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@1000 */ \
+	70, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@10000 */ \
+	71, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@6e000 */ \
+	72, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@cc000 */ \
+	73, /* /soc/flash-controller@4001e000/flash@0/partitions/partition@d0000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_EXISTS 1
@@ -7670,11 +7541,11 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000_ORD 70
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000_ORD 69
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000_REQUIRES_ORDS \
-	69, /* /soc/flash-controller@4001e000/flash@0/partitions */
+	68, /* /soc/flash-controller@4001e000/flash@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_1000_SUPPORTS_ORDS /* nothing */
@@ -7754,11 +7625,11 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000_ORD 71
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000_ORD 70
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000_REQUIRES_ORDS \
-	69, /* /soc/flash-controller@4001e000/flash@0/partitions */
+	68, /* /soc/flash-controller@4001e000/flash@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_10000_SUPPORTS_ORDS /* nothing */
@@ -7838,11 +7709,11 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000_ORD 72
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000_ORD 71
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000_REQUIRES_ORDS \
-	69, /* /soc/flash-controller@4001e000/flash@0/partitions */
+	68, /* /soc/flash-controller@4001e000/flash@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_6e000_SUPPORTS_ORDS /* nothing */
@@ -7922,11 +7793,11 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000_ORD 73
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000_ORD 72
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000_REQUIRES_ORDS \
-	69, /* /soc/flash-controller@4001e000/flash@0/partitions */
+	68, /* /soc/flash-controller@4001e000/flash@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_cc000_SUPPORTS_ORDS /* nothing */
@@ -8006,11 +7877,11 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000_ORD 74
+#define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000_ORD 73
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000_REQUIRES_ORDS \
-	69, /* /soc/flash-controller@4001e000/flash@0/partitions */
+	68, /* /soc/flash-controller@4001e000/flash@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000_SUPPORTS_ORDS /* nothing */
@@ -8080,13 +7951,234 @@
 #define DT_N_S_soc_S_flash_controller_4001e000_S_flash_0_S_partitions_S_partition_d0000_P_reg_EXISTS 1
 
 /*
+ * Devicetree node: /soc/usbd@40027000
+ *
+ * Node identifier: DT_N_S_soc_S_usbd_40027000
+ *
+ * Binding (compatible = nordic,nrf-usbd):
+ *   $ZEPHYR_BASE/dts/bindings/usb/nordic,nrf-usbd.yaml
+ *
+ * (Descriptions have moved to the Devicetree Bindings Index
+ * in the documentation.)
+ */
+
+/* Node's full path: */
+#define DT_N_S_soc_S_usbd_40027000_PATH "/soc/usbd@40027000"
+
+/* Node's name with unit-address: */
+#define DT_N_S_soc_S_usbd_40027000_FULL_NAME "usbd@40027000"
+
+/* Node parent (/soc) identifier: */
+#define DT_N_S_soc_S_usbd_40027000_PARENT DT_N_S_soc
+#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD(fn) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0)
+#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD_STATUS_OKAY(fn) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0) 
+#define DT_N_S_soc_S_usbd_40027000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, __VA_ARGS__) 
+
+/* Node's dependency ordinal: */
+#define DT_N_S_soc_S_usbd_40027000_ORD 74
+
+/* Ordinals for what this node depends on directly: */
+#define DT_N_S_soc_S_usbd_40027000_REQUIRES_ORDS \
+	4, /* /soc */ \
+	5, /* /soc/interrupt-controller@e000e100 */
+
+/* Ordinals for what depends directly on this node: */
+#define DT_N_S_soc_S_usbd_40027000_SUPPORTS_ORDS \
+	75, /* /soc/usbd@40027000/cdc_acm_uart0 */
+
+/* Existence and alternate IDs: */
+#define DT_N_S_soc_S_usbd_40027000_EXISTS 1
+#define DT_N_INST_0_nordic_nrf_usbd DT_N_S_soc_S_usbd_40027000
+#define DT_N_NODELABEL_usbd         DT_N_S_soc_S_usbd_40027000
+#define DT_N_NODELABEL_zephyr_udc0  DT_N_S_soc_S_usbd_40027000
+
+/* Macros for properties that are special in the specification: */
+#define DT_N_S_soc_S_usbd_40027000_REG_NUM 1
+#define DT_N_S_soc_S_usbd_40027000_REG_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_REG_IDX_0_VAL_ADDRESS 1073901568 /* 0x40027000 */
+#define DT_N_S_soc_S_usbd_40027000_REG_IDX_0_VAL_SIZE 4096 /* 0x1000 */
+#define DT_N_S_soc_S_usbd_40027000_RANGES_NUM 0
+#define DT_N_S_soc_S_usbd_40027000_FOREACH_RANGE(fn) 
+#define DT_N_S_soc_S_usbd_40027000_IRQ_NUM 1
+#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_irq 39
+#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_irq_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_priority 1
+#define DT_N_S_soc_S_usbd_40027000_IRQ_IDX_0_VAL_priority_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_COMPAT_MATCHES_nordic_nrf_usbd 1
+#define DT_N_S_soc_S_usbd_40027000_STATUS_okay 1
+
+/* Pin control (pinctrl-<i>, pinctrl-names) properties: */
+#define DT_N_S_soc_S_usbd_40027000_PINCTRL_NUM 0
+
+/* Generic property macros: */
+#define DT_N_S_soc_S_usbd_40027000_P_reg {1073901568 /* 0x40027000 */, 4096 /* 0x1000 */}
+#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_0 1073901568
+#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_1 4096
+#define DT_N_S_soc_S_usbd_40027000_P_reg_IDX_1_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_reg_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, reg, 0) \
+	fn(DT_N_S_soc_S_usbd_40027000, reg, 1)
+#define DT_N_S_soc_S_usbd_40027000_P_reg_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, reg, 0, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, reg, 1, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_P_reg_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts {39 /* 0x27 */, 1 /* 0x1 */}
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_0 39
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_1 1
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_IDX_1_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, interrupts, 0) \
+	fn(DT_N_S_soc_S_usbd_40027000, interrupts, 1)
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, interrupts, 0, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, interrupts, 1, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_P_interrupts_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_isoin_endpoints 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_isoin_endpoints_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_isoout_endpoints 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_isoout_endpoints_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_bidir_endpoints 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_bidir_endpoints_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_in_endpoints 7
+#define DT_N_S_soc_S_usbd_40027000_P_num_in_endpoints_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_num_out_endpoints 7
+#define DT_N_S_soc_S_usbd_40027000_P_num_out_endpoints_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_label "USBD"
+#define DT_N_S_soc_S_usbd_40027000_P_label_STRING_TOKEN USBD
+#define DT_N_S_soc_S_usbd_40027000_P_label_STRING_UPPER_TOKEN USBD
+#define DT_N_S_soc_S_usbd_40027000_P_label_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, label, 0) \
+	fn(DT_N_S_soc_S_usbd_40027000, label, 1) \
+	fn(DT_N_S_soc_S_usbd_40027000, label, 2) \
+	fn(DT_N_S_soc_S_usbd_40027000, label, 3)
+#define DT_N_S_soc_S_usbd_40027000_P_label_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, label, 0, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, label, 1, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, label, 2, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, label, 3, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_P_label_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_status "okay"
+#define DT_N_S_soc_S_usbd_40027000_P_status_STRING_TOKEN okay
+#define DT_N_S_soc_S_usbd_40027000_P_status_STRING_UPPER_TOKEN OKAY
+#define DT_N_S_soc_S_usbd_40027000_P_status_ENUM_IDX 1
+#define DT_N_S_soc_S_usbd_40027000_P_status_ENUM_TOKEN okay
+#define DT_N_S_soc_S_usbd_40027000_P_status_ENUM_UPPER_TOKEN OKAY
+#define DT_N_S_soc_S_usbd_40027000_P_status_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, status, 0) \
+	fn(DT_N_S_soc_S_usbd_40027000, status, 1) \
+	fn(DT_N_S_soc_S_usbd_40027000, status, 2) \
+	fn(DT_N_S_soc_S_usbd_40027000, status, 3)
+#define DT_N_S_soc_S_usbd_40027000_P_status_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, status, 0, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, status, 1, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, status, 2, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000, status, 3, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_P_status_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_compatible {"nordic,nrf-usbd"}
+#define DT_N_S_soc_S_usbd_40027000_P_compatible_IDX_0 "nordic,nrf-usbd"
+#define DT_N_S_soc_S_usbd_40027000_P_compatible_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_compatible_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000, compatible, 0)
+#define DT_N_S_soc_S_usbd_40027000_P_compatible_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, compatible, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_P_compatible_LEN 1
+#define DT_N_S_soc_S_usbd_40027000_P_compatible_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_P_wakeup_source 0
+#define DT_N_S_soc_S_usbd_40027000_P_wakeup_source_EXISTS 1
+
+/*
+ * Devicetree node: /soc/usbd@40027000/cdc_acm_uart0
+ *
+ * Node identifier: DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0
+ *
+ * Binding (compatible = zephyr,cdc-acm-uart):
+ *   $ZEPHYR_BASE/dts/bindings/serial/zephyr,cdc-acm-uart.yaml
+ *
+ * (Descriptions have moved to the Devicetree Bindings Index
+ * in the documentation.)
+ */
+
+/* Node's full path: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_PATH "/soc/usbd@40027000/cdc_acm_uart0"
+
+/* Node's name with unit-address: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_FULL_NAME "cdc_acm_uart0"
+
+/* Node parent (/soc/usbd@40027000) identifier: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_PARENT DT_N_S_soc_S_usbd_40027000
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_FOREACH_CHILD(fn) 
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_FOREACH_CHILD_VARGS(fn, ...) 
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_FOREACH_CHILD_STATUS_OKAY(fn) 
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
+
+/* Node's dependency ordinal: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_ORD 75
+
+/* Ordinals for what this node depends on directly: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_REQUIRES_ORDS \
+	74, /* /soc/usbd@40027000 */
+
+/* Ordinals for what depends directly on this node: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_SUPPORTS_ORDS /* nothing */
+
+/* Existence and alternate IDs: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_EXISTS 1
+#define DT_N_INST_0_zephyr_cdc_acm_uart DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0
+#define DT_N_NODELABEL_cdc_acm_uart0    DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0
+
+/* Bus info (controller: '/soc/usbd@40027000', type: 'usb') */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_BUS_usb 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_BUS DT_N_S_soc_S_usbd_40027000
+
+/* Macros for properties that are special in the specification: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_REG_NUM 0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_RANGES_NUM 0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_FOREACH_RANGE(fn) 
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_IRQ_NUM 0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_COMPAT_MATCHES_zephyr_cdc_acm_uart 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_STATUS_okay 1
+
+/* Pin control (pinctrl-<i>, pinctrl-names) properties: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_PINCTRL_NUM 0
+
+/* Generic property macros: */
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_label "CDC_ACM_0"
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_label_STRING_TOKEN CDC_ACM_0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_label_STRING_UPPER_TOKEN CDC_ACM_0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_label_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 0) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 1) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 2) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 3) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 4) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 5) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 6) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 7) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 8)
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_label_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 0, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 1, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 2, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 3, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 4, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 5, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 6, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 7, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, label, 8, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_label_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_hw_flow_control 0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_hw_flow_control_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible {"zephyr,cdc-acm-uart"}
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible_IDX_0 "zephyr,cdc-acm-uart"
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, compatible, 0)
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, compatible, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible_LEN 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_compatible_EXISTS 1
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_wakeup_source 0
+#define DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0_P_wakeup_source_EXISTS 1
+
+/*
  * Chosen nodes
  */
 #define DT_CHOSEN_zephyr_entropy                 DT_N_S_soc_S_random_4000d000
 #define DT_CHOSEN_zephyr_entropy_EXISTS          1
 #define DT_CHOSEN_zephyr_flash_controller        DT_N_S_soc_S_flash_controller_4001e000
 #define DT_CHOSEN_zephyr_flash_controller_EXISTS 1
-#define DT_CHOSEN_zephyr_console                 DT_N_S_soc_S_uart_40002000
+#define DT_CHOSEN_zephyr_console                 DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0
 #define DT_CHOSEN_zephyr_console_EXISTS          1
 #define DT_CHOSEN_zephyr_shell_uart              DT_N_S_soc_S_uart_40002000
 #define DT_CHOSEN_zephyr_shell_uart_EXISTS       1
@@ -8144,6 +8236,7 @@
 #define DT_COMPAT_HAS_OKAY_soc_nv_flash 1
 #define DT_COMPAT_HAS_OKAY_fixed_partitions 1
 #define DT_COMPAT_HAS_OKAY_nordic_nrf_usbd 1
+#define DT_COMPAT_HAS_OKAY_zephyr_cdc_acm_uart 1
 #define DT_COMPAT_HAS_OKAY_nordic_nrf_gpio 1
 #define DT_COMPAT_HAS_OKAY_nordic_nrf_cc310 1
 #define DT_COMPAT_HAS_OKAY_arm_cryptocell_310 1
@@ -8184,6 +8277,7 @@
 #define DT_N_INST_soc_nv_flash_NUM_OKAY 1
 #define DT_N_INST_fixed_partitions_NUM_OKAY 1
 #define DT_N_INST_nordic_nrf_usbd_NUM_OKAY 1
+#define DT_N_INST_zephyr_cdc_acm_uart_NUM_OKAY 1
 #define DT_N_INST_nordic_nrf_gpio_NUM_OKAY 2
 #define DT_N_INST_nordic_nrf_cc310_NUM_OKAY 1
 #define DT_N_INST_arm_cryptocell_310_NUM_OKAY 1
@@ -8304,6 +8398,10 @@
 #define DT_FOREACH_OKAY_VARGS_nordic_nrf_usbd(fn, ...) fn(DT_N_S_soc_S_usbd_40027000, __VA_ARGS__)
 #define DT_FOREACH_OKAY_INST_nordic_nrf_usbd(fn) fn(0)
 #define DT_FOREACH_OKAY_INST_VARGS_nordic_nrf_usbd(fn, ...) fn(0, __VA_ARGS__)
+#define DT_FOREACH_OKAY_zephyr_cdc_acm_uart(fn) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0)
+#define DT_FOREACH_OKAY_VARGS_zephyr_cdc_acm_uart(fn, ...) fn(DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0, __VA_ARGS__)
+#define DT_FOREACH_OKAY_INST_zephyr_cdc_acm_uart(fn) fn(0)
+#define DT_FOREACH_OKAY_INST_VARGS_zephyr_cdc_acm_uart(fn, ...) fn(0, __VA_ARGS__)
 #define DT_FOREACH_OKAY_nordic_nrf_gpio(fn) fn(DT_N_S_soc_S_gpio_50000000) fn(DT_N_S_soc_S_gpio_50000300)
 #define DT_FOREACH_OKAY_VARGS_nordic_nrf_gpio(fn, ...) fn(DT_N_S_soc_S_gpio_50000000, __VA_ARGS__) fn(DT_N_S_soc_S_gpio_50000300, __VA_ARGS__)
 #define DT_FOREACH_OKAY_INST_nordic_nrf_gpio(fn) fn(0) fn(1)
@@ -8340,3 +8438,4 @@
 /*
  * Bus information for status "okay" nodes of each compatible
  */
+#define DT_COMPAT_zephyr_cdc_acm_uart_BUS_usb 1

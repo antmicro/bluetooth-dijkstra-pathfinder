@@ -301,7 +301,7 @@ DTC:FILEPATH=/home/js/zephyr-sdk-0.13.2/sysroots/x86_64-pokysdk-linux/usr/bin/dt
 // parameter. These settings will override the settings in the
 // board's .dts file. Multiple files may be listed, e.g. DTC_OVERLAY_FILE="dts1.overlay
 // dts2.overlay"
-DTC_OVERLAY_FILE:STRING=
+DTC_OVERLAY_FILE:STRING=/home/js/Projects/engineering-thesis/zephyr-rtos/app.overlay
 
 //Git command line client
 GIT_EXECUTABLE:FILEPATH=/usr/bin/git
@@ -500,7 +500,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=105
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=112
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -556,8 +556,4 @@ _Python3_EXECUTABLE:INTERNAL=/home/js/Projects/zephyr-project/.venv/bin/python3.
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;9;7;64;;cpython-39-x86_64-linux-gnu;/home/linuxbrew/.linuxbrew/opt/python@3.9/lib/python3.9;/home/linuxbrew/.linuxbrew/opt/python@3.9/lib/python3.9;/home/js/Projects/zephyr-project/.venv/lib/python3.9/site-packages;/home/js/Projects/zephyr-project/.venv/lib/python3.9/site-packages
 _Python3_INTERPRETER_SIGNATURE:INTERNAL=a8a50856523cd2ed5ca4dd70c828ff91
-//Test check_C__nostartfiles__nostdlib__isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include___isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include_fixed___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0__mcpu_cortex_m4
-check_C__nostartfiles__nostdlib__isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include___isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include_fixed___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0__mcpu_cortex_m4:INTERNAL=1
-//Test check_fmacro_prefix_map__home_js_Projects_engineering_thesis_zephyr_rtos_CMAKE_SOURCE_DIR_C__nostartfiles__nostdlib__isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include___isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include_fixed___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0
-check_fmacro_prefix_map__home_js_Projects_engineering_thesis_zephyr_rtos_CMAKE_SOURCE_DIR_C__nostartfiles__nostdlib__isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include___isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include_fixed___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0:INTERNAL=1
 

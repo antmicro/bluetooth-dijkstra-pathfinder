@@ -42,3 +42,8 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/js/Projects/engineering-thesis/zephyr-rtos/build/modules/hal_nxp/hal_nxp/cmake_install.cmake")
 endif()
 
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/js/Projects/engineering-thesis/zephyr-rtos/build/modules/hal_nxp/usb/cmake_install.cmake")
+endif()
+

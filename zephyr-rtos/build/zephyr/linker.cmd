@@ -249,6 +249,14 @@ __ramfunc_load_start = LOADADDR(.ramfunc);
   _net_buf_pool_list = .;
   KEEP(*(SORT_BY_NAME("._net_buf_pool.static.*")))
  } > SRAM AT > FLASH
+ usb_descriptor : ALIGN_WITH_INPUT SUBALIGN(1)
+ {
+  __usb_descriptor_start = .;
+  *(".usb.descriptor")
+  KEEP(*(SORT_BY_NAME(".usb.descriptor*")))
+  __usb_descriptor_end = .;
+ } > SRAM AT > FLASH
+ usb_cfg_data_area : ALIGN_WITH_INPUT SUBALIGN(4) { _usb_cfg_data_list_start = .; KEEP(*(SORT_BY_NAME(._usb_cfg_data.static.*))); _usb_cfg_data_list_end = .; } > SRAM AT > FLASH
     __data_region_end = .;
    bss (NOLOAD) : ALIGN_WITH_INPUT
  {

@@ -1,3 +1,4 @@
+/home/js/Projects/engineering-thesis/zephyr-rtos/Kconfig
 /home/js/Projects/engineering-thesis/zephyr-rtos/build/Kconfig/Kconfig.modules
 /home/js/Projects/zephyr-project/modules/audio/sof/Kconfig.sof
 /home/js/Projects/zephyr-project/modules/audio/sof/Kconfig.xtos-build
@@ -22,7 +23,6 @@
 /home/js/Projects/zephyr-project/modules/debug/TraceRecorder/kernelports/Zephyr/streamports/ARM_ITM/Kconfig
 /home/js/Projects/zephyr-project/modules/debug/TraceRecorder/kernelports/Zephyr/streamports/Jlink_RTT/Kconfig
 /home/js/Projects/zephyr-project/modules/lib/zscilib/Kconfig.zscilib
-/home/js/Projects/zephyr-project/zephyr/Kconfig
 /home/js/Projects/zephyr-project/zephyr/Kconfig.zephyr
 /home/js/Projects/zephyr-project/zephyr/arch/Kconfig
 /home/js/Projects/zephyr-project/zephyr/arch/arm/Kconfig

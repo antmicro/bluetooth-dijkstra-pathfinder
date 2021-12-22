@@ -8,7 +8,7 @@
 	chosen {
 		zephyr,entropy = &rng;
 		zephyr,flash-controller = &flash_controller;
-		zephyr,console = &uart0;
+		zephyr,console = &cdc_acm_uart0;
 		zephyr,shell-uart = &uart0;
 		zephyr,uart-mcumgr = &uart0;
 		zephyr,bt-mon-uart = &uart0;
@@ -410,6 +410,10 @@
 			num-isoout-endpoints = < 0x1 >;
 			status = "okay";
 			label = "USBD";
+			cdc_acm_uart0: cdc_acm_uart0 {
+				compatible = "zephyr,cdc-acm-uart";
+				label = "CDC_ACM_0";
+			};
 		};
 		uart1: uart@40028000 {
 			compatible = "nordic,nrf-uarte";
