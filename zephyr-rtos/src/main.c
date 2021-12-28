@@ -27,6 +27,18 @@
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not ACM CDC UART device");
 
+#define STACK_SIZE 500
+#define USB_SEND_PRIORITY 5
+
+void usb_send(){
+    printk("Hello, world %s\n", CONFIG_BOARD);
+}
+
+//k_tid_t usb_send_data_tid;
+K_THREAD_DEFINE(usb_send_data_tid, STACK_SIZE, usb_send, 
+        NULL, NULL, NULL,USB_SEND_PRIORITY, 0, 0); 
+
+
 
 void main(void)
 {
@@ -37,13 +49,11 @@ void main(void)
 
 	led = device_get_binding(LED0);
 	if (led == NULL) {
-		//gpio_pin_set(led, PIN, true);
 		return;
 	}
 
 	ret = gpio_pin_configure(led, PIN, GPIO_OUTPUT_ACTIVE | FLAGS);
 	if (ret < 0) {
-		//gpio_pin_set(led, PIN, true);
 		return;
 	}
     /* end led config */ 
@@ -53,24 +63,19 @@ void main(void)
 	uint32_t dtr = 0;
 
     if (usb_enable(NULL)) {
-		//gpio_pin_set(led, PIN, true);
 		return;
 	}
-
-    /* Poll if the DTR flag was set */
+    
 	uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
-	while (false) {
-		uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
-		gpio_pin_set(led, PIN, led_is_on);
-		led_is_on = !led_is_on;
-		/* Give CPU resources to low priority threads. */
-		k_sleep(K_MSEC(100));
-    }
+	k_msleep(2000);
     /* end usb cdc acm comm */
+
+    /* start data through usb sending thread */
+        /* end data through usb sending thread */
 
 	while (1) {
 		gpio_pin_set(led, PIN, (int)led_is_on);
-        printk("Hello, world %s\n", CONFIG_BOARD);
+        //printk("Hello, world %s\n", CONFIG_BOARD);
 		led_is_on = !led_is_on;
 		k_msleep(SLEEP_TIME_MS);
 	}
