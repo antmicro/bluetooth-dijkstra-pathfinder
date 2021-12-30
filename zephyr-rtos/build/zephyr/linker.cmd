@@ -2,7 +2,7 @@
 _region_min_align = 32;
 MEMORY
     {
-    FLASH (rx) : ORIGIN = (0x0 + 0x1000), LENGTH = (1024*1K - 0x1000)
+    FLASH (rx) : ORIGIN = (0x0 + 0x0), LENGTH = (1024*1K - 0x0)
     SRAM (wx) : ORIGIN = 0x20000000, LENGTH = (256 * 1K)
    
    
@@ -51,7 +51,7 @@ SECTIONS
  *(.iplt)
  }
    
- __rom_region_start = (0x0 + 0x1000);
+ __rom_region_start = (0x0 + 0x0);
     rom_start :
  {
 . = 0x0;
@@ -249,14 +249,6 @@ __ramfunc_load_start = LOADADDR(.ramfunc);
   _net_buf_pool_list = .;
   KEEP(*(SORT_BY_NAME("._net_buf_pool.static.*")))
  } > SRAM AT > FLASH
- usb_descriptor : ALIGN_WITH_INPUT SUBALIGN(1)
- {
-  __usb_descriptor_start = .;
-  *(".usb.descriptor")
-  KEEP(*(SORT_BY_NAME(".usb.descriptor*")))
-  __usb_descriptor_end = .;
- } > SRAM AT > FLASH
- usb_cfg_data_area : ALIGN_WITH_INPUT SUBALIGN(4) { _usb_cfg_data_list_start = .; KEEP(*(SORT_BY_NAME(._usb_cfg_data.static.*))); _usb_cfg_data_list_end = .; } > SRAM AT > FLASH
     __data_region_end = .;
    bss (NOLOAD) : ALIGN_WITH_INPUT
  {

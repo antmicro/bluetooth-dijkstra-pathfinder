@@ -1,0 +1,48 @@
+# mesh app binaries
+$node_bin ?= @/home/js/Projects/engineering-thesis/zephyr-rtos/build/zephyr/zephyr.elf
+
+# sample binaries
+#$node_bin ?= @/home/js/Projects/zephyr-project/build/zephyr/zephyr.elf
+
+logLevel 0
+
+emulation CreateWirelessMedium "wireless"
+emulation CreateWiresharkForWireless "wireless"  #"wireless" "bluetoothle"
+emulation LogToWireshark "wireless"
+logLevel -1 wireless
+
+#emulation CreateUartPtyTerminal "term" "~/tmp/uart"
+
+mach add "central"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+showAnalyzer sysbus.uart0
+showAnalyzer sysbus.uart1
+connector Connect sysbus.radio wireless
+#connector Connect sysbus.uart0 term
+logLevel -1 sysbus.radio
+logLevel -1 sysbus.ppi
+logLevel -1 sysbus.rtc0
+logLevel -1 sysbus.timer0
+logLevel -1 sysbus.timer1
+logLevel -1 sysbus.nvic
+sysbus LogPeripheralAccess sysbus.nvic
+sysbus LogPeripheralAccess sysbus.ppi
+sysbus LogPeripheralAccess sysbus.rtc0
+sysbus LogPeripheralAccess sysbus.timer0
+sysbus LogPeripheralAccess sysbus.timer1
+sysbus LogPeripheralAccess sysbus.radio
+# logLevel 1 sysbus.cpu
+# sysbus.cpu LogFunctionNames true "bt hci ll_ le_ ull lll isr_ chan_ radio is_ abort conn_ rx_ mayfly rtc0 ticker" true
+
+macro reset
+"""
+   mach set "central"
+   sysbus LoadELF $node_bin
+"""
+runMacro $reset
+
+start
+
+machine StartGdbServer 3333 true

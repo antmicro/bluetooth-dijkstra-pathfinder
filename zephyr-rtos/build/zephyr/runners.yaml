@@ -3,6 +3,7 @@ runners:
 - nrfjprog
 - jlink
 - pyocd
+- openocd
 
 # Default flash runner if --runner is not given.
 flash-runner: nrfjprog
@@ -12,7 +13,7 @@ debug-runner: jlink
 
 # Common runner configuration values.
 config:
-  board_dir: /home/js/Projects/zephyr-project/zephyr/boards/arm/nrf52840dongle_nrf52840
+  board_dir: /home/js/Projects/zephyr-project/zephyr/boards/arm/nrf52840dk_nrf52840
   # Build outputs:
   elf_file: zephyr.elf
   hex_file: zephyr.hex
@@ -36,3 +37,16 @@ args:
     - --dt-flash=y
     - --target=nrf52840
     - --frequency=4000000
+  openocd:
+    - --cmd-load
+    - flash write_image erase
+    - --cmd-verify
+    - verify_image
+    - --cmd-pre-init
+    - set WORKAREASIZE 0x4000
+    - --cmd-pre-init
+    - source [find interface/jlink.cfg]
+    - --cmd-pre-init
+    - transport select swd
+    - --cmd-pre-init
+    - source [find target/nrf52.cfg]

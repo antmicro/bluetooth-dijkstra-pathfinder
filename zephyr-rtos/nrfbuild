@@ -1,0 +1,6 @@
+#/bin/bash
+
+# build for dongle
+#west build -b nrf52840dongle_nrf52840 /home/js/Projects/engineering-thesis/zephyr-rtos
+
+west build -b nrf52840dk_nrf52840 /home/js/Projects/engineering-thesis/zephyr-rtos

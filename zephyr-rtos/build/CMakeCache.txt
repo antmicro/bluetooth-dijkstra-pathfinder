@@ -21,16 +21,16 @@ APPLICATION_BINARY_DIR:PATH=/home/js/Projects/engineering-thesis/zephyr-rtos/bui
 APPLICATION_SOURCE_DIR:PATH=/home/js/Projects/engineering-thesis/zephyr-rtos
 
 //No help, variable specified on the command line.
-BOARD:UNINITIALIZED=nrf52840dongle_nrf52840
+BOARD:UNINITIALIZED=nrf52840dk_nrf52840
 
 //Path to a file.
-BOARD_DIR:PATH=/home/js/Projects/zephyr-project/zephyr/boards/arm/nrf52840dongle_nrf52840
+BOARD_DIR:PATH=/home/js/Projects/zephyr-project/zephyr/boards/arm/nrf52840dk_nrf52840
 
 //Path to a program.
 BOSSAC:FILEPATH=/home/js/zephyr-sdk-0.13.2/sysroots/x86_64-pokysdk-linux/usr/bin/bossac
 
 //Selected board
-CACHED_BOARD:STRING=nrf52840dongle_nrf52840
+CACHED_BOARD:STRING=nrf52840dk_nrf52840
 
 //If desired, you can build the application usingthe configuration
 // settings specified in an alternate .conf file using this parameter.
@@ -301,7 +301,7 @@ DTC:FILEPATH=/home/js/zephyr-sdk-0.13.2/sysroots/x86_64-pokysdk-linux/usr/bin/dt
 // parameter. These settings will override the settings in the
 // board's .dts file. Multiple files may be listed, e.g. DTC_OVERLAY_FILE="dts1.overlay
 // dts2.overlay"
-DTC_OVERLAY_FILE:STRING=/home/js/Projects/engineering-thesis/zephyr-rtos/app.overlay
+DTC_OVERLAY_FILE:STRING=
 
 //Git command line client
 GIT_EXECUTABLE:FILEPATH=/usr/bin/git
@@ -500,7 +500,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=112
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=106
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
