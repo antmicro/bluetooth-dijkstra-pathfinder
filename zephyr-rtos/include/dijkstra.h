@@ -3,6 +3,8 @@
 
 #include "../include/graph.h"
 
+struct sys_sflist a;
+
 uint8_t dijkstra_shortest_path(
         struct node_t * graph,
         uint8_t graph_size,
