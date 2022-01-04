@@ -3,7 +3,8 @@
 
 #include "../include/graph.h"
 
-struct sys_sflist a;
+struct sys_slist_t a;
+sys_slist_init(&a);
 
 uint8_t dijkstra_shortest_path(
         struct node_t * graph,

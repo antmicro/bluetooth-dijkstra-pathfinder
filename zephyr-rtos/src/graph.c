@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include <kernel.h> // for k_k_malloc
 
 #include "../include/graph.h"
 

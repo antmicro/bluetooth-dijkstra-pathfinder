@@ -11,8 +11,6 @@ emulation CreateWiresharkForWireless "wireless"  #"wireless" "bluetoothle"
 emulation LogToWireshark "wireless"
 logLevel -1 wireless
 
-#emulation CreateUartPtyTerminal "term" "~/tmp/uart"
-
 mach add "central"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 emulation SetGlobalQuantum "0.00001"
@@ -20,7 +18,6 @@ emulation SetQuantum "0.00001"
 showAnalyzer sysbus.uart0
 showAnalyzer sysbus.uart1
 connector Connect sysbus.radio wireless
-#connector Connect sysbus.uart0 term
 logLevel -1 sysbus.radio
 logLevel -1 sysbus.ppi
 logLevel -1 sysbus.rtc0

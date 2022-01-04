@@ -19,7 +19,7 @@ uint8_t dijkstra_shortest_path(
     graph[start_addr].tentative_distance = 0;  // not a pointer ????
     
     // create unvisited list 
-
+    // WORK IN PROGRESS    
 
     // unlock the mutex 
     int unlock_result = k_mutex_unlock(&graph_mutex);
