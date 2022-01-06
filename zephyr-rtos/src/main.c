@@ -8,6 +8,8 @@
 //#include <string.h>
 
 #include "../include/graph.h"
+#include "../include/dijkstra.h"
+
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
@@ -19,6 +21,9 @@ void main(void)
     struct node_t * graph;
     uint8_t error_code = graph_init(&graph, &graph_mutex);
     int counter = 0;
+
+            
+
 	while (1) {
         const struct device *dev;
         dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
