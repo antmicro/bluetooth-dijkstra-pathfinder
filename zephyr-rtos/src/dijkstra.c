@@ -38,6 +38,7 @@ uint8_t create_unvisited_list(
         uint8_t start_addr){
     sys_slist_init(lst);
     for(uint8_t i = 0; i < graph_size; i++){
+        printk("iterating a node: %d\n", graph[i].addr); 
         if(graph[i].reserved && graph[i].addr != start_addr){
             // TODO: free containers !!! does remove func free containers?
             // remove func acts on sys_node_t so I have to free container after removing from list 

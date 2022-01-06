@@ -9,5 +9,6 @@ target_include_directories(app PUBLIC ${include})
 
 target_sources(app PRIVATE 
     src/main.c
-    src/graph.c)
+    src/graph.c
+    src/dijkstra.c)
 
