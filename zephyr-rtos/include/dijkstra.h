@@ -6,23 +6,91 @@
 #define DEBUG 
 
 struct node_container{
-    sys_snode_t next_node;
+    sys_snode_t next_container_node_ptr;
     struct node_t * node;
 };
 
+/**
+ * @brief Perform shortest path algorithm on graph, between start and dst adrresses.
+ *
+ * @param graph graph to perform shortest path algorithm.
+ * @param graph_size size of this graph.
+ * @param start_addr address of starting node. 
+ * @param dst_addr address of destination node.
+ *
+ * @return 
+ */
 uint8_t dijkstra_shortest_path(
         struct node_t * graph,
         uint8_t graph_size,
         uint8_t start_addr,
         uint8_t dst_addr);
 
-uint8_t create_unvisited_list(
+/**
+ * @brief Get the slist container with node that has the smallest tentative_distance 
+ * for algorithm purposes.
+ *
+ * @param lst pointer to a unvisited list, from which to pick node with smallest td.
+ * @param container_buffer buffer with slist container that stores node with smallest td. 
+ * if list is empty, so be careful dereferencing it.
+ *
+ * @return 0 if node was found and 1 if list is empty.
+ */
+uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container * container_buffer);
+
+
+// get to a node, iterate thorugh its neighbours, check if path thorugh current node is smaller
+// than current tentative_distance of a neighbour
+
+
+/**
+ * @brief Checks a node's neighbours if their tentative_distance is smaller through
+ * current node, if so it is modified and node is marked as visited.
+ *
+ * @param node_addr
+ * @param graph
+ */
+void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph); 
+
+/**
+ * @brief Create a list of nodes for search, excluding starting node. List is single
+ * linked list data structure, as it will be oftnely iterated through and after
+ * each iteration one of elements (with lowest td) will be processed and removed.
+ * Members of a list - node_containers are malloced and caller is responsible for 
+ * freeing!
+ *
+ * @param lst Pointer to list.
+ * @param graph graph from which to create a list.
+ * @param graph_size size of a graph.
+ * @param start_addr address of a node that is starting node.
+ *
+ * @return 
+ */
+uint8_t create_unvisited_slist(
         sys_slist_t * lst, 
         struct node_t * graph, 
         uint8_t graph_size, 
         uint8_t start_addr);
 
+
+void free_slist(sys_slist_t * lst);
+
+
+/**
+ * @brief Removes a member from a list and frees a memory k_malloced for node container.
+ *
+ * @param lst list to remove a member.
+ * @param node_to_remove member to remove.
+ */
+void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container * node_to_remove);
+
 #ifdef DEBUG 
+
+/**
+ * @brief Print addresses of nodes contained in the list.
+ *
+ * @param lst list of unvisited nodes.
+ */
 void print_slist(sys_slist_t * lst);
 
 #endif

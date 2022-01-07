@@ -19,7 +19,7 @@ struct node_t{
 
     bool visited;
 
-    uint8_t tentative_distance;
+    uint16_t tentative_distance;
 
     uint8_t paths_size;
     struct path_t * paths;
