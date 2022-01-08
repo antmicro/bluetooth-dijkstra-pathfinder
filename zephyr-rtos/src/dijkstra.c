@@ -80,10 +80,11 @@ uint8_t dijkstra_shortest_path(
 }
 
 
-uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** container_buffer){
-    // reset buffer
+uint8_t get_smallest_td_node(
+        sys_slist_t * lst, struct node_container ** container_buffer){
+    // cleaer buffer
     *container_buffer = NULL;
-    
+     
     // setup 
     uint8_t smallest_td = INF;
     struct node_container * iterator;
@@ -99,7 +100,6 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** contain
         if(iterator->node->tentative_distance <= smallest_td){
             smallest_td = iterator->node->tentative_distance;
             *container_buffer = iterator;
-            printk("found smallest td: %d\n", smallest_td);
         }
     }
 
@@ -112,12 +112,12 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** contain
 
 void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph){
     struct node_t current_node = graph[node_addr]; 
-    printk("1\n"); 
+    
     // for each neighbour check distances
     for(uint8_t i = 0; i < current_node.paths_size; i++){
         // get neighbour
         struct node_t * neighbour = graph + (current_node.paths + i)->addr;
-        printk("2\n");
+        
         // consider only unvisited neighbours
         if(!neighbour->visited){
             uint8_t distance_to_neighbour = (current_node.paths + i)->distance;
@@ -145,8 +145,11 @@ uint8_t * trace_back(
     if(!path) return NULL;
  
     // tracing back
+    // setup
     uint8_t index = 0;
     struct node_t * current_node = graph + dst_addr;
+    
+    // get to node and check its neighbours for lowest td
     path[index] = current_node->addr;
     while(current_node->addr != start_addr){ 
         // check which of neighbours has smallest td 
@@ -159,13 +162,13 @@ uint8_t * trace_back(
                 current_node = checked_node;
             }
         }
+
         // smallest td node address add to a path 
         index++;
         path[index] = current_node->addr;
         printk("current node %d\n", current_node->addr);
     }
 
-     
     *paths_len = index + 1;
     // invert path
     // two counters decrementing till they are equal and swapping contents
@@ -179,7 +182,6 @@ uint8_t create_unvisited_slist(
         uint8_t graph_size){
     sys_slist_init(lst);
     for(uint8_t i = 0; i < graph_size; i++){
-        //printk("iterating a node: %d\n", graph[i].addr); 
         if(graph[i].reserved){
             struct node_container * container = 
                 k_malloc(sizeof(struct node_container));
@@ -208,10 +210,9 @@ void free_slist(sys_slist_t * lst){
 
 
 void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container ** node_container_to_remove){
-    // remove from a list 
     sys_slist_find_and_remove(lst,
             &(*node_container_to_remove)->next_container_node_ptr);
-    //printk("three %d\n", rm);
+    
     // free memory from heap 
     k_free(*node_container_to_remove);
     printk("four\n");

@@ -13,7 +13,9 @@ struct node_container{
 /**
  * @brief Perform shortest path algorithm on graph, between start and dst adrresses.
  * Function locks graph mutex, reads and modifies graph members. 
- *
+ * TODO: sum up all things that this  function modifies according to other funcs
+ * TODO: make other functions static 
+ * TODO: add graph resetting function, called at the beginning of di 
  * @param graph graph to perform shortest path algorithm.
  * @param graph_size size of this graph.
  * @param start_addr address of starting node. 
