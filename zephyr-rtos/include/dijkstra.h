@@ -95,7 +95,7 @@ void free_slist(sys_slist_t * lst);
  * @param lst list to remove a member.
  * @param node_to_remove member to remove.
  */
-void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container * node_to_remove);
+void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container ** node_to_remove);
 
 #ifdef DEBUG 
 

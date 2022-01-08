@@ -41,7 +41,7 @@ uint8_t dijkstra_shortest_path(
 
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
-            printk("finish now\n");
+            printk("finish now\n\n\n\n");
             //free rest of the list
             free_slist(&lst);
             break;
@@ -52,7 +52,7 @@ uint8_t dijkstra_shortest_path(
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
         printk("two \n"); 
         // remove it from a list 
-        remove_unvisited_slist_member(&lst, smallest_td_node_container);
+        remove_unvisited_slist_member(&lst, &smallest_td_node_container);
     }
     
     // trace back and record a path
@@ -180,19 +180,26 @@ uint8_t create_unvisited_slist(
 
 
 void free_slist(sys_slist_t * lst){
-    struct node_container * iterator;
-    SYS_SLIST_FOR_EACH_CONTAINER(lst, iterator, next_container_node_ptr){
-        remove_unvisited_slist_member(lst, iterator);   
+    volatile sys_snode_t * to_remove; 
+    while((to_remove = sys_slist_get(lst))){
+        struct node_container * container = CONTAINER_OF(
+                to_remove, 
+                struct node_container, 
+                next_container_node_ptr);
+        printk("freeing\n");
+        k_free(container);
     }
+    printk("returninng\n");
 }
 
 
-void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container * node_to_remove){
+void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container ** node_container_to_remove){
     // remove from a list 
-    bool rm = sys_slist_find_and_remove(lst, &(node_to_remove->next_container_node_ptr));
-    printk("three %d\n", rm);
+    sys_slist_find_and_remove(lst,
+            &(*node_container_to_remove)->next_container_node_ptr);
+    //printk("three %d\n", rm);
     // free memory from heap 
-    k_free(node_to_remove);
+    k_free(*node_container_to_remove);
     printk("four\n");
 }
 
