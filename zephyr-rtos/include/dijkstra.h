@@ -58,7 +58,7 @@ uint8_t * trace_back(
         struct node_t * graph, 
         uint8_t start_addr, 
         uint8_t dst_addr, 
-        uint8_t * path_size);
+        uint8_t * paths_len);
 
 
 /**
