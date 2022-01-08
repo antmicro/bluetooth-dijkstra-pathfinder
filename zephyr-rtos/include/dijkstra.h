@@ -12,13 +12,14 @@ struct node_container{
 
 /**
  * @brief Perform shortest path algorithm on graph, between start and dst adrresses.
+ * Function locks graph mutex, reads and modifies graph members. 
  *
  * @param graph graph to perform shortest path algorithm.
  * @param graph_size size of this graph.
  * @param start_addr address of starting node. 
  * @param dst_addr address of destination node.
  *
- * @return 
+ * @return 0 on succes > 0 on failure.
  */
 uint8_t dijkstra_shortest_path(
         struct node_t * graph,

@@ -500,22 +500,22 @@ uint8_t * trace_back(
      4b8:	b178      	cbz	r0, 4da <trace_back+0x36>
  
     // tracing back
-    uint8_t iterator = 0;
+    uint8_t index = 0;
     struct node_t * current_node = graph + dst_addr;
      4ba:	eb04 0444 	add.w	r4, r4, r4, lsl #1
             }
         }
         // smallest td node address add to a path 
-        iterator++;
-        path[iterator] = current_node->addr;
+        index++;
+        path[index] = current_node->addr;
         printk("current node %d\n", current_node->addr);
      4be:	f8df a060 	ldr.w	sl, [pc, #96]	; 520 <trace_back+0x7c>
-    path[iterator] = current_node->addr;
+    path[index] = current_node->addr;
      4c2:	f815 3024 	ldrb.w	r3, [r5, r4, lsl #2]
      4c6:	7003      	strb	r3, [r0, #0]
     struct node_t * current_node = graph + dst_addr;
      4c8:	eb05 0984 	add.w	r9, r5, r4, lsl #2
-    uint8_t iterator = 0;
+    uint8_t index = 0;
      4cc:	2400      	movs	r4, #0
     while(current_node->addr != start_addr){ 
      4ce:	f899 3000 	ldrb.w	r3, [r9]
@@ -524,7 +524,7 @@ uint8_t * trace_back(
     }
 
      
-    *paths_len = iterator + 1;
+    *paths_len = index + 1;
      4d6:	3401      	adds	r4, #1
      4d8:	7034      	strb	r4, [r6, #0]
     // invert path
@@ -543,10 +543,10 @@ uint8_t * trace_back(
      4e8:	b2cb      	uxtb	r3, r1
      4ea:	4563      	cmp	r3, ip
      4ec:	d309      	bcc.n	502 <trace_back+0x5e>
-        iterator++;
+        index++;
      4ee:	3401      	adds	r4, #1
      4f0:	b2e4      	uxtb	r4, r4
-        path[iterator] = current_node->addr;
+        path[index] = current_node->addr;
      4f2:	f899 1000 	ldrb.w	r1, [r9]
      4f6:	f808 1004 	strb.w	r1, [r8, r4]
         printk("current node %d\n", current_node->addr);
@@ -749,7 +749,7 @@ void print_slist(sys_slist_t * lst){
      5de:	bf00      	nop
      5e0:	00005255 	.word	0x00005255
      5e4:	00005270 	.word	0x00005270
-     5e8:	000052d2 	.word	0x000052d2
+     5e8:	000052ec 	.word	0x000052ec
 
 000005ec <dijkstra_shortest_path>:
         uint8_t dst_addr){
@@ -778,116 +778,120 @@ void print_slist(sys_slist_t * lst){
      60e:	f003 fcb3 	bl	3f78 <printk>
         return unlock_result;
      612:	b2e0      	uxtb	r0, r4
-     614:	e017      	b.n	646 <dijkstra_shortest_path+0x5a>
-    graph[start_addr].tentative_distance = 0;  // not a pointer ? no cuz [] is dereference
-     616:	eb06 0346 	add.w	r3, r6, r6, lsl #1
-     61a:	eb05 0383 	add.w	r3, r5, r3, lsl #2
-    create_unvisited_slist(&lst, graph, graph_size);
-     61e:	4642      	mov	r2, r8
-    graph[start_addr].tentative_distance = 0;  // not a pointer ? no cuz [] is dereference
-     620:	8098      	strh	r0, [r3, #4]
-    create_unvisited_slist(&lst, graph, graph_size);
-     622:	4629      	mov	r1, r5
-     624:	a802      	add	r0, sp, #8
-     626:	f7ff ff7d 	bl	524 <create_unvisited_slist>
-    print_slist(&lst);
-     62a:	a802      	add	r0, sp, #8
-     62c:	f7ff ffc2 	bl	5b4 <print_slist>
-                get_smallest_td_node(&lst, &smallest_td_node_container))){
-     630:	a901      	add	r1, sp, #4
-     632:	a802      	add	r0, sp, #8
-     634:	f7ff fee6 	bl	404 <get_smallest_td_node>
-    while(!(smallest_td_node_found =
-     638:	b9c0      	cbnz	r0, 66c <dijkstra_shortest_path+0x80>
-        if(!smallest_td_node_container){
-     63a:	9b01      	ldr	r3, [sp, #4]
-     63c:	b933      	cbnz	r3, 64c <dijkstra_shortest_path+0x60>
+     614:	e007      	b.n	626 <dijkstra_shortest_path+0x3a>
+    if(start_addr > MAX_MESH_SIZE || start_addr < 0
+     616:	2e05      	cmp	r6, #5
+     618:	d801      	bhi.n	61e <dijkstra_shortest_path+0x32>
+            || dst_addr > MAX_MESH_SIZE || dst_addr < 0){
+     61a:	2f05      	cmp	r7, #5
+     61c:	d906      	bls.n	62c <dijkstra_shortest_path+0x40>
+        printk("Incorrect search address\n");
+     61e:	482b      	ldr	r0, [pc, #172]	; (6cc <dijkstra_shortest_path+0xe0>)
             printk("Smallest td node container is NULL!\n");
-     63e:	4823      	ldr	r0, [pc, #140]	; (6cc <dijkstra_shortest_path+0xe0>)
-     640:	f003 fc9a 	bl	3f78 <printk>
+     620:	f003 fcaa 	bl	3f78 <printk>
             return 1;
-     644:	2001      	movs	r0, #1
+     624:	2001      	movs	r0, #1
 }
-     646:	b004      	add	sp, #16
-     648:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     626:	b004      	add	sp, #16
+     628:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+    graph[start_addr].tentative_distance = 0;
+     62c:	eb06 0346 	add.w	r3, r6, r6, lsl #1
+     630:	eb05 0383 	add.w	r3, r5, r3, lsl #2
+    create_unvisited_slist(&lst, graph, graph_size);
+     634:	4642      	mov	r2, r8
+    graph[start_addr].tentative_distance = 0;
+     636:	8098      	strh	r0, [r3, #4]
+    create_unvisited_slist(&lst, graph, graph_size);
+     638:	4629      	mov	r1, r5
+     63a:	a802      	add	r0, sp, #8
+     63c:	f7ff ff72 	bl	524 <create_unvisited_slist>
+    print_slist(&lst);
+     640:	a802      	add	r0, sp, #8
+     642:	f7ff ffb7 	bl	5b4 <print_slist>
+                get_smallest_td_node(&lst, &smallest_td_node_container))){
+     646:	a901      	add	r1, sp, #4
+     648:	a802      	add	r0, sp, #8
+     64a:	f7ff fedb 	bl	404 <get_smallest_td_node>
+    while(!(smallest_td_node_found_code =
+     64e:	b998      	cbnz	r0, 678 <dijkstra_shortest_path+0x8c>
+        if(!smallest_td_node_container){
+     650:	9b01      	ldr	r3, [sp, #4]
+     652:	b90b      	cbnz	r3, 658 <dijkstra_shortest_path+0x6c>
+            printk("Smallest td node container is NULL!\n");
+     654:	481e      	ldr	r0, [pc, #120]	; (6d0 <dijkstra_shortest_path+0xe4>)
+     656:	e7e3      	b.n	620 <dijkstra_shortest_path+0x34>
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
-     64c:	685b      	ldr	r3, [r3, #4]
-     64e:	4629      	mov	r1, r5
-     650:	7818      	ldrb	r0, [r3, #0]
-     652:	f7ff fef7 	bl	444 <recalculate_td_for_neighbours>
-        if(smallest_td_node_container->node->addr == dst_addr){
-     656:	9b01      	ldr	r3, [sp, #4]
      658:	685b      	ldr	r3, [r3, #4]
-     65a:	781b      	ldrb	r3, [r3, #0]
-     65c:	42bb      	cmp	r3, r7
-     65e:	d125      	bne.n	6ac <dijkstra_shortest_path+0xc0>
+     65a:	4629      	mov	r1, r5
+     65c:	7818      	ldrb	r0, [r3, #0]
+     65e:	f7ff fef1 	bl	444 <recalculate_td_for_neighbours>
+        if(smallest_td_node_container->node->addr == dst_addr){
+     662:	9b01      	ldr	r3, [sp, #4]
+     664:	685b      	ldr	r3, [r3, #4]
+     666:	781b      	ldrb	r3, [r3, #0]
+     668:	42bb      	cmp	r3, r7
+     66a:	d120      	bne.n	6ae <dijkstra_shortest_path+0xc2>
             printk("finish now\n\n\n\n");
-     660:	481b      	ldr	r0, [pc, #108]	; (6d0 <dijkstra_shortest_path+0xe4>)
-     662:	f003 fc89 	bl	3f78 <printk>
+     66c:	4819      	ldr	r0, [pc, #100]	; (6d4 <dijkstra_shortest_path+0xe8>)
+     66e:	f003 fc83 	bl	3f78 <printk>
             free_slist(&lst);
-     666:	a802      	add	r0, sp, #8
-     668:	f003 fc58 	bl	3f1c <free_slist>
+     672:	a802      	add	r0, sp, #8
+     674:	f003 fc52 	bl	3f1c <free_slist>
     path = trace_back(graph, start_addr, dst_addr, &paths_size);
-     66c:	f10d 0303 	add.w	r3, sp, #3
-     670:	463a      	mov	r2, r7
-     672:	4631      	mov	r1, r6
-     674:	4628      	mov	r0, r5
-     676:	f7ff ff15 	bl	4a4 <trace_back>
-    printk("This is paths size: %d", paths_size);
-     67a:	f89d 1003 	ldrb.w	r1, [sp, #3]
-        printk("%d\n", *(path + i)); 
-     67e:	4e15      	ldr	r6, [pc, #84]	; (6d4 <dijkstra_shortest_path+0xe8>)
-    path = trace_back(graph, start_addr, dst_addr, &paths_size);
-     680:	4605      	mov	r5, r0
-    printk("This is paths size: %d", paths_size);
-     682:	4815      	ldr	r0, [pc, #84]	; (6d8 <dijkstra_shortest_path+0xec>)
-     684:	f003 fc78 	bl	3f78 <printk>
+     678:	4631      	mov	r1, r6
+     67a:	f10d 0303 	add.w	r3, sp, #3
+     67e:	463a      	mov	r2, r7
+     680:	4628      	mov	r0, r5
+     682:	f7ff ff0f 	bl	4a4 <trace_back>
+     686:	4605      	mov	r5, r0
     printk("Nodes in path:\n");
-     688:	4814      	ldr	r0, [pc, #80]	; (6dc <dijkstra_shortest_path+0xf0>)
-     68a:	f003 fc75 	bl	3f78 <printk>
+     688:	4813      	ldr	r0, [pc, #76]	; (6d8 <dijkstra_shortest_path+0xec>)
+        printk("%d\n", *(path + i)); 
+     68a:	4e14      	ldr	r6, [pc, #80]	; (6dc <dijkstra_shortest_path+0xf0>)
+    printk("Nodes in path:\n");
+     68c:	f003 fc74 	bl	3f78 <printk>
     for(uint8_t i = 0; i < paths_size; i++){
-     68e:	2400      	movs	r4, #0
-     690:	f89d 2003 	ldrb.w	r2, [sp, #3]
-     694:	b2e3      	uxtb	r3, r4
-     696:	429a      	cmp	r2, r3
-     698:	d80d      	bhi.n	6b6 <dijkstra_shortest_path+0xca>
+     690:	2400      	movs	r4, #0
+     692:	f89d 2003 	ldrb.w	r2, [sp, #3]
+     696:	b2e3      	uxtb	r3, r4
+     698:	429a      	cmp	r2, r3
+     69a:	d80d      	bhi.n	6b8 <dijkstra_shortest_path+0xcc>
 		/* coverity[OVERRUN] */
 		return (int) arch_syscall_invoke1(*(uintptr_t *)&mutex, K_SYSCALL_K_MUTEX_UNLOCK);
 	}
 #endif
 	compiler_barrier();
 	return z_impl_k_mutex_unlock(mutex);
-     69a:	480a      	ldr	r0, [pc, #40]	; (6c4 <dijkstra_shortest_path+0xd8>)
-     69c:	f002 fe74 	bl	3388 <z_impl_k_mutex_unlock>
+     69c:	4809      	ldr	r0, [pc, #36]	; (6c4 <dijkstra_shortest_path+0xd8>)
+     69e:	f002 fe73 	bl	3388 <z_impl_k_mutex_unlock>
     if(unlock_result){
-     6a0:	4604      	mov	r4, r0
-     6a2:	2800      	cmp	r0, #0
-     6a4:	d0cf      	beq.n	646 <dijkstra_shortest_path+0x5a>
+     6a2:	4604      	mov	r4, r0
+     6a4:	2800      	cmp	r0, #0
+     6a6:	d0be      	beq.n	626 <dijkstra_shortest_path+0x3a>
         printk("Mutex unlock failed with status: %d\n", unlock_result); 
-     6a6:	4601      	mov	r1, r0
-     6a8:	480d      	ldr	r0, [pc, #52]	; (6e0 <dijkstra_shortest_path+0xf4>)
-     6aa:	e7b0      	b.n	60e <dijkstra_shortest_path+0x22>
+     6a8:	4601      	mov	r1, r0
+     6aa:	480d      	ldr	r0, [pc, #52]	; (6e0 <dijkstra_shortest_path+0xf4>)
+     6ac:	e7af      	b.n	60e <dijkstra_shortest_path+0x22>
         remove_unvisited_slist_member(&lst, &smallest_td_node_container);
-     6ac:	a901      	add	r1, sp, #4
-     6ae:	a802      	add	r0, sp, #8
-     6b0:	f7ff ff5e 	bl	570 <remove_unvisited_slist_member>
-     6b4:	e7bc      	b.n	630 <dijkstra_shortest_path+0x44>
+     6ae:	a901      	add	r1, sp, #4
+     6b0:	a802      	add	r0, sp, #8
+     6b2:	f7ff ff5d 	bl	570 <remove_unvisited_slist_member>
+     6b6:	e7c6      	b.n	646 <dijkstra_shortest_path+0x5a>
         printk("%d\n", *(path + i)); 
-     6b6:	5ce9      	ldrb	r1, [r5, r3]
-     6b8:	4630      	mov	r0, r6
-     6ba:	f003 fc5d 	bl	3f78 <printk>
+     6b8:	5ce9      	ldrb	r1, [r5, r3]
+     6ba:	4630      	mov	r0, r6
+     6bc:	f003 fc5c 	bl	3f78 <printk>
     for(uint8_t i = 0; i < paths_size; i++){
-     6be:	3401      	adds	r4, #1
-     6c0:	e7e6      	b.n	690 <dijkstra_shortest_path+0xa4>
-     6c2:	bf00      	nop
+     6c0:	3401      	adds	r4, #1
+     6c2:	e7e6      	b.n	692 <dijkstra_shortest_path+0xa6>
      6c4:	200001f0 	.word	0x200001f0
      6c8:	0000527f 	.word	0x0000527f
      6cc:	000052a2 	.word	0x000052a2
-     6d0:	000052c7 	.word	0x000052c7
-     6d4:	0000520a 	.word	0x0000520a
-     6d8:	000052d6 	.word	0x000052d6
-     6dc:	000052ed 	.word	0x000052ed
-     6e0:	000052fd 	.word	0x000052fd
+     6d0:	000052bc 	.word	0x000052bc
+     6d4:	000052e1 	.word	0x000052e1
+     6d8:	000052f0 	.word	0x000052f0
+     6dc:	0000520a 	.word	0x0000520a
+     6e0:	00005300 	.word	0x00005300
 
 000006e4 <char_out>:
 
@@ -2196,7 +2200,7 @@ static inline int isdigit(int a)
     1056:	3501      	adds	r5, #1
     1058:	e7dd      	b.n	1016 <cbvprintf+0x73a>
     105a:	bf00      	nop
-    105c:	00005322 	.word	0x00005322
+    105c:	00005325 	.word	0x00005325
 
 00001060 <pm_state_notify>:
 /*
@@ -4349,7 +4353,7 @@ NRF_STATIC_INLINE void nrf_power_dcdcen_vddh_set(NRF_POWER_Type * p_reg, bool en
     1954:	bd10      	pop	{r4, pc}
     1956:	bf00      	nop
     1958:	4001e000 	.word	0x4001e000
-    195c:	00005337 	.word	0x00005337
+    195c:	0000533a 	.word	0x0000533a
 
 00001960 <arch_busy_wait>:
 
@@ -6332,7 +6336,7 @@ NRF_STATIC_INLINE void nrf_rtc_event_disable(NRF_RTC_Type * p_reg, uint32_t mask
 }
     24dc:	4770      	bx	lr
     24de:	bf00      	nop
-    24e0:	00005365 	.word	0x00005365
+    24e0:	00005368 	.word	0x00005368
 
 000024e4 <nvmc_wait>:
 
@@ -6625,7 +6629,7 @@ __NO_RETURN __STATIC_INLINE void __NVIC_SystemReset(void)
     26a4:	00038148 	.word	0x00038148
     26a8:	4000f000 	.word	0x4000f000
     26ac:	40029000 	.word	0x40029000
-    26b0:	0000535f 	.word	0x0000535f
+    26b0:	00005362 	.word	0x00005362
     26b4:	4001e000 	.word	0x4001e000
     26b8:	e000ed00 	.word	0xe000ed00
     26bc:	05fa0004 	.word	0x05fa0004
@@ -7983,11 +7987,11 @@ static void _DoInit(void) {
     2f70:	bd10      	pop	{r4, pc}
     2f72:	bf00      	nop
     2f74:	200002c8 	.word	0x200002c8
-    2f78:	0000536b 	.word	0x0000536b
-    2f7c:	00005374 	.word	0x00005374
+    2f78:	0000536e 	.word	0x0000536e
+    2f7c:	00005377 	.word	0x00005377
     2f80:	200003b9 	.word	0x200003b9
     2f84:	200003a9 	.word	0x200003a9
-    2f88:	00005378 	.word	0x00005378
+    2f88:	0000537b 	.word	0x0000537b
 
 00002f8c <z_sys_init_run_level>:
 		/* End marker */
@@ -8314,7 +8318,7 @@ static ALWAYS_INLINE void z_arm_clear_faults(void)
     3138:	20000370 	.word	0x20000370
     313c:	00003025 	.word	0x00003025
     3140:	20000168 	.word	0x20000168
-    3144:	0000537f 	.word	0x0000537f
+    3144:	00005382 	.word	0x00005382
     3148:	200007c0 	.word	0x200007c0
     314c:	200000e8 	.word	0x200000e8
 
@@ -10010,9 +10014,9 @@ void z_data_copy(void)
     3b44:	f000 bd2d 	b.w	45a2 <memcpy>
     3b48:	20000000 	.word	0x20000000
     3b4c:	200000e4 	.word	0x200000e4
-    3b50:	000053c8 	.word	0x000053c8
+    3b50:	000053cc 	.word	0x000053cc
     3b54:	00000000 	.word	0x00000000
-    3b58:	000053c8 	.word	0x000053c8
+    3b58:	000053cc 	.word	0x000053cc
     3b5c:	20000000 	.word	0x20000000
 
 00003b60 <elapsed>:
@@ -10461,9 +10465,9 @@ void *k_aligned_alloc(size_t align, size_t size)
     3de8:	4803      	ldr	r0, [pc, #12]	; (3df8 <boot_banner+0x14>)
     3dea:	f000 b8c5 	b.w	3f78 <printk>
     3dee:	bf00      	nop
-    3df0:	000052d5 	.word	0x000052d5
-    3df4:	00005384 	.word	0x00005384
-    3df8:	0000539f 	.word	0x0000539f
+    3df0:	000052ef 	.word	0x000052ef
+    3df4:	00005387 	.word	0x00005387
+    3df8:	000053a2 	.word	0x000053a2
 
 00003dfc <statics_init>:
 

@@ -14,11 +14,16 @@ uint8_t dijkstra_shortest_path(
         printk("Mutex lock failed with status: %d\n", lock_result); 
         return lock_result;
     }
-    // TODO: make checking if correct addresses were passed  
+    
+    if(start_addr > MAX_MESH_SIZE || start_addr < 0
+            || dst_addr > MAX_MESH_SIZE || dst_addr < 0){
+        printk("Incorrect search address\n");
+        return 1;
+    }
 
-    // algorithm
+    /* algorithm */
     // set tentative_distance to 0 at start node  
-    graph[start_addr].tentative_distance = 0;  // not a pointer ? no cuz [] is dereference
+    graph[start_addr].tentative_distance = 0;
     
     // create unvisited list 
     sys_slist_t lst;
@@ -28,11 +33,10 @@ uint8_t dijkstra_shortest_path(
     print_slist(&lst);
 
     // get smallest_td node and process it in a loop 
-    uint8_t smallest_td_node_found;
+    uint8_t smallest_td_node_found_code;
     struct node_container * smallest_td_node_container;
-    while(!(smallest_td_node_found =
+    while(!(smallest_td_node_found_code =
                 get_smallest_td_node(&lst, &smallest_td_node_container))){
-        // check if not NULL
         if(!smallest_td_node_container){
             printk("Smallest td node container is NULL!\n");
             return 1;
@@ -44,12 +48,13 @@ uint8_t dijkstra_shortest_path(
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
             printk("finish now\n\n\n\n");
+            
             //free rest of the list
             free_slist(&lst);
             break;
         }
 
-        // remove it from a list 
+        // remove processed node from a list 
         remove_unvisited_slist_member(&lst, &smallest_td_node_container);
     }
     
@@ -57,8 +62,8 @@ uint8_t dijkstra_shortest_path(
     uint8_t paths_size;
     uint8_t * path;
     path = trace_back(graph, start_addr, dst_addr, &paths_size);
-    printk("This is paths size: %d", paths_size);
-    
+   
+    // print nodes in path
     printk("Nodes in path:\n");
     for(uint8_t i = 0; i < paths_size; i++){
         printk("%d\n", *(path + i)); 
