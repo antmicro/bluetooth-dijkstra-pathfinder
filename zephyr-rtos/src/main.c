@@ -23,10 +23,14 @@ void main(void)
     int counter = 0;
 
     // list test          
-    sys_slist_t lst;
-    uint8_t list_error_code = create_unvisited_list(&lst, graph, 5, 0x0);
-    print_slist(&lst);
-    printk("list init code %d\n", list_error_code); 
+    //sys_slist_t lst;
+    //uint8_t list_error_code = create_unvisited_slist(&lst, graph, 5, 0x0);
+    //print_slist(&lst);
+    //printk("list init code %d\n", list_error_code); 
+
+    // dijkstra 
+    dijkstra_shortest_path(graph, 5, 0, 2);
+    
 	while (1) {
         const struct device *dev;
         dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));

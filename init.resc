@@ -16,7 +16,7 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 emulation SetGlobalQuantum "0.00001"
 emulation SetQuantum "0.00001"
 showAnalyzer sysbus.uart0
-showAnalyzer sysbus.uart1
+#showAnalyzer sysbus.uart1
 connector Connect sysbus.radio wireless
 logLevel -1 sysbus.radio
 logLevel -1 sysbus.ppi
@@ -35,11 +35,12 @@ sysbus LogPeripheralAccess sysbus.radio
 
 macro reset
 """
-   mach set "central"
-   sysbus LoadELF $node_bin
+    pause
+    mach set "central"
+    sysbus LoadELF $node_bin
 """
 runMacro $reset
 
-start
+#start
 
 machine StartGdbServer 3333 true

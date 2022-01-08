@@ -36,7 +36,7 @@ uint8_t dijkstra_shortest_path(
  *
  * @return 0 if node was found and 1 if list is empty.
  */
-uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container * container_buffer);
+uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** container_buffer);
 
 
 // get to a node, iterate thorugh its neighbours, check if path thorugh current node is smaller
@@ -51,6 +51,14 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container * containe
  * @param graph
  */
 void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph); 
+
+// need initialized memory heap
+uint8_t * trace_back(
+        struct node_t * graph, 
+        uint8_t start_addr, 
+        uint8_t dst_addr, 
+        uint8_t * path_size);
+
 
 /**
  * @brief Create a list of nodes for search, excluding starting node. List is single
@@ -69,10 +77,14 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph);
 uint8_t create_unvisited_slist(
         sys_slist_t * lst, 
         struct node_t * graph, 
-        uint8_t graph_size, 
-        uint8_t start_addr);
+        uint8_t graph_size);
 
 
+/**
+ * @brief Free unvisited list from remaining members.
+ *
+ * @param lst unvisited list.
+ */
 void free_slist(sys_slist_t * lst);
 
 
