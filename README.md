@@ -9,6 +9,16 @@ In folder zephyr\_project You can find Zephyr project files. Destination platfor
 of this project is nRF52840 Dongle with Zephyr RTOS. For now it is tested on 
 Renode platform.
 
+Default Dijkstra graph used in zephyr version is:
+(1)    2   (2)
+  
+   1       3
+         
+(1)    0   (2)
+
+In brackets are distances between nodes and without brackets are nodes addresses. 
+This information is contained in graph.c file in initialization function.
+
 File init.resc contains script for Renode platform.
 
 Project is still work in progress and I am also just learning Zephyr RTOS.
