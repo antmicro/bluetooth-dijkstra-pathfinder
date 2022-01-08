@@ -73,7 +73,7 @@ uint8_t dijkstra_shortest_path(
 
 uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** container_buffer){
     // reset buffer
-    container_buffer = NULL;
+    *container_buffer = NULL;
     
     // setup 
     uint8_t smallest_td = INF;
