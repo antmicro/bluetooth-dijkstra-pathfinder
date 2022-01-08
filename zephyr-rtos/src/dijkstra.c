@@ -15,6 +15,7 @@ uint8_t dijkstra_shortest_path(
         return lock_result;
     }
     // TODO: make checking if correct addresses were passed  
+
     // algorithm
     // set tentative_distance to 0 at start node  
     graph[start_addr].tentative_distance = 0;  // not a pointer ? no cuz [] is dereference
@@ -32,12 +33,20 @@ uint8_t dijkstra_shortest_path(
     while(!(smallest_td_node_found =
                 get_smallest_td_node(&lst, &smallest_td_node_container))){
         printk("smallest_td loop\n");
+        // check if not NULL
+        if(!smallest_td_node_container){
+            printk("Smallest td node container is NULL!\n");
+            return 1;
+        }
+
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
+            printk("finish now\n");
             //free rest of the list
             free_slist(&lst);
             break;
         }
+
         printk("one \n");    
         // visit a smallest_td node and update its neighbours td
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
@@ -63,20 +72,31 @@ uint8_t dijkstra_shortest_path(
 
 
 uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** container_buffer){
+    // reset buffer
+    container_buffer = NULL;
+    
+    // setup 
     uint8_t smallest_td = INF;
     struct node_container * iterator;
+
+    // check if empty
     if(sys_slist_is_empty(lst)){
         printk("List empty, returning\n");
         return 1; 
     }
+    
+    // find lowest_td_node
     SYS_SLIST_FOR_EACH_CONTAINER(lst, iterator, next_container_node_ptr){
-        printk("for each container loop\n");
-        if(iterator->node->tentative_distance < smallest_td){
+        if(iterator->node->tentative_distance <= smallest_td){
             smallest_td = iterator->node->tentative_distance;
-            container_buffer = iterator;
+            *container_buffer = iterator;
             printk("found smallest td: %d\n", smallest_td);
         }
     }
+
+    // if container_buffer is NULL then return error code
+    if(!container_buffer) return 1;
+
     return 0;
 }
 

@@ -28,7 +28,8 @@ uint8_t dijkstra_shortest_path(
 
 /**
  * @brief Get the slist container with node that has the smallest tentative_distance 
- * for algorithm purposes.
+ * for algorithm purposes. If function fails buffer will be NULL and it will return
+ * 1.
  *
  * @param lst pointer to a unvisited list, from which to pick node with smallest td.
  * @param container_buffer buffer with slist container that stores node with smallest td. 
