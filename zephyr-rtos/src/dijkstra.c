@@ -47,8 +47,6 @@ uint8_t dijkstra_shortest_path(
 
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
-            printk("finish now\n\n\n\n");
-            
             //free rest of the list
             free_slist(&lst);
             break;
@@ -170,7 +168,7 @@ uint8_t * trace_back(
     }
 
     *paths_len = index + 1;
-    // invert path
+    // TODO:invert path
     // two counters decrementing till they are equal and swapping contents
     return path;
 }

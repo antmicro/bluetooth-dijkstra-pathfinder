@@ -13,7 +13,11 @@
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
-    
+void dijkstra(){
+
+}
+
+
 struct k_mutex graph_mutex;
 
 void main(void)
@@ -21,15 +25,18 @@ void main(void)
     struct node_t * graph;
     uint8_t graph_init_error_code = graph_init(&graph, &graph_mutex);
     int counter = 0;
-
-    // list test          
-    //sys_slist_t lst;
-    //uint8_t list_error_code = create_unvisited_slist(&lst, graph, 5, 0x0);
-    //print_slist(&lst);
-    //printk("list init code %d\n", list_error_code); 
+    if(graph_init_error_code){
+        printk("Graph initialization failed\n");
+        return;
+    }
 
     // dijkstra 
-    dijkstra_shortest_path(graph, 5, 0, 2);
+    uint8_t dijkstra_err = 0;
+    dijkstra_err = dijkstra_shortest_path(graph, 5, 0, 2);
+    if(dijkstra_err){
+        printk("Dijkstra failed\n");
+        return;
+    }
     
 	while (1) {
         const struct device *dev;

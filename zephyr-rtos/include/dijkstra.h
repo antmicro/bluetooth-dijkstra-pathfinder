@@ -10,11 +10,16 @@ struct node_container{
     struct node_t * node;
 };
 
+// global variable updated with path after dijkstra algorithm  
+extern uint8_t * path; // TODO: make init function
+
 /**
  * @brief Perform shortest path algorithm on graph, between start and dst adrresses.
  * Function locks graph mutex, reads and modifies graph members. 
- * TODO: sum up all things that this  function modifies according to other funcs
+ * TODO: in docs sum up all things that this  function modifies according to other funcs
  * TODO: make other functions static 
+ * TODO: add path inverting function
+ * TODO: add path returning
  * TODO: add graph resetting function, called at the beginning of di 
  * @param graph graph to perform shortest path algorithm.
  * @param graph_size size of this graph.
