@@ -101,3 +101,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# ignore build dirs
+/dijkstra_shortest_path/build/
+/zephyr-rtos/build
