@@ -1,0 +1,1 @@
+{"addr":0, "reserved":true, "visited":false, "tentative_distance":255, "paths_size":2, "paths":[{"addr":1, "distance":2}, {"addr":3, "distance":1}]}
