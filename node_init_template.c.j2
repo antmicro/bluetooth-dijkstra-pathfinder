@@ -1,10 +1,12 @@
-(*graph + {{name}})->addr = 0x4;    
-(*graph + 4)->reserved = true;
-(*graph + 4)->visited = false;
-(*graph + 4)->tentative_distance = INF;
-(*graph + 4)->paths_size = 2;
-(*graph + 4)->paths = k_malloc(sizeof(struct path_t) * (*graph)->paths_size);
-if((*graph + 4)->paths == NULL) return 1;
-
-
-
+// node 0x{{ addr_t }}
+(*graph + {{ addr_t }})->addr = 0x{{ addr_t }};    
+(*graph + {{ addr_t }})->reserved = {{ reserved_t }};
+(*graph + {{ addr_t }})->visited = false;
+(*graph + {{ addr_t }})->tentative_distance = INF;
+(*graph + {{ addr_t }})->paths_size = {{ paths_size_t }};
+(*graph + {{ addr_t }})->paths = k_malloc(sizeof(struct path_t) * (*graph)->paths_size);
+if((*graph + {{ addr_t }})->paths == NULL) return 1;
+{% for path in paths %}
+(*graph + {{ addr_t }})->paths->addr = 0x{{ path.addr }};
+(*graph + {{ addr_t }})->paths->distance = {{ path.distance }};
+{% endfor %}
