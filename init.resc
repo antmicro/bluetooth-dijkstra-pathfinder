@@ -37,7 +37,7 @@ macro reset
 """
     pause
     mach set "central"
-    sysbus LoadELF $node_bin
+    sysbus LoadELF $ORIGIN/zephyr-rtos/build/zephyr/zephyr.elf 
 """
 runMacro $reset
 
