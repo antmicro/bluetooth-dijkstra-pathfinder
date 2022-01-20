@@ -106,6 +106,7 @@ dkms.conf
 /dijkstra_shortest_path/build/
 /zephyr-rtos/build
 /build
+/zephyr-rtos/src/generated-scr
 
 # caches
 /zephyr-rtos/.cache
