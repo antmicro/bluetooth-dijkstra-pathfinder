@@ -108,3 +108,7 @@ dkms.conf
 
 # caches
 /zephyr-rtos/.cache
+
+# swap files
+*.swp
+
