@@ -9,10 +9,11 @@ constant_contents_prepend = [
         "\n",
         "    // nodes initialization \n",
         "    *graph = k_malloc(MAX_MESH_SIZE * sizeof(struct node_t)); \n",
-        "    if((*graph) == NULL) return 1; \n"
+        "    if((*graph) == NULL) return 1; \n",
+        "\n"
         ]
 constant_contents_append = [
-        "    return 0; \n"
+        "return 0; \n"
         ]
 
 
