@@ -105,6 +105,7 @@ dkms.conf
 # ignore build dirs
 /dijkstra_shortest_path/build/
 /zephyr-rtos/build
+/build
 
 # caches
 /zephyr-rtos/.cache
