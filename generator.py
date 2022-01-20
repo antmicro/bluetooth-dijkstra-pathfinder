@@ -82,7 +82,7 @@ if __name__ == "__main__":
         for node in nodes_config:
             out = template.render(
                     addr_t=node['addr'],
-                    reserved_t=node['reserved'],
+                    reserved_t=str(node['reserved']).lower(),
                     paths_size_t=node['paths_size'],
                     paths=node['paths']
                     )
