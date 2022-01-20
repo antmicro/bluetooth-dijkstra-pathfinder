@@ -62,8 +62,6 @@ def insert_contents(start, function_contents, file_contents):
             + constant_contents_append
             + second_part 
             )
-    for line in output:
-        print(line)
     return output 
 
 
@@ -87,7 +85,6 @@ with open(config_file_path, 'r') as config:
                 paths=node['paths']
                 )
         function_new_contents.append(out)
-        # print(out)
 
 # read contents of a file that will be impacted 
 target_file_path = os.path.join(execution_dir,  "zephyr-rtos/src/graph.c")
