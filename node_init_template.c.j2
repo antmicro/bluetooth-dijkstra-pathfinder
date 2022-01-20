@@ -4,9 +4,12 @@
     (*graph + {{ addr_t }})->visited = false;
     (*graph + {{ addr_t }})->tentative_distance = INF;
     (*graph + {{ addr_t }})->paths_size = {{ paths_size_t }};
+    {% if paths_size_t is greaterthan 0 %}
     (*graph + {{ addr_t }})->paths = k_malloc(sizeof(struct path_t) * (*graph)->paths_size);
     if((*graph + {{ addr_t }})->paths == NULL) return 1;
     {% for path in paths %}
     (*graph + {{ addr_t }})->paths->addr = 0x{{ path.addr }};
     (*graph + {{ addr_t }})->paths->distance = {{ path.distance }};
     {% endfor %}
+    {% endif %}
+    
