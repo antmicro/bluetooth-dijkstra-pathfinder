@@ -5,7 +5,7 @@ Test Teardown   Test Teardown
 Resource        ${RENODEKEYWORDS}
 
 *** Variables ***
-${SCRIPT_PATH} =      ../init.resc
+${SCRIPT_PATH} =       ${CURDIR}/../init.resc
 
 *** Test Cases ***
 Should Print Route
