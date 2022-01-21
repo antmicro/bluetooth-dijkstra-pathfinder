@@ -6,7 +6,8 @@ Resource        ${RENODEKEYWORDS}
 
 *** Variables ***
 ${SCRIPT_PATH} =      ../init.resc
-    
+
+*** Test Cases ***
 Should Print Route
     Execute Script    ${SCRIPT_PATH}
     Create Terminal Tester     sysbus.uart0
