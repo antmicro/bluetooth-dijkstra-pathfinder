@@ -7,8 +7,8 @@ $node_bin ?= @/home/js/Projects/engineering-thesis/zephyr-rtos/build/zephyr/zeph
 logLevel 0
 
 emulation CreateWirelessMedium "wireless"
-emulation CreateWiresharkForWireless "wireless"  #"wireless" "bluetoothle"
-emulation LogToWireshark "wireless"
+#emulation CreateWiresharkForWireless "wireless"  #"wireless" "bluetoothle"
+#emulation LogToWireshark "wireless"
 logLevel -1 wireless
 
 mach add "central"
