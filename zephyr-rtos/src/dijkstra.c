@@ -1,6 +1,6 @@
 
 #include "../include/dijkstra.h"
-
+#include <string.h>
 
 uint8_t dijkstra_shortest_path(
         struct node_t * graph,
@@ -44,7 +44,7 @@ uint8_t dijkstra_shortest_path(
  
         // visit a smallest_td node and update its neighbours td
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
-
+        printk("address found: %d\n", smallest_td_node_container->node->addr);
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
             //free rest of the list
@@ -63,9 +63,16 @@ uint8_t dijkstra_shortest_path(
    
     // print nodes in path
     printk("Nodes in path:\n");
+    char output[40] = "Path: ";
     for(uint8_t i = 0; i < paths_size; i++){
-        printk("%d\n", *(path + i)); 
+        char buffer[4];
+        snprintk(buffer, 4, "%d, ", *(path + i));
+        strcat(output, buffer);
     }
+    printk("%s\n", output);
+    printk("pathssize %d\n", paths_size);
+    printk("%d, %d, %d", *(path), *(path+1), *(path+2));
+    
 
     // unlock the mutex 
     int unlock_result = k_mutex_unlock(&graph_mutex);
@@ -110,26 +117,34 @@ uint8_t get_smallest_td_node(
 
 void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph){
     struct node_t current_node = graph[node_addr]; 
-    
+    printk("Current node: %d\n", current_node.addr); 
+    printk("Current node td: %d\n", current_node.tentative_distance);
     // for each neighbour check distances
+    printk("Current node paths_size: %d\n", current_node.paths_size);
     for(uint8_t i = 0; i < current_node.paths_size; i++){
         // get neighbour
-        struct node_t * neighbour = graph + (current_node.paths + i)->addr;
-        
+        printk("Neighbour address %d\n", ((current_node.paths + i)->addr));
+        struct node_t * neighbour = graph + ((current_node.paths + i)->addr);
+        printk("    Neighbour: %d\n", neighbour->addr);
+         
         // consider only unvisited neighbours
         if(!neighbour->visited){
             uint8_t distance_to_neighbour = (current_node.paths + i)->distance;
+            printk("    Distance to neighbour: %d\n", distance_to_neighbour);
 
             // check if distance through current node is smaller than neighbour's 
             // current tentative distance
             if(current_node.tentative_distance + distance_to_neighbour <
                     neighbour->tentative_distance){
+                printk("     node %d Pre update: %d\n",
+                        neighbour->addr, neighbour->tentative_distance);
                 neighbour->tentative_distance = 
                     current_node.tentative_distance + distance_to_neighbour;
-                neighbour->visited = true;
+                printk("     node after update %d\n", neighbour->tentative_distance);
             }
         }
     }
+    (graph + node_addr)->visited = true;
 }
 
 
