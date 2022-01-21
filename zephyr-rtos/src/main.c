@@ -22,8 +22,8 @@ struct k_mutex graph_mutex;
 
 void main(void)
 {
-    struct node_t * graph;
-    uint8_t graph_init_error_code = graph_init(&graph, &graph_mutex);
+    struct node_t graph[MAX_MESH_SIZE];
+    uint8_t graph_init_error_code = graph_init(graph, &graph_mutex);
     int counter = 0;
     if(graph_init_error_code){
         printk("Graph initialization failed\n");
