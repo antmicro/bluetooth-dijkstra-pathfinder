@@ -11,13 +11,20 @@ emulation CreateWirelessMedium "wireless"
 #emulation LogToWireshark "wireless"
 logLevel -1 wireless
 
-mach add "central"
+# machine definitions
+# sink 
+mach add "sink"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
+
+# time quantum setup 
 emulation SetGlobalQuantum "0.00001"
 emulation SetQuantum "0.00001"
+
+# analyzers 
 showAnalyzer sysbus.uart0
-#showAnalyzer sysbus.uart1
 connector Connect sysbus.radio wireless
+
+# logging 
 logLevel -1 sysbus.radio
 logLevel -1 sysbus.ppi
 logLevel -1 sysbus.rtc0
@@ -30,13 +37,45 @@ sysbus LogPeripheralAccess sysbus.rtc0
 sysbus LogPeripheralAccess sysbus.timer0
 sysbus LogPeripheralAccess sysbus.timer1
 sysbus LogPeripheralAccess sysbus.radio
-# logLevel 1 sysbus.cpu
-# sysbus.cpu LogFunctionNames true "bt hci ll_ le_ ull lll isr_ chan_ radio is_ abort conn_ rx_ mayfly rtc0 ticker" true
+
+#############################################################
+
+# node 1 
+mach add "node1"
+mach set "node1"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# analyzers 
+showAnalyzer sysbus.uart0
+connector Connect sysbus.radio wireless
+
+# logging 
+logLevel -1 sysbus.radio
+logLevel -1 sysbus.ppi
+logLevel -1 sysbus.rtc0
+logLevel -1 sysbus.timer0
+logLevel -1 sysbus.timer1
+logLevel -1 sysbus.nvic
+sysbus LogPeripheralAccess sysbus.nvic
+sysbus LogPeripheralAccess sysbus.ppi
+sysbus LogPeripheralAccess sysbus.rtc0
+sysbus LogPeripheralAccess sysbus.timer0
+sysbus LogPeripheralAccess sysbus.timer1
+sysbus LogPeripheralAccess sysbus.radio
+
 
 macro reset
 """
     pause
-    mach set "central"
+
+    mach set "sink"
+    sysbus LoadELF $ORIGIN/zephyr-rtos/build/zephyr/zephyr.elf 
+
+    mach set "node1"
     sysbus LoadELF $ORIGIN/zephyr-rtos/build/zephyr/zephyr.elf 
 """
 runMacro $reset
