@@ -23,6 +23,7 @@ constant_contents_append = """return 0;
         
 
 template_to_load = """// node 0x{{ addr_t }} 
+    (*graph + {{ addr_t }})->addr = 0x{{ addr_t }};    
     (*graph + {{ addr_t }})->reserved = {{ reserved_t }};
     (*graph + {{ addr_t }})->visited = false;
     (*graph + {{ addr_t }})->tentative_distance = INF;
@@ -31,8 +32,8 @@ template_to_load = """// node 0x{{ addr_t }}
     (*graph + {{ addr_t }})->paths = k_malloc(sizeof(struct path_t) * (*graph)->paths_size);
     if((*graph + {{ addr_t }})->paths == NULL) return 1;
     {% for path in paths %}
-    (*graph + {{ addr_t }})->paths->addr = 0x{{ path.addr }};
-    (*graph + {{ addr_t }})->paths->distance = {{ path.distance }};
+    ((*graph + {{ addr_t }})->paths + {{loop.index0}} )->addr = 0x{{ path.addr }};
+    ((*graph + {{ addr_t }})->paths + {{loop.index0}} )->distance = {{ path.distance }};
     {% endfor %}
     {% endif %}
     """
