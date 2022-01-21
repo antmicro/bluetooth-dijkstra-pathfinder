@@ -25,7 +25,7 @@ struct node_t{
     struct path_t * paths;
 };
 
-uint8_t graph_init(struct node_t ** graph, struct k_mutex * graph_mutex);
+uint8_t graph_init(struct node_t * graph, struct k_mutex * graph_mutex);
 void reset_tentative_distances(struct node_t * graph);
 
 #endif
