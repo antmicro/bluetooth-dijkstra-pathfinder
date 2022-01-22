@@ -14,7 +14,10 @@ logLevel -1 wireless
 # machine definitions
 # sink 
 mach add "sink"
-machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0 false
 
 # time quantum setup 
 emulation SetGlobalQuantum "0.00001"
@@ -43,7 +46,10 @@ sysbus LogPeripheralAccess sysbus.radio
 # node 1 
 mach add "node1"
 mach set "node1"
-machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 1 false
 
 # time quantum setup 
 emulation SetGlobalQuantum "0.00001"
