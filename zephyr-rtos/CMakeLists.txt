@@ -24,5 +24,6 @@ target_sources(app PRIVATE
     src/main.c
     src/graph.c 
     src/generated-src/graph_init.c
-    src/dijkstra.c)
+    src/dijkstra.c
+    src/bluetooth_ble.c)
 
