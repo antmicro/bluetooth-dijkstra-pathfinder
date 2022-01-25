@@ -21,16 +21,12 @@ extern uint8_t * path; // TODO: make init function
  * TODO: add path inverting function
  * TODO: add path returning
  * TODO: add graph resetting function, called at the beginning of di 
- * @param graph graph to perform shortest path algorithm.
- * @param graph_size size of this graph.
  * @param start_addr address of starting node. 
  * @param dst_addr address of destination node.
  *
  * @return 0 on succes > 0 on failure.
  */
 uint8_t dijkstra_shortest_path(
-        struct node_t * graph,
-        uint8_t graph_size,
         uint8_t start_addr,
         uint8_t dst_addr);
 
@@ -57,13 +53,11 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** contain
  * current node, if so it is modified and node is marked as visited.
  *
  * @param node_addr
- * @param graph
  */
-void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph); 
+void recalculate_td_for_neighbours(uint8_t node_addr); 
 
 // need initialized memory heap
 uint8_t * trace_back(
-        struct node_t * graph, 
         uint8_t start_addr, 
         uint8_t dst_addr, 
         uint8_t * paths_len);
@@ -77,16 +71,12 @@ uint8_t * trace_back(
  * freeing!
  *
  * @param lst Pointer to list.
- * @param graph graph from which to create a list.
- * @param graph_size size of a graph.
  * @param start_addr address of a node that is starting node.
  *
  * @return 
  */
 uint8_t create_unvisited_slist(
-        sys_slist_t * lst, 
-        struct node_t * graph, 
-        uint8_t graph_size);
+        sys_slist_t * lst);
 
 
 /**

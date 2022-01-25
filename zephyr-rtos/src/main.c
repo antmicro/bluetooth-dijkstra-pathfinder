@@ -9,7 +9,6 @@
 #include <drivers/hwinfo.h>
 #include <device.h>
 
-
 #include "../include/graph.h"
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
@@ -22,29 +21,11 @@ void dijkstra(){
     // TODO: make BLE to thread with mutex 
 }
 
-// global mutex for graph data structure
-struct k_mutex graph_mutex;
-
-
-static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
-			 struct net_buf_simple *ad)
-{
-	char addr_str[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
-	printk("Device found: %s (RSSI )\n", addr_str);
-
-    char data_str[129];
-    bin2hex(ad->data, ad->len, data_str, sizeof(data_str));
-    printk("Data as hex:%s\n", data_str);
-}
-
 
 void main(void)
 {
     /* Graph Initialization */
-    struct node_t graph[MAX_MESH_SIZE];
-    uint8_t graph_init_error_code = graph_init(graph, &graph_mutex);
+    uint8_t graph_init_error_code = graph_init();
     if(graph_init_error_code){
         printk("Graph initialization failed! \n");
         return;
@@ -52,24 +33,30 @@ void main(void)
 
     /* Dijkstra's path finding algorithm*/
     uint8_t dijkstra_err = 0;
-    dijkstra_err = dijkstra_shortest_path(graph, 5, 0, 2);
+    dijkstra_err = dijkstra_shortest_path(0, 2);
     if(dijkstra_err){
         printk("Dijkstra failed! \n");
         return;
     }
 
-    /* Bluetooth advertising */
-    struct bt_config_t bt_config;
-    bt_directed_messaging_setup(&bt_config); 
-    
     int err = bt_enable(NULL);
     if(err){
         printk("BLE Initialization failed!\n");
     }
 
-    err  = bt_le_scan_start_wrapper(&bt_config);
-    printk("BLE scan error code: %d\n", err);
-    
+    /* Bluetooth scanning */
+    struct bt_le_scan_param scan_params;
+    bt_le_scan_setup(&scan_params);
+    err  = bt_le_scan_start(&scan_params, NULL); 
+    if(err){
+        printk("BLE scan error code: %d\n", err);
+    }
+
+    /* Bluetooth direct adv setup*/
+    static struct bt_le_ext_adv **adv_set[MAX_MESH_SIZE]; 
+    //bt_le_adv_set_setup(adv_set);
+
+    /* Debug */
     bt_addr_le_t my_identity[CONFIG_BT_ID_MAX];
     bt_id_get(my_identity, ARRAY_SIZE(my_identity));
     
@@ -77,7 +64,7 @@ void main(void)
     char hex2[129];
     bin2hex(my_identity->a.val, 6, hex2, 129);
 
-	bt_addr_le_to_str(my_identity, hex, sizeof(hex));
+	//bt_addr_le_to_str(my_identity, hex, sizeof(hex));
     printk("a.val: %s\n", hex); 
     printk("my_identity: %s\n", hex);
 

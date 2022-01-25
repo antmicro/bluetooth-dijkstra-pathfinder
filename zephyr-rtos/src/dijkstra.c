@@ -2,13 +2,17 @@
 #include "../include/dijkstra.h"
 #include <string.h>
 
-uint8_t dijkstra_shortest_path(
-        struct node_t * graph,
-        uint8_t graph_size,
-        uint8_t start_addr,
-        uint8_t dst_addr){
+
+uint8_t dijkstra_shortest_path(uint8_t start_addr, uint8_t dst_addr){ 
+    struct k_mutex graph_mutex;
+    struct node_t graph[MAX_MESH_SIZE];
+   // check if right node was picked 
+    if(!graph[dst_addr].reserved || !graph[start_addr].reserved){
+        printk("Node address not used!\n");
+        return 1;
+    }
+
     // lock the mutex
-    extern struct k_mutex graph_mutex;
     int lock_result = k_mutex_lock(&graph_mutex, K_FOREVER);
     if(lock_result){
         printk("Mutex lock failed with status: %d\n", lock_result); 
@@ -27,7 +31,7 @@ uint8_t dijkstra_shortest_path(
     
     // create unvisited list 
     sys_slist_t lst;
-    create_unvisited_slist(&lst, graph, graph_size);
+    create_unvisited_slist(&lst);
 
     // print the result 
     print_slist(&lst);
@@ -43,7 +47,7 @@ uint8_t dijkstra_shortest_path(
         }
  
         // visit a smallest_td node and update its neighbours td
-        recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
+        recalculate_td_for_neighbours(smallest_td_node_container->node->addr); 
         printk("address found: %d\n", smallest_td_node_container->node->addr);
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
@@ -59,7 +63,7 @@ uint8_t dijkstra_shortest_path(
     // trace back and record a path
     uint8_t paths_size;
     uint8_t * path;
-    path = trace_back(graph, start_addr, dst_addr, &paths_size);
+    path = trace_back(start_addr, dst_addr, &paths_size);
    
     // print nodes in path
     printk("Nodes in path:\n");
@@ -115,32 +119,23 @@ uint8_t get_smallest_td_node(
 }
 
 
-void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph){
+void recalculate_td_for_neighbours(uint8_t node_addr){
     struct node_t current_node = graph[node_addr]; 
-    printk("Current node: %d\n", current_node.addr); 
-    printk("Current node td: %d\n", current_node.tentative_distance);
     // for each neighbour check distances
-    printk("Current node paths_size: %d\n", current_node.paths_size);
     for(uint8_t i = 0; i < current_node.paths_size; i++){
         // get neighbour
-        printk("Neighbour address %d\n", ((current_node.paths + i)->addr));
         struct node_t * neighbour = graph + ((current_node.paths + i)->addr);
-        printk("    Neighbour: %d\n", neighbour->addr);
          
         // consider only unvisited neighbours
         if(!neighbour->visited){
             uint8_t distance_to_neighbour = (current_node.paths + i)->distance;
-            printk("    Distance to neighbour: %d\n", distance_to_neighbour);
 
             // check if distance through current node is smaller than neighbour's 
             // current tentative distance
             if(current_node.tentative_distance + distance_to_neighbour <
                     neighbour->tentative_distance){
-                printk("     node %d Pre update: %d\n",
-                        neighbour->addr, neighbour->tentative_distance);
                 neighbour->tentative_distance = 
                     current_node.tentative_distance + distance_to_neighbour;
-                printk("     node after update %d\n", neighbour->tentative_distance);
             }
         }
     }
@@ -149,7 +144,6 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t * graph){
 
 
 uint8_t * trace_back(
-        struct node_t * graph,
         uint8_t start_addr, 
         uint8_t dst_addr, 
         uint8_t * paths_len){
@@ -189,12 +183,9 @@ uint8_t * trace_back(
 }
 
 
-uint8_t create_unvisited_slist(
-        sys_slist_t * lst, 
-        struct node_t * graph, 
-        uint8_t graph_size){
+uint8_t create_unvisited_slist(sys_slist_t * lst){
     sys_slist_init(lst);
-    for(uint8_t i = 0; i < graph_size; i++){
+    for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         if(graph[i].reserved){
             struct node_container * container = 
                 k_malloc(sizeof(struct node_container));

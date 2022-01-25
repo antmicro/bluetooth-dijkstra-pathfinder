@@ -6,12 +6,16 @@ constant_contents_prepend = """
 /* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY */
 #include <stdint.h>
 #include <stdlib.h>
+#include <bluetooth/addr.h>
 
 #include "../../include/graph.h"
 
-uint8_t graph_init(struct node_t * graph, struct k_mutex * graph_mutex){ 
-    // graph mutex initialization 
-    k_mutex_init(graph_mutex); 
+uint8_t graph_init(){ 
+    struct k_mutex graph_mutex;
+    struct node_t graph[MAX_MESH_SIZE];
+
+   // graph mutex initialization 
+    k_mutex_init(&graph_mutex); 
 
     """
 
@@ -20,7 +24,8 @@ constant_contents_append = """return 0;
         
 
 template_to_load = """// node 0x{{ addr_t }} 
-    graph[{{ addr_t }}].addr = 0x{{ addr_t }};    
+    graph[{{ addr_t }}].addr = 0x{{ addr_t }};
+    strncpy(graph[{{ addr_t }}].addr_bt_le, "{{ addr_bt_le_t }}", 18);
     graph[{{ addr_t }}].reserved = {{ reserved_t }};
     graph[{{ addr_t }}].visited = false;
     graph[{{ addr_t }}].tentative_distance = INF;
@@ -50,6 +55,7 @@ with open(config_file_path, 'r') as config:
     for node in nodes_config.values():
         out = template.render(
                 addr_t=node['addr'],
+                addr_bt_le_t=node['addr_bt_le'],
                 reserved_t=str(node['reserved']).lower(),
                 paths_size_t=node['paths_size'],
                 paths=node['paths']

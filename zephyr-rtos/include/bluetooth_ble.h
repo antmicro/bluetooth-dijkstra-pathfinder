@@ -7,18 +7,11 @@
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/sdp.h>
 #include <bluetooth/iso.h>
+#include "graph.h"
 
-// wrapper for few configuraion parameters for ble transsmission 
-struct bt_config_t {
-    // advertising 
-    // ext_adv_options(uint32 my), bt_le_adv_params, set, 
 
-    // scanning 
-    struct bt_le_scan_param scan_params;
-};
-
-void bt_directed_messaging_setup(struct bt_config_t * config);
-int bt_le_scan_start_wrapper(struct bt_config_t * config);
+void bt_le_scan_setup(struct bt_le_scan_param *scan_params);
+void bt_le_adv_set_setup(struct bt_le_ext_adv ***adv_set);
 
 // callbacks 
 static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
