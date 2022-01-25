@@ -31,7 +31,7 @@ uint8_t graph_init(struct node_t *graph){
     
     // node 0x1 
     graph[1].addr = 0x1;
-    strncpy(graph[1].addr_bt_le, "C0:00:00:00:00:FF", 18);
+    strncpy(graph[1].addr_bt_le, "C0:00:00:00:00:11", 18);
     graph[1].reserved = true;
     graph[1].visited = false;
     graph[1].tentative_distance = INF;
@@ -49,7 +49,7 @@ uint8_t graph_init(struct node_t *graph){
     
     // node 0x2 
     graph[2].addr = 0x2;
-    strncpy(graph[2].addr_bt_le, "C0:00:00:00:00:FF", 18);
+    strncpy(graph[2].addr_bt_le, "C0:00:00:00:00:22", 18);
     graph[2].reserved = true;
     graph[2].visited = false;
     graph[2].tentative_distance = INF;
@@ -67,7 +67,7 @@ uint8_t graph_init(struct node_t *graph){
     
     // node 0x3 
     graph[3].addr = 0x3;
-    strncpy(graph[3].addr_bt_le, "C0:00:00:00:00:FF", 18);
+    strncpy(graph[3].addr_bt_le, "C0:00:00:00:00:33", 18);
     graph[3].reserved = false;
     graph[3].visited = false;
     graph[3].tentative_distance = INF;
@@ -75,7 +75,7 @@ uint8_t graph_init(struct node_t *graph){
     
     // node 0x4 
     graph[4].addr = 0x4;
-    strncpy(graph[4].addr_bt_le, "C0:00:00:00:00:FF", 18);
+    strncpy(graph[4].addr_bt_le, "C0:00:00:00:00:44", 18);
     graph[4].reserved = true;
     graph[4].visited = false;
     graph[4].tentative_distance = INF;
@@ -91,5 +91,7 @@ uint8_t graph_init(struct node_t *graph){
     (graph[4].paths + 1)->distance = 2;
     
     
-    return 0;
+    
+    identify_self_in_graph(graph);
+return 0;
 }

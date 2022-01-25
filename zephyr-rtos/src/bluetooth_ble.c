@@ -66,7 +66,10 @@ void bt_le_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set)
 
 
 void create_packet_thread_entry(struct net_buf_simple *buf){ 
-    printk("Inside entry\n");
+    // get the destination node 
+    uint8_t common_self_id;
+    printk("I have access to proper common_self_id: %d\n",  common_self_id);
+
 }
 
 
@@ -75,8 +78,6 @@ static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
 		      struct net_buf_simple *buf){
     char addr_str[BT_ADDR_LE_STR_LEN];
     char data_str[31];
-   
-    printk("juz nie moge\n\n");
 
     // formatting 
     bin2hex(buf->data, buf->len, data_str, sizeof(data_str));
@@ -85,6 +86,8 @@ static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
     // print
     printk("Received data from node with address: %s\n", addr_str);
     printk("Data: %s\n", data_str);
+    
+    // spawn a thread
     struct k_thread create_packet_thread;
     k_tid_t my_tid = k_thread_create(&create_packet_thread, 
             create_packet_thread_stack,

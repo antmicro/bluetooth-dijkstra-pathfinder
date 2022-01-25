@@ -30,11 +30,15 @@ struct node_t{
 };
 
 
+// global variable with address of this node 
+extern uint8_t common_self_id; // TODO: maybe make it into abstract data type?
+
 // global mutex for graph data structure
 //extern struct k_mutex *graph_mutex;
 
 //uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex);
 uint8_t graph_init(struct node_t *graph);
 void reset_tentative_distances(struct node_t *graph);
+uint8_t identify_self_in_graph(struct node_t *graph);
 
 #endif

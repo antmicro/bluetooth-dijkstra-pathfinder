@@ -17,7 +17,9 @@ uint8_t graph_init(struct node_t *graph){
 
     """
 
-constant_contents_append = """return 0;
+constant_contents_append = """
+    identify_self_in_graph(graph);
+return 0;
 }"""
         
 

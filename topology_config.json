@@ -17,7 +17,7 @@
    },
    "node1":{
       "addr":1,
-      "addr_bt_le":"C0:00:00:00:00:FF",
+      "addr_bt_le":"C0:00:00:00:00:11",
       "reserved":true,
       "paths_size":2,
       "paths":[
@@ -33,7 +33,7 @@
    },
    "node2":{
       "addr":2,
-      "addr_bt_le":"C0:00:00:00:00:FF",
+      "addr_bt_le":"C0:00:00:00:00:22",
       "reserved":true,
       "paths_size":2,
       "paths":[
@@ -49,7 +49,7 @@
    },
    "node3":{
       "addr":3,
-      "addr_bt_le":"C0:00:00:00:00:FF",
+      "addr_bt_le":"C0:00:00:00:00:33",
       "reserved":false,
       "paths_size":0,
       "paths":[
@@ -58,7 +58,7 @@
    },
    "node4":{
       "addr":4,
-      "addr_bt_le":"C0:00:00:00:00:FF",
+      "addr_bt_le":"C0:00:00:00:00:44",
       "reserved":true,
       "paths_size":2,
       "paths":[
