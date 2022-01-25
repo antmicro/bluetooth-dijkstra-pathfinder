@@ -31,11 +31,9 @@ struct node_t{
 
 
 // global mutex for graph data structure
-extern struct k_mutex graph_mutex;
-extern struct node_t graph[MAX_MESH_SIZE];
+extern struct k_mutex *graph_mutex;
 
-
-uint8_t graph_init();
-void reset_tentative_distances();
+uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex);
+void reset_tentative_distances(struct node_t *graph);
 
 #endif

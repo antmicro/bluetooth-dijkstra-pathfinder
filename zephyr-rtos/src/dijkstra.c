@@ -1,12 +1,16 @@
-
 #include "../include/dijkstra.h"
 #include <string.h>
 
 
-uint8_t dijkstra_shortest_path(uint8_t start_addr, uint8_t dst_addr){ 
+uint8_t dijkstra_shortest_path(
+        struct node_t *graph,
+        uint8_t graph_size,
+        uint8_t start_addr, 
+        uint8_t dst_addr){ 
+    // get global mutex 
     struct k_mutex graph_mutex;
-    struct node_t graph[MAX_MESH_SIZE];
-   // check if right node was picked 
+   
+    // check if right node was picked 
     if(!graph[dst_addr].reserved || !graph[start_addr].reserved){
         printk("Node address not used!\n");
         return 1;
@@ -31,7 +35,7 @@ uint8_t dijkstra_shortest_path(uint8_t start_addr, uint8_t dst_addr){
     
     // create unvisited list 
     sys_slist_t lst;
-    create_unvisited_slist(&lst);
+    create_unvisited_slist(graph, graph_size, &lst);
 
     // print the result 
     print_slist(&lst);
@@ -47,7 +51,7 @@ uint8_t dijkstra_shortest_path(uint8_t start_addr, uint8_t dst_addr){
         }
  
         // visit a smallest_td node and update its neighbours td
-        recalculate_td_for_neighbours(smallest_td_node_container->node->addr); 
+        recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
         printk("address found: %d\n", smallest_td_node_container->node->addr);
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
@@ -63,7 +67,7 @@ uint8_t dijkstra_shortest_path(uint8_t start_addr, uint8_t dst_addr){
     // trace back and record a path
     uint8_t paths_size;
     uint8_t * path;
-    path = trace_back(start_addr, dst_addr, &paths_size);
+    path = trace_back(graph, start_addr, dst_addr, &paths_size);
    
     // print nodes in path
     printk("Nodes in path:\n");
@@ -119,7 +123,7 @@ uint8_t get_smallest_td_node(
 }
 
 
-void recalculate_td_for_neighbours(uint8_t node_addr){
+void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
     struct node_t current_node = graph[node_addr]; 
     // for each neighbour check distances
     for(uint8_t i = 0; i < current_node.paths_size; i++){
@@ -144,6 +148,7 @@ void recalculate_td_for_neighbours(uint8_t node_addr){
 
 
 uint8_t * trace_back(
+        struct node_t *graph,
         uint8_t start_addr, 
         uint8_t dst_addr, 
         uint8_t * paths_len){
@@ -183,7 +188,8 @@ uint8_t * trace_back(
 }
 
 
-uint8_t create_unvisited_slist(sys_slist_t * lst){
+uint8_t create_unvisited_slist(struct node_t *graph, 
+        uint8_t graph_size, sys_slist_t * lst){
     sys_slist_init(lst);
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         if(graph[i].reserved){

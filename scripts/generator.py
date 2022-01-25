@@ -10,12 +10,9 @@ constant_contents_prepend = """
 
 #include "../../include/graph.h"
 
-uint8_t graph_init(){ 
-    struct k_mutex graph_mutex;
-    struct node_t graph[MAX_MESH_SIZE];
-
+uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex){ 
    // graph mutex initialization 
-    k_mutex_init(&graph_mutex); 
+    k_mutex_init(graph_mutex); 
 
     """
 
@@ -65,6 +62,8 @@ with open(config_file_path, 'r') as config:
 output = constant_contents_prepend + function_contents + constant_contents_append 
 
 target_file_path = os.path.join(project_dir, "zephyr-rtos/src/generated-src/graph_init.c")
+print("Target file path: ")
+print(target_file_path)
 with open(target_file_path, 'w') as filehandle:
     for line in output:
         filehandle.write(line)

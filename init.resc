@@ -87,6 +87,6 @@ macro reset
 """
 runMacro $reset
 
-start
+#start
 
 machine StartGdbServer 3333 true

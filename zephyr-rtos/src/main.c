@@ -16,16 +16,13 @@
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
-void dijkstra(){
-    // TODO: make dijkstra to a thread 
-    // TODO: make BLE to thread with mutex 
-}
-
 
 void main(void)
 {
     /* Graph Initialization */
-    uint8_t graph_init_error_code = graph_init();
+    struct node_t graph[MAX_MESH_SIZE];
+    struct k_mutex *graph_mutex = NULL;
+    uint8_t graph_init_error_code = graph_init(graph, graph_mutex);
     if(graph_init_error_code){
         printk("Graph initialization failed! \n");
         return;
@@ -33,7 +30,7 @@ void main(void)
 
     /* Dijkstra's path finding algorithm*/
     uint8_t dijkstra_err = 0;
-    dijkstra_err = dijkstra_shortest_path(0, 2);
+    dijkstra_err = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 0, 2);
     if(dijkstra_err){
         printk("Dijkstra failed! \n");
         return;

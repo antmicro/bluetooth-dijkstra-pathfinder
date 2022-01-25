@@ -27,6 +27,8 @@ extern uint8_t * path; // TODO: make init function
  * @return 0 on succes > 0 on failure.
  */
 uint8_t dijkstra_shortest_path(
+        struct node_t *graph,
+        uint8_t graph_size,
         uint8_t start_addr,
         uint8_t dst_addr);
 
@@ -54,10 +56,11 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** contain
  *
  * @param node_addr
  */
-void recalculate_td_for_neighbours(uint8_t node_addr); 
+void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph); 
 
 // need initialized memory heap
 uint8_t * trace_back(
+        struct node_t *graph,
         uint8_t start_addr, 
         uint8_t dst_addr, 
         uint8_t * paths_len);
@@ -75,8 +78,8 @@ uint8_t * trace_back(
  *
  * @return 
  */
-uint8_t create_unvisited_slist(
-        sys_slist_t * lst);
+uint8_t create_unvisited_slist(struct node_t *graph, 
+        uint8_t graph_size, sys_slist_t * lst);
 
 
 /**

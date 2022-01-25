@@ -9,9 +9,16 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
+// TODO: make local mesh address into typedef for clarity
+struct bt_le_packet_data {
+    uint8_t local_mesh_addr; 
+    struct net_buf_simple data;    
+};
 
+// TODO: function for extracting address from ad bt_data
 void bt_le_scan_setup(struct bt_le_scan_param *scan_params);
 void bt_le_adv_set_setup(struct bt_le_ext_adv ***adv_set);
+void create_packet_thread_entry(struct net_buf_simple *buf);
 
 // callbacks 
 static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,

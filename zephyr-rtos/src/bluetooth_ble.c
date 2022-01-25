@@ -1,7 +1,11 @@
 #include "../include/bluetooth_ble.h"
+#include <zephyr.h>
+#include <kernel/thread_stack.h>
 
-#define PASS_DATA_THREAD_STACK_SIZE 500
-#define PASS_DATA_PRIORITY 5 
+#define CREATE_PACKET_THREAD_STACK_SIZE 100
+#define CREATE_PACKET_THREAD_PRIO       -2
+K_THREAD_STACK_DEFINE(create_packet_thread_stack, 
+        CREATE_PACKET_THREAD_STACK_SIZE);
 
 struct node_t graph[MAX_MESH_SIZE];
 
@@ -61,17 +65,33 @@ void bt_le_adv_sets_setup(struct bt_le_ext_adv ***adv_set){
 }
 
 
-//void pass_data(uint8_t dst, struct node_t * graph, uint8_t size){
 
-//}
+void create_packet_thread_entry(struct net_buf_simple *buf){ 
+    printk("Inside entry\n");
+}
 
 
 /* Callbacks */
 static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
 		      struct net_buf_simple *buf){
     char addr_str[BT_ADDR_LE_STR_LEN];
+    char data_str[31];
+    
+    // formatting 
+    bin2hex(buf->data, buf->len, data_str, sizeof(data_str));
 	bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
+
+    // print
     printk("Received data from node with address: %s\n", addr_str);
-    printk("Received data as trash: %d\n", buf->data[0]); 
+    printk("Data: %s\n", data_str);
+    
+    struct k_thread create_packet_thread;
+    k_tid_t my_tid = k_thread_create(&create_packet_thread, 
+            create_packet_thread_stack,
+            K_THREAD_STACK_SIZEOF(create_packet_thread_stack),
+            create_packet_thread_entry,
+            buf, NULL, NULL,
+            CREATE_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
+    printk("Created thread %d \n" ,create_packet_thread.stack_info.size);
 }
 
