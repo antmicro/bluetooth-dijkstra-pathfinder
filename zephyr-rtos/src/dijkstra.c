@@ -8,7 +8,7 @@ uint8_t dijkstra_shortest_path(
         uint8_t start_addr, 
         uint8_t dst_addr){ 
     // get global mutex 
-    struct k_mutex graph_mutex;
+    //struct k_mutex graph_mutex;
    
     // check if right node was picked 
     if(!graph[dst_addr].reserved || !graph[start_addr].reserved){
@@ -17,11 +17,11 @@ uint8_t dijkstra_shortest_path(
     }
 
     // lock the mutex
-    int lock_result = k_mutex_lock(&graph_mutex, K_FOREVER);
-    if(lock_result){
-        printk("Mutex lock failed with status: %d\n", lock_result); 
-        return lock_result;
-    }
+    //int lock_result = k_mutex_lock(&graph_mutex, K_FOREVER);
+    //if(lock_result){
+    //    printk("Mutex lock failed with status: %d\n", lock_result); 
+    //    return lock_result;
+    //}
     
     if(start_addr > MAX_MESH_SIZE || start_addr < 0
             || dst_addr > MAX_MESH_SIZE || dst_addr < 0){
@@ -83,11 +83,11 @@ uint8_t dijkstra_shortest_path(
     
 
     // unlock the mutex 
-    int unlock_result = k_mutex_unlock(&graph_mutex);
-    if(unlock_result){
-        printk("Mutex unlock failed with status: %d\n", unlock_result); 
-        return unlock_result;
-    }
+    //int unlock_result = k_mutex_unlock(&graph_mutex);
+    //if(unlock_result){
+    //    printk("Mutex unlock failed with status: %d\n", unlock_result); 
+    //    return unlock_result;
+    //}
 
     return 0;
 }

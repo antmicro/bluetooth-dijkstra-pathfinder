@@ -31,9 +31,10 @@ struct node_t{
 
 
 // global mutex for graph data structure
-extern struct k_mutex *graph_mutex;
+//extern struct k_mutex *graph_mutex;
 
-uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex);
+//uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex);
+uint8_t graph_init(struct node_t *graph);
 void reset_tentative_distances(struct node_t *graph);
 
 #endif

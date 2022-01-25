@@ -10,9 +10,10 @@ constant_contents_prepend = """
 
 #include "../../include/graph.h"
 
-uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex){ 
+//uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex){ 
+uint8_t graph_init(struct node_t *graph){ 
    // graph mutex initialization 
-    k_mutex_init(graph_mutex); 
+    //k_mutex_init(graph_mutex); 
 
     """
 

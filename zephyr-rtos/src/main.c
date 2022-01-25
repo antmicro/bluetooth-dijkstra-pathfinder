@@ -16,13 +16,34 @@
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
+static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
+			 struct net_buf_simple *ad)
+{
+	char addr_str[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+    printk("Data type: %d \n", type); 
+	printk("Device found: %s (RSSI %d)\n", addr_str, rssi);
+
+    char data_str[129];
+    bin2hex(ad->data, ad->len, data_str, sizeof(data_str));
+    printk("Data as hex?wtfffffffffffff :%s\n", data_str);
+    /* 
+    printk("Data MSF: %x\n", *(ad->data));
+    printk("Data LSB: %x\n", *((ad + 1)->data));
+    printk("Data LSB: %x\n", *((ad + 2)->data));
+    printk("Data LSB: %x\n", *((ad + 3)->data));
+    printk("Data LSB: %x\n", *((ad + 4)->data));
+    printk("Data len: %d\n", ad->len);
+    */
+}
 
 void main(void)
 {
     /* Graph Initialization */
     struct node_t graph[MAX_MESH_SIZE];
-    struct k_mutex *graph_mutex = NULL;
-    uint8_t graph_init_error_code = graph_init(graph, graph_mutex);
+    //struct k_mutex *graph_mutex = NULL;
+    uint8_t graph_init_error_code = graph_init(graph);
     if(graph_init_error_code){
         printk("Graph initialization failed! \n");
         return;
@@ -50,7 +71,7 @@ void main(void)
     }
 
     /* Bluetooth direct adv setup*/
-    static struct bt_le_ext_adv **adv_set[MAX_MESH_SIZE]; 
+    //static struct bt_le_ext_adv **adv_set[MAX_MESH_SIZE]; 
     //bt_le_adv_set_setup(adv_set);
 
     /* Debug */
@@ -61,7 +82,7 @@ void main(void)
     char hex2[129];
     bin2hex(my_identity->a.val, 6, hex2, 129);
 
-	//bt_addr_le_to_str(my_identity, hex, sizeof(hex));
+	bt_addr_le_to_str(my_identity, hex, sizeof(hex));
     printk("a.val: %s\n", hex); 
     printk("my_identity: %s\n", hex);
 
@@ -69,6 +90,7 @@ void main(void)
     while (1) {
         const struct device *dev;
         dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+        printk("here");
         //printk("Graph initialization status code: %d\n", graph_init_error_code);
         //printk("Graph mutex lock count: %d \n", graph_mutex.lock_count);
 		k_msleep(SLEEP_TIME_MS);

@@ -7,7 +7,6 @@
 K_THREAD_STACK_DEFINE(create_packet_thread_stack, 
         CREATE_PACKET_THREAD_STACK_SIZE);
 
-struct node_t graph[MAX_MESH_SIZE];
 
 void bt_le_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
@@ -26,7 +25,7 @@ void bt_le_scan_setup(struct bt_le_scan_param *scan_params){
 }
 
 
-void bt_le_adv_sets_setup(struct bt_le_ext_adv ***adv_set){ 
+void bt_le_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set){ 
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
         + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
@@ -76,7 +75,9 @@ static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
 		      struct net_buf_simple *buf){
     char addr_str[BT_ADDR_LE_STR_LEN];
     char data_str[31];
-    
+   
+    printk("juz nie moge\n\n");
+
     // formatting 
     bin2hex(buf->data, buf->len, data_str, sizeof(data_str));
 	bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
@@ -84,7 +85,6 @@ static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
     // print
     printk("Received data from node with address: %s\n", addr_str);
     printk("Data: %s\n", data_str);
-    
     struct k_thread create_packet_thread;
     k_tid_t my_tid = k_thread_create(&create_packet_thread, 
             create_packet_thread_stack,

@@ -6,9 +6,10 @@
 
 #include "../../include/graph.h"
 
-uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex){ 
+//uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex){ 
+uint8_t graph_init(struct node_t *graph){ 
    // graph mutex initialization 
-    k_mutex_init(graph_mutex); 
+    //k_mutex_init(graph_mutex); 
 
     // node 0x0 
     graph[0].addr = 0x0;
