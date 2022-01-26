@@ -39,6 +39,7 @@ void main(void)
     }
 
     int err = bt_enable(NULL);
+    err = identify_self_in_graph(graph);
     if(err){
         printk("BLE Initialization failed!\n");
     }
@@ -54,7 +55,7 @@ void main(void)
     /* Bluetooth direct adv setup*/
     //static struct bt_le_ext_adv **adv_set[MAX_MESH_SIZE]; 
     //bt_le_adv_set_setup(adv_set);
-
+    
     /* Debug */
     while (1) {
         const struct device *dev;

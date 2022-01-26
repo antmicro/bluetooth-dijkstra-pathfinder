@@ -40,5 +40,6 @@ extern uint8_t common_self_id; // TODO: maybe make it into abstract data type?
 uint8_t graph_init(struct node_t *graph);
 void reset_tentative_distances(struct node_t *graph);
 uint8_t identify_self_in_graph(struct node_t *graph);
+uint8_t get_id_by_ble_addr(struct node_t *graph, char *ble_addr, uint8_t *id);
 
 #endif

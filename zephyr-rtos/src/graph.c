@@ -7,6 +7,7 @@ void reset_tentative_distances(struct node_t *graph){
     }
 }
 
+
 uint8_t identify_self_in_graph(struct node_t *graph){
     uint8_t common_self_id;
     // get all configured identities 
@@ -15,20 +16,29 @@ uint8_t identify_self_in_graph(struct node_t *graph){
     bt_id_get(NULL, count); // when addrs=null count will be loaded with num of ids 
     bt_id_get(identities, count);
     
-    char addr_str[129];
+    char addr_str[129]; // TODO: extract printks 
 	bt_addr_le_to_str(&identities[0], addr_str, sizeof(addr_str));
     printk("Default identity: %s\n", addr_str);
     printk("Value of DEVICEADDR[0] register: %u,\n", (NRF_FICR->DEVICEADDR[0]));
+    
+    uint8_t err = get_id_by_ble_addr(graph, addr_str, &common_self_id);
+    if(err){
+        printk("Error self identifying\n"); 
+        return 1;
+    }
+    printk("Self identified in mesh as %d\n", common_self_id); 
+    return 0;
+}
 
+
+// return 0 on succes, and > 0 on failure 
+uint8_t get_id_by_ble_addr(struct node_t *graph, char *ble_addr, uint8_t *id_buffer){
+    // check in graph 
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
-        if(!strcmp(graph[i].addr_bt_le, addr_str)){
-            common_self_id = graph[i].addr; // grrrrr
-            printk("Self identified in mesh as %d\n", common_self_id); 
+        if(!memcmp(graph[i].addr_bt_le, ble_addr, 17)){
+            *id_buffer = graph[i].addr;
             return 0;
         }
     }
-                
-    printk("Error during self identification, no member in graph with %s BLE address\n",
-        addr_str);
     return 1;
 }

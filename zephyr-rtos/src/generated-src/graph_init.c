@@ -92,6 +92,5 @@ uint8_t graph_init(struct node_t *graph){
     
     
     
-    identify_self_in_graph(graph);
 return 0;
 }
