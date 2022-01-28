@@ -24,9 +24,9 @@ extern uint8_t * path; // TODO: make init function
  * @param start_addr address of starting node. 
  * @param dst_addr address of destination node.
  *
- * @return 0 on succes > 0 on failure.
+ * @return 0 on succes -1 on failure.
  */
-uint8_t dijkstra_shortest_path(
+int dijkstra_shortest_path(
         struct node_t *graph,
         uint8_t graph_size,
         uint8_t start_addr,

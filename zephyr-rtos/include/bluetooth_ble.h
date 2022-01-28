@@ -18,7 +18,7 @@ struct bt_le_packet_data {
 // TODO: function for extracting address from ad bt_data
 void bt_le_scan_setup(struct bt_le_scan_param *scan_params);
 void bt_le_adv_set_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set);
-void create_packet_thread_entry(struct net_buf_simple *buf);
+void create_packet_thread_entry(struct node_t *graph);
 
 // callbacks 
 static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,

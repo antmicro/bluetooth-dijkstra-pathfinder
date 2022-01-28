@@ -2,31 +2,21 @@
 #include <string.h>
 
 
-uint8_t dijkstra_shortest_path(
+int dijkstra_shortest_path(
         struct node_t *graph,
         uint8_t graph_size,
         uint8_t start_addr, 
         uint8_t dst_addr){ 
-    // get global mutex 
-    //struct k_mutex graph_mutex;
-   
     // check if right node was picked 
     if(!graph[dst_addr].reserved || !graph[start_addr].reserved){
         printk("Node address not used!\n");
-        return 1;
+        return -1;
     }
 
-    // lock the mutex
-    //int lock_result = k_mutex_lock(&graph_mutex, K_FOREVER);
-    //if(lock_result){
-    //    printk("Mutex lock failed with status: %d\n", lock_result); 
-    //    return lock_result;
-    //}
-    
     if(start_addr > MAX_MESH_SIZE || start_addr < 0
             || dst_addr > MAX_MESH_SIZE || dst_addr < 0){
         printk("Incorrect search address\n");
-        return 1;
+        return -1;
     }
 
     /* algorithm */
@@ -47,7 +37,7 @@ uint8_t dijkstra_shortest_path(
                 get_smallest_td_node(&lst, &smallest_td_node_container))){
         if(!smallest_td_node_container){
             printk("Smallest td node container is NULL!\n");
-            return 1;
+            return -1;
         }
  
         // visit a smallest_td node and update its neighbours td
@@ -69,27 +59,13 @@ uint8_t dijkstra_shortest_path(
     uint8_t * path;
     path = trace_back(graph, start_addr, dst_addr, &paths_size);
    
-    // print nodes in path
-    printk("Nodes in path:\n");
-    char output[40] = "Path: ";
-    for(uint8_t i = 0; i < paths_size; i++){
-        char buffer[4];
-        snprintk(buffer, 4, "%d, ", *(path + i));
-        strcat(output, buffer);
-    }
-    printk("%s\n", output);
-    printk("pathssize %d\n", paths_size);
-    printk("%d, %d, %d", *(path), *(path+1), *(path+2));
-    
+    // TODO: if only the next node is returned, simplify trace back function
 
-    // unlock the mutex 
-    //int unlock_result = k_mutex_unlock(&graph_mutex);
-    //if(unlock_result){
-    //    printk("Mutex unlock failed with status: %d\n", unlock_result); 
-    //    return unlock_result;
-    //}
-
-    return 0;
+    // path is in reverse order, so next node from current one is
+    // one before last one (last is start node) 
+    int next_node_id = path[paths_size - 2];
+    k_free(path);
+    return next_node_id;
 }
 
 
@@ -178,12 +154,9 @@ uint8_t * trace_back(
         // smallest td node address add to a path 
         index++;
         path[index] = current_node->addr;
-        printk("current node %d\n", current_node->addr);
     }
 
     *paths_len = index + 1;
-    // TODO:invert path
-    // two counters decrementing till they are equal and swapping contents
     return path;
 }
 

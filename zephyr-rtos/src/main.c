@@ -16,37 +16,62 @@
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
+/* Threads data */
+#define CREATE_PACKET_THREAD_STACK_SIZE 100
+#define CREATE_PACKET_THREAD_PRIO       1 
+K_THREAD_STACK_DEFINE(create_packet_thread_stack, 
+        CREATE_PACKET_THREAD_STACK_SIZE);
+
+
 // queue of packets to pass 
 K_FIFO_DEFINE(packets_to_send);
 
 void main(void)
 {
+    // TODO: move important variables to the top for better visibility
     /* Graph Initialization */
     struct node_t graph[MAX_MESH_SIZE];
-    //struct k_mutex *graph_mutex = NULL;
     uint8_t graph_init_error_code = graph_init(graph);
     if(graph_init_error_code){
         printk("Graph initialization failed! \n");
         return;
     }
 
-    /* Dijkstra's path finding algorithm*/
-    uint8_t dijkstra_err = 0;
-    dijkstra_err = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 0, 2);
-    if(dijkstra_err){
-        printk("Dijkstra failed! \n");
-        return;
-    }
-
+    /* Bluetooth setup */ 
     int err = bt_enable(NULL);
-    err = identify_self_in_graph(graph);
     if(err){
         printk("BLE Initialization failed!\n");
     }
 
-    /* Bluetooth scanning */
+    err = identify_self_in_graph(graph);
+    if(err){
+        printk("BLE self identification failed!\n");
+    }
+    
     struct bt_le_scan_param scan_params;
     bt_le_scan_setup(&scan_params);
+   
+    /* Create Bluetooth LE threads */
+    struct k_thread create_packet_thread;
+    k_tid_t create_packet_thread_id = k_thread_create(&create_packet_thread, 
+            create_packet_thread_stack,
+            K_THREAD_STACK_SIZEOF(create_packet_thread_stack),
+            create_packet_thread_entry,
+            &graph, NULL, NULL,
+            CREATE_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
+    printk("Created thread %d \n" ,create_packet_thread.stack_info.size);
+    
+
+        
+    /* Dijkstra's path finding algorithm*/
+    //uint8_t dijkstra_err = 0;
+    //dijkstra_err = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 0, 2);
+    //if(dijkstra_err){
+    //    printk("Dijkstra failed! \n");
+    //    return;
+    //}
+
+    /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 
     if(err){
         printk("BLE scan error code: %d\n", err);
