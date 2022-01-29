@@ -50,7 +50,7 @@ void main(void)
     }
     
     struct bt_le_scan_param scan_params;
-    bt_le_scan_setup(&scan_params);
+    ble_scan_setup(&scan_params);
 
     
     /* Create Bluetooth LE threads */

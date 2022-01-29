@@ -6,7 +6,7 @@
 K_MSGQ_DEFINE(common_received_packets_q, sizeof(struct net_buf_simple), 10, 4);
 
 /* Setup functions */
-void bt_le_scan_setup(struct bt_le_scan_param *scan_params){
+void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
 		.type       = BT_LE_SCAN_TYPE_ACTIVE,
@@ -23,7 +23,7 @@ void bt_le_scan_setup(struct bt_le_scan_param *scan_params){
 }
 
 
-void bt_le_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set){ 
+void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set){ 
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
         + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
@@ -67,10 +67,10 @@ void bt_le_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set)
 
 
 /* Utility functions */
-void get_ble_dst_addr_from_data(struct net_buf_simple *buf,
-        uint8_t *ble_addr){
+void get_mesh_id_from_data(struct net_buf_simple *buf,
+        uint8_t *mesh_id){
     // addr of dst node in mesh addr form is in first byte
-    *ble_addr = buf->data[2]; 
+    *mesh_id = buf->data[2]; 
 }
 
 
@@ -78,10 +78,6 @@ void get_ble_dst_addr_from_data(struct net_buf_simple *buf,
 
 /* Thread entries */
 void create_packet_thread_entry(struct node_t *graph){ 
-    // get the destination node 
-    printk("I have accesss to proper common_self_id: %d\n",  common_self_id);
-    printk("I have accesss to graph. BLE addr of the 0 node: %s\n", graph->addr_bt_le); 
-    
     struct net_buf_simple buf; 
     uint8_t ble_addr;
     uint8_t dst_mesh_addr;
@@ -95,8 +91,7 @@ void create_packet_thread_entry(struct node_t *graph){
         }
 
         else{
-            get_ble_dst_addr_from_data(&buf, &ble_addr);
-            bin2hex(&ble_addr, 1, &dst_mesh_addr, 1);
+            get_mesh_id_from_data(&buf, &ble_addr);
             printk("THIS IS DESTINATION MESH ADDR %d\n", ble_addr);
         }
     }

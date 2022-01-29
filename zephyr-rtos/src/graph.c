@@ -1,7 +1,7 @@
 #include "../include/graph.h"
 #include <bluetooth/bluetooth.h>
 
-uint8_t common_self_id = 255;
+uint8_t common_self_mesh_id = 255;
 
 void reset_tentative_distances(struct node_t *graph){
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
@@ -22,23 +22,24 @@ uint8_t identify_self_in_graph(struct node_t *graph){
     printk("Default identity: %s\n", addr_str);
     printk("Value of DEVICEADDR[0] register: %u,\n", (NRF_FICR->DEVICEADDR[0]));
 
-    // TODO: becareful with that common_self_id!!! 
-    uint8_t err = get_id_by_ble_addr(graph, addr_str, &common_self_id);
+    // TODO: becareful with that common_self_mesh_id!!! 
+    uint8_t err = get_mesh_id_by_ble_addr(graph, addr_str, &common_self_mesh_id);
     if(err){
         printk("Error self identifying\n"); 
         return 1;
     }
-    printk("Self identified in mesh as %d\n", common_self_id); 
+    printk("Self identified in mesh as %d\n", common_self_mesh_id); 
     return 0;
 }
 
 
 // return 0 on succes, and > 0 on failure 
-uint8_t get_id_by_ble_addr(struct node_t *graph, char *ble_addr, uint8_t *id_buffer){
+uint8_t get_mesh_id_by_ble_addr(struct node_t *graph, 
+        char *ble_addr, uint8_t *mesh_id){
     // check in graph 
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         if(!memcmp(graph[i].addr_bt_le, ble_addr, 17)){
-            *id_buffer = graph[i].addr;
+            *mesh_id = graph[i].addr;
             return 0;
         }
     }
