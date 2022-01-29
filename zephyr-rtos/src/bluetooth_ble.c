@@ -1,9 +1,11 @@
 #include "../include/bluetooth_ble.h"
 #include <zephyr.h>
 #include <kernel/thread_stack.h>
+#include "../include/dijkstra.h"
 
 
 K_MSGQ_DEFINE(common_received_packets_q, sizeof(struct net_buf_simple), 10, 4);
+K_FIFO_DEFINE(common_packets_to_send_q);
 
 /* Setup functions */
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
@@ -79,8 +81,7 @@ void get_mesh_id_from_data(struct net_buf_simple *buf,
 /* Thread entries */
 void create_packet_thread_entry(struct node_t *graph){ 
     struct net_buf_simple buf; 
-    uint8_t ble_addr;
-    uint8_t dst_mesh_addr;
+    uint8_t dst_mesh_id;
     int err;
     
     while(1){
@@ -91,9 +92,36 @@ void create_packet_thread_entry(struct node_t *graph){
         }
 
         else{
-            get_mesh_id_from_data(&buf, &ble_addr);
-            printk("THIS IS DESTINATION MESH ADDR %d\n", ble_addr);
+            // retrieve dst node from data packet (3rd byte)
+            get_mesh_id_from_data(&buf, &dst_mesh_id);
+            printk("THIS IS DESTINATION MESH ADDR %d\n", dst_mesh_id);
+            
+            // calculate next node from dijkstra algorithm
+            int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 
+                    common_self_mesh_id, dst_mesh_id);
+            if(next_node_mesh_id < 0){
+                printk("Dijkstra algorithm failed\n");
+            }
+            else{
+                // if all is good, create a packet and queue it to tx 
+                printk("Dijkstra result: %d\n", next_node_mesh_id);
+                
+                struct ble_tx_packet_data tx_packet = {
+                    .next_node_mesh_id = next_node_mesh_id,
+                    .data = buf
+                };
+                k_fifo_put(&common_packets_to_send_q, &tx_packet);
+            }
         }
+    }
+}
+
+
+void ble_send_packet_thread_entry(){
+    struct ble_tx_packet_data *tx_packet;
+    while(1){
+        tx_packet = k_fifo_get(&common_packets_to_send_q, K_FOREVER);
+        printk("This is next node's id from send thread %d \n", tx_packet->next_node_mesh_id);
     }
 }
 

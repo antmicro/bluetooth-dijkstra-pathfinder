@@ -17,15 +17,18 @@
 #define SLEEP_TIME_MS   1000
 
 /* Threads data */
+// data tx packets producer data 
 #define CREATE_PACKET_THREAD_STACK_SIZE 100
 #define CREATE_PACKET_THREAD_PRIO       1 
 K_THREAD_STACK_DEFINE(create_packet_thread_stack, 
         CREATE_PACKET_THREAD_STACK_SIZE);
 
-/* Message queue */
+// data transmitter thread data  
+#define BLE_SEND_PACKET_THREAD_STACK_SIZE 100
+#define BLE_SEND_PACKET_THREAD_PRIO       1 
+K_THREAD_STACK_DEFINE(ble_send_packet_thread_stack, 
+        BLE_SEND_PACKET_THREAD_STACK_SIZE);
 
-// queue of packets to pass 
-//K_FIFO_DEFINE(packets_to_send);
 
 void main(void)
 {
@@ -62,6 +65,14 @@ void main(void)
             &graph, NULL, NULL,
             CREATE_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
     printk("Created thread %d \n" ,create_packet_thread.stack_info.size);
+
+    struct k_thread ble_send_packet_thread;
+    k_tid_t ble_send_packet_thread_id = k_thread_create(&ble_send_packet_thread,
+            ble_send_packet_thread_stack,
+            K_THREAD_STACK_SIZEOF(ble_send_packet_thread_stack),
+            ble_send_packet_thread_entry,
+            NULL, NULL, NULL,
+            BLE_SEND_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
     
 
         
