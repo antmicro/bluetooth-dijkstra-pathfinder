@@ -5,7 +5,6 @@
 
 K_MSGQ_DEFINE(common_received_packets_q, sizeof(struct net_buf_simple), 10, 4);
 
-/* Setup functions */
 void bt_le_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
@@ -43,11 +42,8 @@ void bt_le_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set)
         bt_addr_t temp_ble_addr;
         err = bt_addr_from_str(graph[i].addr_bt_le, &temp_ble_addr);
         if(err){
-            printk("Incorrect BLE addr string! Node mesh addr: %d err: %d\n",
-                    err, graph[i].addr);
-            if(!graph[i].reserved){
-                printk("Node %d not reserved\n", graph[i].addr);
-            }
+            printk("Incorrect BLE addr string! err: %d\n", err);
+                return;
         }
             
         // set up receiver address 
@@ -66,27 +62,15 @@ void bt_le_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set)
 }
 
 
-/* Utility functions */
-void get_ble_dst_addr_from_data(struct net_buf_simple *buf,
-        uint8_t *ble_addr){
-    // addr of dst node in mesh addr form is in first byte
-    *ble_addr = buf->data[2]; 
-}
 
-
-
-
-/* Thread entries */
 void create_packet_thread_entry(struct node_t *graph){ 
     // get the destination node 
     printk("I have accesss to proper common_self_id: %d\n",  common_self_id);
     printk("I have accesss to graph. BLE addr of the 0 node: %s\n", graph->addr_bt_le); 
     
+    // queue test 
     struct net_buf_simple buf; 
-    uint8_t ble_addr;
-    uint8_t dst_mesh_addr;
     int err;
-    
     while(1){
         err = k_msgq_get(&common_received_packets_q, &buf, K_FOREVER);
         
@@ -95,9 +79,9 @@ void create_packet_thread_entry(struct node_t *graph){
         }
 
         else{
-            get_ble_dst_addr_from_data(&buf, &ble_addr);
-            bin2hex(&ble_addr, 1, &dst_mesh_addr, 1);
-            printk("THIS IS DESTINATION MESH ADDR %d\n", ble_addr);
+            char data_str[31];
+            bin2hex(buf.data, buf.len, data_str, sizeof(data_str));
+            printk("Calculating dijkstra algorithm for packet.\n", buf.len);
         }
     }
 }
