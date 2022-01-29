@@ -1,6 +1,8 @@
 #include "../include/graph.h"
 #include <bluetooth/bluetooth.h>
 
+uint8_t common_self_id = 255;
+
 void reset_tentative_distances(struct node_t *graph){
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         if((graph + i)->reserved) (graph + i)->tentative_distance = INF;
@@ -9,7 +11,6 @@ void reset_tentative_distances(struct node_t *graph){
 
 
 uint8_t identify_self_in_graph(struct node_t *graph){
-    uint8_t common_self_id;
     // get all configured identities 
     bt_addr_le_t identities[CONFIG_BT_ID_MAX];
     size_t *count = NULL;
@@ -20,7 +21,8 @@ uint8_t identify_self_in_graph(struct node_t *graph){
 	bt_addr_le_to_str(&identities[0], addr_str, sizeof(addr_str));
     printk("Default identity: %s\n", addr_str);
     printk("Value of DEVICEADDR[0] register: %u,\n", (NRF_FICR->DEVICEADDR[0]));
-    
+
+    // TODO: becareful with that common_self_id!!! 
     uint8_t err = get_id_by_ble_addr(graph, addr_str, &common_self_id);
     if(err){
         printk("Error self identifying\n"); 

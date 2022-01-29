@@ -22,9 +22,10 @@
 K_THREAD_STACK_DEFINE(create_packet_thread_stack, 
         CREATE_PACKET_THREAD_STACK_SIZE);
 
+/* Message queue */
 
 // queue of packets to pass 
-K_FIFO_DEFINE(packets_to_send);
+//K_FIFO_DEFINE(packets_to_send);
 
 void main(void)
 {
@@ -36,7 +37,7 @@ void main(void)
         printk("Graph initialization failed! \n");
         return;
     }
-
+    
     /* Bluetooth setup */ 
     int err = bt_enable(NULL);
     if(err){
@@ -50,7 +51,8 @@ void main(void)
     
     struct bt_le_scan_param scan_params;
     bt_le_scan_setup(&scan_params);
-   
+
+    
     /* Create Bluetooth LE threads */
     struct k_thread create_packet_thread;
     k_tid_t create_packet_thread_id = k_thread_create(&create_packet_thread, 
@@ -86,6 +88,12 @@ void main(void)
         const struct device *dev;
         dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
         printk("here");
+        struct net_buf_simple buf; 
+        k_msgq_get(&common_received_packets_q, &buf, K_FOREVER);
+        char data_str[31];
+        bin2hex(buf.data, buf.len, data_str, sizeof(data_str));
+        printk("I have acccess to messages from queue: %d\n", buf.len);
+
         //printk("Graph initialization status code: %d\n", graph_init_error_code);
         //printk("Graph mutex lock count: %d \n", graph_mutex.lock_count);
 		k_msleep(SLEEP_TIME_MS);
