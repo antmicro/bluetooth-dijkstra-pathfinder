@@ -20,9 +20,8 @@ uint8_t identify_self_in_graph(struct node_t *graph){
     char addr_str[129]; // TODO: extract printks 
 	bt_addr_le_to_str(&identities[0], addr_str, sizeof(addr_str));
     printk("Default identity: %s\n", addr_str);
-    printk("Value of DEVICEADDR[0] register: %u,\n", (NRF_FICR->DEVICEADDR[0]));
+    //printk("Value of DEVICEADDR[0] register: %u,\n", (NRF_FICR->DEVICEADDR[0]));
 
-    // TODO: becareful with that common_self_mesh_id!!! 
     uint8_t err = get_mesh_id_by_ble_addr(graph, addr_str, &common_self_mesh_id);
     if(err){
         printk("Error self identifying\n"); 

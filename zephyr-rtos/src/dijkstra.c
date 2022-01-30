@@ -28,7 +28,7 @@ int dijkstra_shortest_path(
     create_unvisited_slist(graph, graph_size, &lst);
 
     // print the result 
-    print_slist(&lst);
+    //print_slist(&lst);
 
     // get smallest_td node and process it in a loop 
     uint8_t smallest_td_node_found_code;
@@ -42,7 +42,6 @@ int dijkstra_shortest_path(
  
         // visit a smallest_td node and update its neighbours td
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
-        printk("address found: %d\n", smallest_td_node_container->node->addr);
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
             //free rest of the list
@@ -198,7 +197,6 @@ void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container ** n
     
     // free memory from heap 
     k_free(*node_container_to_remove);
-    printk("four\n");
 }
 
 

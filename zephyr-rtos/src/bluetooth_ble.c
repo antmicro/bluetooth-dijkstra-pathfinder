@@ -11,7 +11,7 @@ K_FIFO_DEFINE(common_packets_to_send_q);
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
-		.type       = BT_LE_SCAN_TYPE_ACTIVE,
+		.type       = BT_LE_SCAN_TYPE_PASSIVE,
 		.options    = BT_LE_SCAN_OPT_CODED, //+ BT_LE_SCAN_OPT_FILTER_DUPLICATE,
 		.interval   = BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = BT_GAP_SCAN_FAST_WINDOW,
@@ -25,7 +25,7 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
 }
 
 
-void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set){ 
+void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){ 
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
         + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
@@ -37,11 +37,12 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set){
         .interval_min = 0xFF, // must be greater than 0x00a0
         .interval_max = 0x0300
     };
-   
+    printk("inside ble adv sets setup \n"); 
     // TODO: handle unreserved nodes !!!
     // get addr from string to proper format
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         int err; 
+        printk("In for loop\n");
         bt_addr_t temp_ble_addr;
         err = bt_addr_from_str(graph[i].addr_bt_le, &temp_ble_addr);
         if(err){
@@ -60,11 +61,13 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv ***adv_set){
 
         params.peer = &receiver_addr;
 
-        err = bt_le_ext_adv_create(&params, NULL, adv_set[i]);
+        // 2nd param is callbacks struct for adv 
+        err = bt_le_ext_adv_create(&params, NULL, &adv_set[i]);
         if(err){
             printk("Error creating advertising set! err: %d\n", err);
         }
     }
+        printk("In end of cycle\n");
 }
 
 
@@ -76,26 +79,26 @@ void get_mesh_id_from_data(struct net_buf_simple *buf,
 }
 
 
-
-
 /* Thread entries */
 void create_packet_thread_entry(struct node_t *graph){ 
     struct net_buf_simple buf; 
     uint8_t dst_mesh_id;
     int err;
-    
+     
     while(1){
+        uint32_t messages_num = k_msgq_num_used_get(&common_received_packets_q);
+        printk("Number of elements in message queue in create packet thread pre remove: %d\n",
+            messages_num);
+
         err = k_msgq_get(&common_received_packets_q, &buf, K_FOREVER);
-        
+               
         if(err){
             printk("Error reading from queue: %d \n!\n", err);
         }
-
         else{
             // retrieve dst node from data packet (3rd byte)
             get_mesh_id_from_data(&buf, &dst_mesh_id);
             printk("THIS IS DESTINATION MESH ADDR %d\n", dst_mesh_id);
-            
             // calculate next node from dijkstra algorithm
             int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 
                     common_self_mesh_id, dst_mesh_id);
@@ -117,17 +120,34 @@ void create_packet_thread_entry(struct node_t *graph){
 }
 
 
-void ble_send_packet_thread_entry(){
+void ble_send_packet_thread_entry(struct node_t *graph, 
+        struct bt_le_scan_param *params){
+    /* Bluetooth direct adv setup*/
+    struct bt_le_ext_adv *adv_set[MAX_MESH_SIZE];// TODO this is problem
+    ble_adv_sets_setup(graph, adv_set);
+    printk("after a funciton\n"); 
+    
     struct ble_tx_packet_data *tx_packet;
     while(1){
+        printk("waiting for tx_packet....\n");
         tx_packet = k_fifo_get(&common_packets_to_send_q, K_FOREVER);
-        printk("This is next node's id from send thread %d \n", tx_packet->next_node_mesh_id);
+        printk("This is next node's id from send thread %d \n", 
+                tx_packet->next_node_mesh_id);
+         
+        //bt_le_scan_stop();
+        int err = bt_le_ext_adv_start(
+                adv_set[tx_packet->next_node_mesh_id],
+                BT_LE_EXT_ADV_START_PARAM(30, 10)); 
+        if(err){
+            printk("Error initiating advertising: err %d\n", err); 
+        }
+        //bt_le_scan_start(params, NULL);
     }
 }
 
 
 /* Callbacks */
-static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
+void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
               struct net_buf_simple *buf){
     char addr_str[BT_ADDR_LE_STR_LEN];
     char data_str[31];
@@ -142,6 +162,8 @@ static void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
     
     // add to queue  
     int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
+    uint32_t messages_num = k_msgq_num_used_get(&common_received_packets_q);
+    printk("Number of packets received and passed to queue: %d \n", messages_num);
     if(err){ // TODO: change this purge, this is little extreme 
         printk("Error queue put: %d, queue purged\n", err);
         k_msgq_purge(&common_received_packets_q);
