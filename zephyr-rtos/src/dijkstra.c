@@ -68,7 +68,7 @@ int dijkstra_shortest_path(
     printk("\n\n");
     
     // make all tentative_distances to INF again for future calculations
-    reset_tentative_distances(graph); 
+    reset_td_visited(graph); 
 
     // path is in reverse order, so next node from current one is
     // one before last one (last is start node) 

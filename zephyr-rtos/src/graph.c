@@ -3,9 +3,12 @@
 
 uint8_t common_self_mesh_id = 255;
 
-void reset_tentative_distances(struct node_t *graph){
+void reset_td_visited(struct node_t *graph){
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
-        if((graph + i)->reserved) (graph + i)->tentative_distance = INF;
+        if((graph + i)->reserved){
+            (graph + i)->tentative_distance = INF;
+            (graph + i)->visited = false;
+        }
     }
 }
 
