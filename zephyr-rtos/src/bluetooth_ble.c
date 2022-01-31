@@ -34,17 +34,15 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
     struct bt_le_adv_param params = {
         .id = 0x0,
         .options = ext_adv_aptions,
-        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, // 100ms TODO CHange
-
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, // 100ms 
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_2, // 150ms
     };
-    printk("inside ble adv sets setup \n"); 
     // TODO: handle unreserved nodes !!!
     // get addr from string to proper format
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         int err; 
-        printk("In for loop\n");
         bt_addr_t temp_ble_addr;
+        
         err = bt_addr_from_str(graph[i].addr_bt_le, &temp_ble_addr);
         if(err){
             printk("Incorrect BLE addr string! Node mesh addr: %d err: %d\n",
@@ -68,7 +66,6 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
             printk("Error creating advertising set! err: %d\n", err);
         }
     }
-        printk("In end of cycle\n");
 }
 
 
@@ -135,11 +132,20 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         printk("waiting for tx_packet....\n");
         tx_packet = k_fifo_get(&common_packets_to_send_q, K_FOREVER);
         
-        // set advertisement data 
+        // add as type the address of sender ? just for debug?\
+
+        // pick adv set proper for next node mesh id 
         struct bt_le_ext_adv *current_set = adv_set[tx_packet->next_node_mesh_id];
-        struct bt_data ad[] = {BT_DATA(BT_DATA_LE_BT_DEVICE_ADDRESS, 
-                tx_packet->data.data, tx_packet->data.len)};
-        err = bt_le_ext_adv_set_data(current_set, ad, ARRAY_SIZE(ad), NULL, 0);
+        
+        // hack to bypass auto appended type / header  
+        uint8_t *extracted_data = &(tx_packet->data.data[2]);
+
+        // create bt data 
+        struct bt_data ad[] = {BT_DATA(BT_DATA_GAP_APPEARANCE, extracted_data, 31) };
+
+        // set data to one from received packet  
+        err = bt_le_ext_adv_set_data(current_set, ad,
+                ARRAY_SIZE(ad), NULL, 0);
         if(err){
             printk("Error setting advertisement data: %d\n", err);
         }
@@ -147,10 +153,10 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         printk("######################################################\n");
         printk("Advertising...\n");
         printk("######################################################\n");
-        /*err = bt_le_ext_adv_start(
+        err = bt_le_ext_adv_start(
                 current_set, 
                 BT_LE_EXT_ADV_START_PARAM(15, 3)); 
-        k_sleep(K_MSEC(300));*/
+        k_sleep(K_MSEC(300));
 
         if(err){
             printk("Error initiating advertising: err %d\n", err); 
