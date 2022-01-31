@@ -158,7 +158,7 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         printk("######################################################\n");
         err = bt_le_ext_adv_start(
                 current_set, 
-                BT_LE_EXT_ADV_START_PARAM(15, 3)); 
+                BT_LE_EXT_ADV_START_PARAM(0, 15)); 
         k_sleep(K_MSEC(300));
 
         if(err){
