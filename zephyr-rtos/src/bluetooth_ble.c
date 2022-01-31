@@ -12,7 +12,7 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,  // opt code scan is for long range
-		.options    = BT_LE_SCAN_OPT_CODED, //long range //+ BT_LE_SCAN_OPT_FILTER_DUPLICATE,
+		.options    = BT_LE_SCAN_OPT_CODED | BT_LE_SCAN_OPT_FILTER_DUPLICATE, //long range //+ ,
 		.interval   = BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = BT_GAP_SCAN_FAST_WINDOW,
 	};
