@@ -186,8 +186,6 @@ void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
     
     // add to queue  
     int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
-    uint32_t messages_num = k_msgq_num_used_get(&common_received_packets_q);
-    printk("Number of packets received and passed to queue: %d \n", messages_num);
     if(err){ // TODO: change this purge, this is little extreme 
         printk("Error queue put: %d, queue purged\n", err);
         k_msgq_purge(&common_received_packets_q);
