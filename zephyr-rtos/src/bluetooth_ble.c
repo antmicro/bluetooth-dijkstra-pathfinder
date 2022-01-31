@@ -144,7 +144,7 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         uint8_t *extracted_data = &(tx_packet->data.data[2]);
 
         // create bt data 
-        struct bt_data ad[] = {BT_DATA(BT_DATA_GAP_APPEARANCE, extracted_data, 8) };
+        struct bt_data ad[] = {BT_DATA(common_self_mesh_id, extracted_data, 8) };
 
         // set data to one from received packet  
         err = bt_le_ext_adv_set_data(current_set, ad,
