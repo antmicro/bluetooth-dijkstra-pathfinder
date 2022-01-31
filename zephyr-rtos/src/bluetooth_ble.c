@@ -11,8 +11,8 @@ K_FIFO_DEFINE(common_packets_to_send_q);
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
-		.type       = BT_LE_SCAN_TYPE_PASSIVE,
-		.options    = BT_LE_SCAN_OPT_CODED, //+ BT_LE_SCAN_OPT_FILTER_DUPLICATE,
+		.type       = BT_LE_SCAN_TYPE_PASSIVE,  // opt code scan is for long range
+		.options    = BT_LE_SCAN_OPT_CODED, //long range //+ BT_LE_SCAN_OPT_FILTER_DUPLICATE,
 		.interval   = BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = BT_GAP_SCAN_FAST_WINDOW,
 	};
@@ -34,8 +34,9 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
     struct bt_le_adv_param params = {
         .id = 0x0,
         .options = ext_adv_aptions,
-        .interval_min = 0xFF, // must be greater than 0x00a0
-        .interval_max = 0x0300
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, // 100ms TODO CHange
+
+        .interval_max = BT_GAP_ADV_FAST_INT_MAX_2, // 150ms
     };
     printk("inside ble adv sets setup \n"); 
     // TODO: handle unreserved nodes !!!
@@ -125,23 +126,35 @@ void ble_send_packet_thread_entry(struct node_t *graph,
     /* Bluetooth direct adv setup*/
     struct bt_le_ext_adv *adv_set[MAX_MESH_SIZE];// TODO this is problem
     ble_adv_sets_setup(graph, adv_set);
-    printk("after a funciton\n"); 
     
     struct ble_tx_packet_data *tx_packet;
+
     while(1){
+        int err;
+       
         printk("waiting for tx_packet....\n");
         tx_packet = k_fifo_get(&common_packets_to_send_q, K_FOREVER);
-        printk("This is next node's id from send thread %d \n", 
-                tx_packet->next_node_mesh_id);
-         
-        //bt_le_scan_stop();
-        int err = bt_le_ext_adv_start(
-                adv_set[tx_packet->next_node_mesh_id],
-                BT_LE_EXT_ADV_START_PARAM(30, 10)); 
+        
+        // set advertisement data 
+        struct bt_le_ext_adv *current_set = adv_set[tx_packet->next_node_mesh_id];
+        struct bt_data ad[] = {BT_DATA(BT_DATA_LE_BT_DEVICE_ADDRESS, 
+                tx_packet->data.data, tx_packet->data.len)};
+        err = bt_le_ext_adv_set_data(current_set, ad, ARRAY_SIZE(ad), NULL, 0);
+        if(err){
+            printk("Error setting advertisement data: %d\n", err);
+        }
+
+        printk("######################################################\n");
+        printk("Advertising...\n");
+        printk("######################################################\n");
+        /*err = bt_le_ext_adv_start(
+                current_set, 
+                BT_LE_EXT_ADV_START_PARAM(15, 3)); 
+        k_sleep(K_MSEC(300));*/
+
         if(err){
             printk("Error initiating advertising: err %d\n", err); 
         }
-        //bt_le_scan_start(params, NULL);
     }
 }
 
@@ -157,8 +170,10 @@ void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
 
     // print
+    printk("######################################################\n");
     printk("Received data from node with address: %s\n", addr_str);
     printk("Data: %s\n", data_str);
+    printk("######################################################\n");
     
     // add to queue  
     int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
