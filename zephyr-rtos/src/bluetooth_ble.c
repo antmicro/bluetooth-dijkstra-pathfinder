@@ -84,10 +84,6 @@ void create_packet_thread_entry(struct node_t *graph){
     int err;
      
     while(1){
-        uint32_t messages_num = k_msgq_num_used_get(&common_received_packets_q);
-        printk("Number of elements in message queue in create packet thread pre remove: %d\n",
-            messages_num);
-
         err = k_msgq_get(&common_received_packets_q, &buf, K_FOREVER);
                
         if(err){
@@ -96,10 +92,17 @@ void create_packet_thread_entry(struct node_t *graph){
         else{
             // retrieve dst node from data packet (3rd byte)
             get_mesh_id_from_data(&buf, &dst_mesh_id);
+
+            if(dst_mesh_id == common_self_mesh_id){
+                printk("Final destination %d reached!\n", dst_mesh_id);
+                continue;
+            }
+
             printk("THIS IS DESTINATION MESH ADDR %d\n", dst_mesh_id);
             // calculate next node from dijkstra algorithm
             int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 
                     common_self_mesh_id, dst_mesh_id);
+
             if(next_node_mesh_id < 0){
                 printk("Dijkstra algorithm failed\n");
             }
