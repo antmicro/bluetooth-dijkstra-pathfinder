@@ -80,6 +80,7 @@ sysbus LogPeripheralAccess sysbus.radio
 #############################################################
 
 mach add "node2"
+mach set "node2"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
 # set unique identification address 
@@ -110,6 +111,7 @@ sysbus LogPeripheralAccess sysbus.radio
 #############################################################
 
 mach add "node4"
+mach set "node4"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
 # set unique identification address 
@@ -141,6 +143,8 @@ sysbus LogPeripheralAccess sysbus.radio
 # mesh end 
 
 mach add "mobile_broadcaster"
+mach set "mobile_broadcaster"
+
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
 emulation SetGlobalQuantum "0.00001"
