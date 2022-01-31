@@ -42,6 +42,7 @@ int dijkstra_shortest_path(
  
         // visit a smallest_td node and update its neighbours td
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
+
         // check if smallest_td_node_container is destination node
         if(smallest_td_node_container->node->addr == dst_addr){
             //free rest of the list
@@ -59,7 +60,13 @@ int dijkstra_shortest_path(
     path = trace_back(graph, start_addr, dst_addr, &paths_size);
    
     // TODO: if only the next node is returned, simplify trace back function
-
+    
+    printk("\n\n");
+    for(uint8_t i = 0; i < paths_size; i++){
+        printk("Path member %d, mesh id: %d\n", i, path[i]); 
+    }
+    printk("\n\n");
+    
     // path is in reverse order, so next node from current one is
     // one before last one (last is start node) 
     int next_node_id = path[paths_size - 2];
@@ -142,15 +149,17 @@ uint8_t * trace_back(
         // check which of neighbours has smallest td 
         uint8_t smallest_td = INF;
         uint8_t number_of_paths = current_node->paths_size; 
+        struct node_t *temp_node = current_node;
         for(uint8_t i = 0; i < number_of_paths; i++){
             struct node_t * checked_node = graph + ((current_node->paths) + i)->addr;
             if(checked_node->tentative_distance <= smallest_td){
                 smallest_td = checked_node->tentative_distance;
-                current_node = checked_node;
+                temp_node = checked_node; // here some temp node 
             }
         }
-
+        
         // smallest td node address add to a path 
+        current_node = temp_node;
         index++;
         path[index] = current_node->addr;
     }
@@ -208,7 +217,7 @@ void print_slist(sys_slist_t * lst){
     SYS_SLIST_FOR_EACH_CONTAINER(lst, iterator, next_container_node_ptr){
         printk("Node addr: %d\n", iterator->node->addr); 
     }
-    printk("\n\n\n");
+    //printk("\n\n\n");
 }
 
 #endif 
