@@ -154,14 +154,13 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         printk("######################################################\n");
         printk("Advertising...\n");
         printk("######################################################\n");
-        err = bt_le_ext_adv_start(
-                current_set, 
-                BT_LE_EXT_ADV_START_PARAM(0, 15)); 
-        k_sleep(K_MSEC(1000));
-
-        if(err){
-            printk("Error initiating advertising: err %d\n", err); 
-        }
+        
+        // wait until previous adv finished and advertise current msg
+        do{
+            err = bt_le_ext_adv_start(
+                    current_set, 
+                    BT_LE_EXT_ADV_START_PARAM(0, 5)); 
+        }while(err);
     }
 }
 
