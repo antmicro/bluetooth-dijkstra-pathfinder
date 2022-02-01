@@ -13,8 +13,8 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
     *(scan_params) = (struct bt_le_scan_param){
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,  // opt code scan is for long range
 		.options    = BT_LE_SCAN_OPT_CODED | BT_LE_SCAN_OPT_FILTER_DUPLICATE, //long range //+ ,
-		.interval   = BT_GAP_SCAN_FAST_INTERVAL,
-		.window     = BT_GAP_SCAN_FAST_WINDOW,
+		.interval   = 0x0060, //BT_GAP_SCAN_FAST_INTERVAL,
+		.window     = 0x0060//BT_GAP_SCAN_FAST_WINDOW,
 	};
     
     // register a callback for packet reception
@@ -34,8 +34,8 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
     struct bt_le_adv_param params = {
         .id = 0x0,
         .options = ext_adv_aptions,
-        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, // 100ms 
-        .interval_max = BT_GAP_ADV_FAST_INT_MAX_2, // 150ms
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, // 30ms  
+        .interval_max = BT_GAP_ADV_FAST_INT_MAX_1, // 60ms 
     };
     // TODO: handle unreserved nodes !!!
     // get addr from string to proper format
@@ -135,8 +135,6 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         printk("waiting for tx_packet....\n");
         tx_packet = k_fifo_get(&common_packets_to_send_q, K_FOREVER);
         
-        // add as type the address of sender ? just for debug?\
-
         // pick adv set proper for next node mesh id 
         struct bt_le_ext_adv *current_set = adv_set[tx_packet->next_node_mesh_id];
         
@@ -159,7 +157,7 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         err = bt_le_ext_adv_start(
                 current_set, 
                 BT_LE_EXT_ADV_START_PARAM(0, 15)); 
-        k_sleep(K_MSEC(300));
+        k_sleep(K_MSEC(1000));
 
         if(err){
             printk("Error initiating advertising: err %d\n", err); 

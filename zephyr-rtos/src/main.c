@@ -18,13 +18,13 @@
 
 /* Threads data */
 // data tx packets producer data 
-#define CREATE_PACKET_THREAD_STACK_SIZE 500
+#define CREATE_PACKET_THREAD_STACK_SIZE 1024 
 #define CREATE_PACKET_THREAD_PRIO       2 
 K_THREAD_STACK_DEFINE(create_packet_thread_stack, 
         CREATE_PACKET_THREAD_STACK_SIZE);
 
 // data transmitter thread data  
-#define BLE_SEND_PACKET_THREAD_STACK_SIZE 500
+#define BLE_SEND_PACKET_THREAD_STACK_SIZE 1024 
 #define BLE_SEND_PACKET_THREAD_PRIO       2 
 K_THREAD_STACK_DEFINE(ble_send_packet_thread_stack, 
         BLE_SEND_PACKET_THREAD_STACK_SIZE);
