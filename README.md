@@ -73,12 +73,10 @@ Threads are initialized in main and there also their priorities are set.
 
 ### Running the application
 To build the project, go to zephyr-rtos directory and run build command:
-> cd zephyr-rtos 
-> west build -b nrf52840dk_nrf52840 
+> cd zephyr-rtos && west build -b nrf52840dk_nrf52840 
 
 Then go back to the root of the project and build mobile broadcaster:
-> cd ../mobile_broadcaster
-> west build -b nrf52840dk_nrf52840 
+> cd ../mobile_broadcaster && west build -b nrf52840dk_nrf52840 
 
 Now You should be ready to run a project. File named init.resc in project root
 directory is for simulation with Renode and should be run with it (use Renode 
