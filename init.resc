@@ -176,7 +176,7 @@ macro reset
     # mesh end
 
     mach set "mobile_broadcaster"
-    sysbus LoadELF @/home/js/Projects/zephyr-project/zephyr/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/mobile_broadcaster/build/zephyr/zephyr.elf
 """
 runMacro $reset
 

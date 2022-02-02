@@ -1,0 +1,43 @@
+The target system is: Generic - 2.7.99 - arm
+The host system is: Linux - 5.13.0-27-generic - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /home/js/zephyr-sdk-0.13.2/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc 
+Build flags: 
+Id flags: -c 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
+
+The C compiler identification is GNU, found in "/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/mobile_broadcaster/build/CMakeFiles/3.22.2/CompilerIdC/CMakeCCompilerId.o"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /home/js/zephyr-sdk-0.13.2/arm-zephyr-eabi/bin/arm-zephyr-eabi-g++ 
+Build flags: 
+Id flags: -c 
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.o"
+
+The CXX compiler identification is GNU, found in "/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/mobile_broadcaster/build/CMakeFiles/3.22.2/CompilerIdCXX/CMakeCXXCompilerId.o"
+
+Checking whether the ASM compiler is GNU using "--version" matched "(GNU assembler)|(GCC)|(Free Software Foundation)":
+arm-zephyr-eabi-gcc (crosstool-NG 1.24.0.378_e011758) 10.3.0
+Copyright (C) 2020 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Performing C SOURCE FILE Test check_fmacro_prefix_map__home_js_Projects_antmicro_bluetooth_dijkstra_pathfinder_mobile_broadcaster_CMAKE_SOURCE_DIR_C__nostartfiles__nostdlib__isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include___isystem___home_js_zephyr_sdk_0_13_2_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_10_3_0_include_fixed___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0 succeeded with the following output:
+Change Dir: /home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/mobile_broadcaster/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/ninja cmTC_b4823 && [1/2] Building C object CMakeFiles/cmTC_b4823.dir/src.c.obj
+[2/2] Linking C executable cmTC_b4823
+
+
+Source file was:
+int main(void) { return 0; }
