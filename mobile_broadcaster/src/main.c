@@ -50,7 +50,7 @@ void main(void)
         .type = BT_ADDR_LE_RANDOM,
         .a = { // set it to receiver addr 
             //      LSB                           MSB
-			.val = {0x22, 0x00, 0x00, 0x00, 0x00 ,0xC0} 
+			.val = {0x01, 0x00, 0x00, 0x00, 0x00 ,0xC0} 
         }
     };
     char r_identity[129];
