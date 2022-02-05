@@ -39,7 +39,7 @@ int dijkstra_shortest_path(
             printk("Smallest td node container is NULL!\n");
             return -1;
         }
- 
+        printk("Looking...\n");
         // visit a smallest_td node and update its neighbours td
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
 

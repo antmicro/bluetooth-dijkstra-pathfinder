@@ -35,7 +35,7 @@ while index < nodes:
 
     # pick paths_size not greater than number 
     # of nodes in case MAX_CONN_NUM > nodes
-    paths_size = int(rnd.random() * 100) % min(MAX_CONN_NUM, nodes) + 1 
+    paths_size = int(rnd.random() * 100) % min(MAX_CONN_NUM, nodes - 1) + 1 
      
     # randomize addrs and distances for this connections
     paths_index = 0
@@ -58,11 +58,60 @@ while index < nodes:
             "addr":index,
             "addr_bt_le":ble_addr,
             "reserved":True,
-            "paths_size":paths_size,
-            "paths":paths
+            "paths_size":0,
+            "paths":[]
             }
     index += 1
 
+# add connections
+cnt = 0
+MAX_CONN_NUM = (nodes * (nodes - 1)) / 5
+
+
+def randomize_index(nodes):
+    return int(rnd.random() * 100) % nodes
+
+
+existing_connections = []
+while cnt < MAX_CONN_NUM:
+    # pick random index
+    first_node_index = randomize_index(nodes)
+    second_node_index = randomize_index(nodes)
+
+    # make sure they are different
+    while second_node_index == first_node_index:
+        second_node_index = randomize_index(nodes)
+
+    # check if such connection already exists
+    for conn in existing_connections:
+        config1 = [first_node_index, second_node_index]
+        config2 = [second_node_index, first_node_index]
+        if conn == config1 or conn == config2:
+            break
+    else:
+        print("Here")
+        # make connection bidirectional connection 
+        mesh["node" + str(first_node_index)]["paths_size"] += 1
+        mesh["node" + str(first_node_index)]["paths"].append(
+                dict(
+                    addr=mesh["node" + str(second_node_index)]["addr"],
+                    distance=int(rnd.random() * 100 % MAX_DIST) + 1
+                    )
+                )
+        
+        mesh["node" + str(second_node_index)]["paths_size"] += 1
+        mesh["node" + str(second_node_index)]["paths"].append(
+                dict(
+                    addr=mesh["node" + str(first_node_index)]["addr"],
+                    distance=int(rnd.random() * 100 % MAX_DIST) + 1
+                    )
+                )
+        existing_connections.append([first_node_index, second_node_index])
+        print([first_node_index, second_node_index])
+        cnt += 1
+
+
+# dict(addr=connection_addr, distance=connection_dist))
 print(json.dumps(mesh))
 
 with open("tests.json", "w") as f:
