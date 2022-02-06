@@ -45,7 +45,7 @@ template = env.from_string(template_to_load)
 
 # fill the template with data from json config file
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
-# config_file_path = os.path.join(project_dir, "topology_config.json") 
+#config_file_path = os.path.join(project_dir, "topology_config.json") 
 config_file_path = os.path.join(project_dir, "scripts/tests.json")
 print("cnf file path")
 print(config_file_path)

@@ -65,7 +65,7 @@ void main(void)
             create_packet_thread_entry,
             &graph, NULL, NULL,
             CREATE_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
-    printk("Created thread %d \n" ,create_packet_thread.stack_info.size);
+    //printk("Created thread %d \n" ,create_packet_thread.stack_info.size);
     
      
     struct k_thread ble_send_packet_thread;

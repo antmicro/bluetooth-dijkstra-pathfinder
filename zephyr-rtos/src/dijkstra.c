@@ -39,7 +39,7 @@ int dijkstra_shortest_path(
             printk("Smallest td node container is NULL!\n");
             return -1;
         }
-        printk("Looking...\n");
+        
         // visit a smallest_td node and update its neighbours td
         recalculate_td_for_neighbours(smallest_td_node_container->node->addr, graph); 
 
@@ -61,11 +61,10 @@ int dijkstra_shortest_path(
    
     // TODO: if only the next node is returned, simplify trace back function
     
-    printk("\n\n");
+    printk("Path: \n");
     for(uint8_t i = 0; i < paths_size; i++){
-        printk("Path member %d, mesh id: %d\n", i, path[i]); 
+        printk("%d\n", path[i]); 
     }
-    printk("\n\n");
     
     // make all tentative_distances to INF again for future calculations
     reset_td_visited(graph); 

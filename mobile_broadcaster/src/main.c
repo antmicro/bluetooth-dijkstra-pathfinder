@@ -15,9 +15,9 @@
 #include <bluetooth/hci.h>
 #include <timing/timing.h>
 
-uint8_t mfg_data2[] = {0x00, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
-const struct bt_data ad2[] = {BT_DATA(0xff, mfg_data2, 8)
-};
+//uint8_t mfg_data2[] = {0x00, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
+//const struct bt_data ad2[] = {BT_DATA(0xff, mfg_data2, 8)
+//};
 
 
 void main(void)
@@ -43,7 +43,6 @@ void main(void)
 		printk("Bluetooth init failed (err %d)\n", err);
 		return;
 	}
-	printk("Bluetooth initialized\n");
 
     // Receiver address 
     bt_addr_le_t receiver_addr = {
@@ -51,16 +50,18 @@ void main(void)
         .a = { // set it to receiver addr 
             //      LSB                           MSB
 			.val = {0x01, 0x00, 0x00, 0x00, 0x00 ,0xC0} 
+			//.val = {0x22, 0x00, 0x00, 0x00, 0x00 ,0xC0} 
         }
     };
     char r_identity[129];
     bt_addr_le_to_str(&receiver_addr, r_identity, sizeof(r_identity)); 
-    printk("Sending to node with identity: %s", r_identity); 
+    printk("Sending to node with identity: %s\n", r_identity); 
+    printk("Sending to node with mesh id: 2\n");
 
     // Advertisement setup 
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
-        + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY;
+        + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY;  // TODO:remove that ??
         //+ BT_LE_ADV_OPT_NOTIFY_SCAN_REQ;
         //+ BT_LE_ADV_OPT_CONNECTABLE;
         //+ BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY;
@@ -69,7 +70,7 @@ void main(void)
         .id = 0x0,
         .options = ext_adv_aptions,
         .peer = &receiver_addr,
-        .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, 
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, //TODO: advertising interval bigger?
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_1 
     };
 
@@ -87,7 +88,7 @@ void main(void)
     end_time = timing_counter_get(); 
     cycles = timing_cycles_get(&start_time, &end_time);
     time_in_ns = timing_cycles_to_ns(cycles); 
-    printk("Measured start time: %llu", time_in_ns); 
+    //printk("Measured start time: %llu, cycles: %llu\n", time_in_ns, cycles); 
 
     // Data setup
     // First byte is ***mesh address*** of final destination 
@@ -109,23 +110,36 @@ void main(void)
 
     // start advertising
     err = bt_le_ext_adv_start(adv,
-        BT_LE_EXT_ADV_START_PARAM(0, 3));
+        BT_LE_EXT_ADV_START_PARAM(0, 20));
         //BT_LE_EXT_ADV_START_DEFAULT);
     if (err) {
         printk("Advertising failed to start (err %d)\n", err);
         return;
     }
 
+    printk("MOBILE BROADCASTER ADV START\n");
+
     // wait some time to finish 	
     k_msleep(100);
     
     // stop it
-    err = bt_le_adv_stop();
+    /*err = bt_le_adv_stop();
     if (err) {
         printk("Advertising failed to stop (err %d)\n", err);
         return;
-    }
+    }*/
+    
+    end_time = timing_counter_get(); 
+    cycles = timing_cycles_get(&start_time, &end_time);
+    time_in_ns = timing_cycles_to_ns(cycles); 
+    //printk("Measured start time: %llu, cycles: %llu \n", time_in_ns, cycles); 
 
+    uint8_t mfg_data2[9]; 
+    memcpy(&mfg_data2[1], &time_in_ns, sizeof(time_in_ns));
+    mfg_data2[0] = 0x00; 
+    const struct bt_data ad2[] = {BT_DATA(0xff, mfg_data2, 9)
+    };
+    
     // set new data to adv set 
     err = bt_le_ext_adv_set_data(adv, ad2, ARRAY_SIZE(ad2),
             NULL, 0);
@@ -135,8 +149,9 @@ void main(void)
         return;
     }
     
-    printk("Second message advertising...\n");
+    //printk("Second message advertising...\n");
 
+    /*
     do{
         err = bt_le_ext_adv_start(adv,
             //BT_LE_EXT_ADV_START_DEFAULT); 
@@ -148,6 +163,7 @@ void main(void)
                 err); 
         return;
     }
+    */
 	
 	do {
 		k_msleep(100);

@@ -2,7 +2,7 @@
 #include <zephyr.h>
 #include <kernel/thread_stack.h>
 #include "../include/dijkstra.h"
-
+#include <timing/timing.h>
 
 K_MSGQ_DEFINE(common_received_packets_q, sizeof(struct net_buf_simple), 10, 4);
 K_FIFO_DEFINE(common_packets_to_send_q);
@@ -82,6 +82,16 @@ void create_packet_thread_entry(struct node_t *graph){
     struct net_buf_simple buf; 
     uint8_t dst_mesh_id;
     int err;
+
+    // Timing setup 
+    timing_t start_time, receive_time;
+    uint64_t receive_time_in_ns;
+    uint64_t cycles; 
+    
+    // start time measurement
+    timing_init();
+    timing_start();
+    start_time = timing_counter_get();
      
     while(1){
         err = k_msgq_get(&common_received_packets_q, &buf, K_FOREVER);
@@ -94,12 +104,26 @@ void create_packet_thread_entry(struct node_t *graph){
             get_mesh_id_from_data(&buf, &dst_mesh_id);
 
             if(dst_mesh_id == common_self_mesh_id){
-                printk("Final destination %d reached!\n", dst_mesh_id);
+                printk("FINAL DESTINATION REACHED!\n");
+               
+                // copy time stamp to a buffer
+                uint64_t packet_send_time = 0;
+                memcpy(&packet_send_time, &buf.data[3], sizeof(packet_send_time));
+                
+                // get current time in ns
+                receive_time = timing_counter_get(); 
+                cycles = timing_cycles_get(&start_time, &receive_time);
+                receive_time_in_ns = timing_cycles_to_ns(cycles); 
+                
+                // subtract to get travel time 
+                uint64_t travel_time = receive_time_in_ns - packet_send_time;
+                //printk("Travel time of a packet was: %llu, %llu\n", travel_time, cycles);
                 continue;
             }
+            printk("Packet's final destination is node: %d\n", dst_mesh_id);
 
-            printk("THIS IS DESTINATION MESH ADDR %d\n", dst_mesh_id);
             // calculate next node from dijkstra algorithm
+            printk("Calculating Dijkstra's algorithm...\n");
             int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 
                     common_self_mesh_id, dst_mesh_id);
 
@@ -108,7 +132,7 @@ void create_packet_thread_entry(struct node_t *graph){
             }
             else{
                 // if all is good, create a packet and queue it to tx 
-                printk("Dijkstra result: %d\n", next_node_mesh_id);
+                printk("Next hop: %d\n", next_node_mesh_id);
                 
                 struct ble_tx_packet_data tx_packet = {
                     .next_node_mesh_id = next_node_mesh_id,
@@ -152,7 +176,7 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         }
 
         printk("######################################################\n");
-        printk("Advertising...\n");
+        printk("Advertising to node: %d\n", tx_packet->next_node_mesh_id);
         printk("######################################################\n");
         
         // wait until previous adv finished and advertise current msg
