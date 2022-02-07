@@ -1,0 +1,158 @@
+
+logLevel 0
+
+emulation CreateWirelessMedium "wireless"
+emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
+emulation LogToWireshark "wireless"
+emulation LogWirelessTraffic
+logLevel -1 wireless
+
+
+# mesh begin  
+#############################################################
+
+
+ 
+mach add "node0"
+mach set "node0"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000000 false
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# connect to medium 
+connector Connect sysbus.radio wireless
+ 
+mach add "node1"
+mach set "node1"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000001 false
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# connect to medium 
+connector Connect sysbus.radio wireless
+ 
+mach add "node2"
+mach set "node2"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000002 false
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# connect to medium 
+connector Connect sysbus.radio wireless
+ 
+mach add "node3"
+mach set "node3"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000003 false
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# connect to medium 
+connector Connect sysbus.radio wireless
+ 
+mach add "node4"
+mach set "node4"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000004 false
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# connect to medium 
+connector Connect sysbus.radio wireless
+ 
+mach add "node5"
+mach set "node5"
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+# set unique identification address 
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000005 false
+
+# time quantum setup 
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# connect to medium 
+connector Connect sysbus.radio wireless
+
+
+###########################################################
+# mesh end 
+
+mach add "mobile_broadcaster"
+mach set "mobile_broadcaster"
+
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+emulation SetGlobalQuantum "0.00001"
+emulation SetQuantum "0.00001"
+
+# analyzers 
+showAnalyzer sysbus.uart0
+connector Connect sysbus.radio wireless
+
+
+macro reset
+"""
+    pause
+    
+    # mesh begin 
+
+
+    
+    mach set "node0"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    
+    mach set "node1"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    
+    mach set "node2"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    
+    mach set "node3"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    
+    mach set "node4"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    
+    mach set "node5"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    
+    mach set "mobile_broadcaster"
+    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/mobile_broadcaster/build/zephyr/zephyr.elf
+
+"""
+runMacro $reset
+
+# observe uarts for default start and dst nodes  
+mach set "node0"
+showAnalyzer sysbus.uart0
+mach set "node1"
+showAnalyzer sysbus.uart0
+
+start
+
+machine StartGdbServer 3333 true
+

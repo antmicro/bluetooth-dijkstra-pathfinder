@@ -63,15 +63,13 @@ while index < nodes:
             }
     index += 1
 
-# add connections
-cnt = 0
-MAX_CONN_NUM = (nodes * (nodes - 1)) / 5
-
 
 def randomize_index(nodes):
     return int(rnd.random() * 100) % nodes
 
-
+# add connections
+cnt = 0
+MAX_CONN_NUM = (nodes * (nodes - 1))/5
 existing_connections = []
 while cnt < MAX_CONN_NUM:
     # pick random index
@@ -89,7 +87,6 @@ while cnt < MAX_CONN_NUM:
         if conn == config1 or conn == config2:
             break
     else:
-        print("Here")
         # make connection bidirectional connection 
         mesh["node" + str(first_node_index)]["paths_size"] += 1
         mesh["node" + str(first_node_index)]["paths"].append(
@@ -107,12 +104,12 @@ while cnt < MAX_CONN_NUM:
                     )
                 )
         existing_connections.append([first_node_index, second_node_index])
-        print([first_node_index, second_node_index])
+        # print([first_node_index, second_node_index])
         cnt += 1
 
 
 # dict(addr=connection_addr, distance=connection_dist))
-print(json.dumps(mesh))
+#print(json.dumps(mesh))
 
 with open("tests.json", "w") as f:
     f.write(json.dumps(mesh))
@@ -232,10 +229,6 @@ with open(config_file_path, 'r') as config:
             + constant_contents_append)
 
     print(contents)
-
-for node in mesh:
-    print(node)
-    print(mesh[node]['addr_bt_le'])
 
 with open("tests.resc", 'w') as rescfile:
     rescfile.write(contents)

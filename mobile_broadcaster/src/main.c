@@ -15,14 +15,14 @@
 #include <bluetooth/hci.h>
 #include <timing/timing.h>
 
-//uint8_t mfg_data2[] = {0x00, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
-//const struct bt_data ad2[] = {BT_DATA(0xff, mfg_data2, 8)
-//};
+uint8_t mfg_data2[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
+const struct bt_data ad2[] = {BT_DATA(0xff, mfg_data2, 8)
+};
 
 
 void main(void)
 {
-    
+    /* 
     // Timing setup 
     timing_t start_time, end_time;
     uint64_t time_in_ns;
@@ -32,7 +32,7 @@ void main(void)
     timing_init();
     timing_start();
     start_time = timing_counter_get();
-
+    */
 	int err;
 
 	printk("Starting Broadcaster\n");
@@ -85,16 +85,18 @@ void main(void)
     }
     
     // get time in ns as 64b int 
+    /*
     end_time = timing_counter_get(); 
     cycles = timing_cycles_get(&start_time, &end_time);
     time_in_ns = timing_cycles_to_ns(cycles); 
+    */
     //printk("Measured start time: %llu, cycles: %llu\n", time_in_ns, cycles); 
 
     // Data setup
     // First byte is ***mesh address*** of final destination 
     // Giving time stamp to the packet 
     uint8_t mfg_data[9]; 
-    memcpy(&mfg_data[1], &time_in_ns, sizeof(time_in_ns));
+    memcpy(&mfg_data[1], mfg_data2, sizeof(mfg_data2));
     mfg_data[0] = 0x00; 
     const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 9)
     };
@@ -128,19 +130,21 @@ void main(void)
         printk("Advertising failed to stop (err %d)\n", err);
         return;
     }*/
-    
+    /* 
     end_time = timing_counter_get(); 
     cycles = timing_cycles_get(&start_time, &end_time);
     time_in_ns = timing_cycles_to_ns(cycles); 
     //printk("Measured start time: %llu, cycles: %llu \n", time_in_ns, cycles); 
-
+    
     uint8_t mfg_data2[9]; 
     memcpy(&mfg_data2[1], &time_in_ns, sizeof(time_in_ns));
     mfg_data2[0] = 0x00; 
     const struct bt_data ad2[] = {BT_DATA(0xff, mfg_data2, 9)
     };
-    
+    */ 
     // set new data to adv set 
+    // 
+    /*
     err = bt_le_ext_adv_set_data(adv, ad2, ARRAY_SIZE(ad2),
             NULL, 0);
     if(err){
@@ -148,6 +152,7 @@ void main(void)
                 err); 
         return;
     }
+    */
     
     //printk("Second message advertising...\n");
 
