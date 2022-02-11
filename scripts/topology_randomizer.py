@@ -26,6 +26,10 @@ else:
 
 print("Input correct. Generating " + str(nodes) + " nodes...") 
 
+# specified root directory of the project 
+project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
+
+
 index = 0
 mesh = {}
 
@@ -111,13 +115,19 @@ while cnt < MAX_CONN_NUM:
 # dict(addr=connection_addr, distance=connection_dist))
 #print(json.dumps(mesh))
 
-with open("tests.json", "w") as f:
+topology_config_file_path = os.path.join(project_dir,
+        "config-files/mesh-topology-desc/randomized_topology.json")
+with open(topology_config_file_path, "w") as f:
     f.write(json.dumps(mesh))
 
 # .resc generation 
 # ble_addr
 
 constant_contents_prepend = """
+############################################################
+THIS FILE IS AUTO GENERATED - DO NOT CHANGE DIRECTLY
+############################################################
+
 logLevel 0
 
 emulation CreateWirelessMedium "wireless"
@@ -209,28 +219,26 @@ mach_load_desc_template = """
 
 env = Environment()
 
-project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
-# config_file_path = os.path.join(project_dir, "topology_config.json") 
-config_file_path = os.path.join(project_dir, "scripts/tests.json")
-with open(config_file_path, 'r') as config:
-    # mach create 
-    template = env.from_string(mach_create_template)
-    out_mach_create = template.render(nodes_temp = mesh)
-    
-    # desc load
-    template = env.from_string(mach_load_desc_template)
-    out_mach_load_desc = template.render(nodes_temp = mesh)
+# mach create 
+template = env.from_string(mach_create_template)
+out_mach_create = template.render(nodes_temp = mesh)
 
-    contents = (
-            constant_contents_prepend 
-            + out_mach_create 
-            + constant_contents_mid 
-            + out_mach_load_desc 
-            + constant_contents_append)
+# desc load
+template = env.from_string(mach_load_desc_template)
+out_mach_load_desc = template.render(nodes_temp = mesh)
 
-    print(contents)
+contents = (
+        constant_contents_prepend 
+        + out_mach_create 
+        + constant_contents_mid 
+        + out_mach_load_desc 
+        + constant_contents_append)
 
-with open("tests.resc", 'w') as rescfile:
+#print(contents)
+
+resc_file_path = os.path.join(project_dir,
+        "config-files/renode-resc-files/randomized_topology.resc")
+with open(resc_file_path, 'w') as rescfile:
     rescfile.write(contents)
 
 
