@@ -7,7 +7,7 @@ pip3 install robotframework==4.0.1
 
 west build -b nrf52840dk_nrf52840 ~/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos --build-dir ~/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build
 
-NODES_NUM=10
+NODES_NUM=5
 
 LOG_FILE_PATH=/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/\
 tests/out/${NODES_NUM}nodes.log
@@ -27,7 +27,7 @@ ROBOT_TESTS_PATH=~/Projects/antmicro/bluetooth-dijkstra-pathfinder/tests
 
 LINES=$(wc -l  $LOG_FILE_PATH | cut -f 1 -d " ")
 
-while [ $LINES -le 24 ] 
+while [ $LINES -le 50 ] 
 do
     # randomize
     python3 $TOPOLOGY_RANDOMIZER_PATH/topology_randomizer.py $NODES_NUM

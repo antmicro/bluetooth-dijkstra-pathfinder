@@ -7,7 +7,7 @@ Library         DateTime
 
 *** Variables ***
 ${SCRIPT_PATH} =       ${CURDIR}/../scripts/tests.resc
-${LOG_PATH}=           /home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/tests/out/10nodes.log
+${LOG_PATH}=           /home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/tests/out/5nodes.log
 
 *** Test Cases ***
 Get Packet Travel Time
