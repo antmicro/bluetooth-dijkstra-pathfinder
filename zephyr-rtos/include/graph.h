@@ -7,7 +7,7 @@
 #include <bluetooth/addr.h>
 
 #define INF 255
-#define MAX_MESH_SIZE 9 
+//#define MAX_MESH_SIZE 9 
 
 
 struct path_t{

@@ -55,7 +55,9 @@ void main(void)
     struct bt_le_scan_param scan_params;
     ble_scan_setup(&scan_params);
     
-        
+
+    printk("BUILT FOR %d NUMBER OF NODES\n", MAX_MESH_SIZE);
+
     /* Create Bluetooth LE threads */
     
     struct k_thread create_packet_thread;
