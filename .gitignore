@@ -111,7 +111,7 @@ dkms.conf
 
 # caches
 /zephyr-rtos/.cache
-
+/mobile_broadcaster/.cache
 # swap files
 *.swp
 
