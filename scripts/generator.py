@@ -1,5 +1,6 @@
 import json
 import os 
+import sys
 from jinja2 import Template, PackageLoader, Environment, FileSystemLoader
 
 constant_contents_prepend = """
@@ -38,7 +39,16 @@ template_to_load = """// node 0x{{ addr_t }}
     {% endfor %}
     {% endif %}
     """
-    
+
+# check if filepath exists
+if len(sys.argv) < 2:
+    print("Specify path to configuration file!")
+    exit()
+
+if os.path.isfile(sys.argv[1]):
+    print("Incorrect filepath to .json file with topology config:", sys.argv[1])
+    exit()
+
 # create jinja enviroment and load a template 
 env = Environment()
 template = env.from_string(template_to_load)
@@ -46,7 +56,9 @@ template = env.from_string(template_to_load)
 # fill the template with data from json config file
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
 #config_file_path = os.path.join(project_dir, "topology_config.json") 
-config_file_path = os.path.join(project_dir, "scripts/tests.json")
+#config_file_path = os.path.join(project_dir, "scripts/tests.json")
+config_file_path = os.path.join(project_dir, sys.argv[1])
+
 print("cnf file path")
 print(config_file_path)
 with open(config_file_path, 'r') as config:
