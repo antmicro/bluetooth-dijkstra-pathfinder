@@ -18,12 +18,14 @@ build_mobile_broadcaster () {
 
 
 build_randomized () {
+    # randomize
+    python3 scripts/topology_randomizer.py $1 
+
+    # build 
     west build -b nrf52840dk_nrf52840 \
         $SRC_DIR \
         -d $BUILD_DIR \
-        -- -DMAX_MESH_SIZE=5 \
-        -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/basic_5_nodes.json
-
+        -- -DMAX_MESH_SIZE=$1 -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/randomized_topology.json
 }
 
 
@@ -44,7 +46,7 @@ case $VERSION in
 
     # if randomized mesh specified, load also number of nodes to generate
     NODES_NUM=$2
-    build_randomized
+    build_randomized $NODES_NUM
     build_mobile_broadcaster
     ;;
 
@@ -57,8 +59,8 @@ case $VERSION in
 
   *)
     echo "Specify correct application version to build:
-    --randomized   - random topology
-    --basic        - basic 5 nodes minimal topology  
+    --randomized   - generate random topology and build 
+    --basic        - generate basic 5 nodes minimal topology  
     " 
     ;;
 esac
