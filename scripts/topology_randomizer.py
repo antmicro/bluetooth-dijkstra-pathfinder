@@ -13,16 +13,15 @@ if len(sys.argv) > 1:
     try:
         nodes = int(sys.argv[1]) # is integer 
         
-        if not 1 <= nodes <=64: # is in range 
-            raise ValueError("Value not in range [1, 64]")
+        if not 3 <= nodes <=64: # is in range 
+            sys.exit("Value not in range [1, 64]")
         
 
     except ValueError:
-        print("Value should be integer in range [1, 64]")
-        exit()
+        sys.exit("Value should be integer in range [1, 64]")
 
 else:
-    exit()
+    sys.exit("Did not provide number of nodes!")
 
 print("Input correct. Generating " + str(nodes) + " nodes...") 
 
@@ -125,7 +124,7 @@ with open(topology_config_file_path, "w") as f:
 
 constant_contents_prepend = """
 ############################################################
-THIS FILE IS AUTO GENERATED - DO NOT CHANGE DIRECTLY
+#THIS FILE IS AUTO GENERATED - DO NOT CHANGE DIRECTLY
 ############################################################
 
 logLevel 0
@@ -175,7 +174,7 @@ runMacro $reset
 # observe uarts for default start and dst nodes  
 mach set "node0"
 showAnalyzer sysbus.uart0
-mach set "node1"
+mach set "node2"
 showAnalyzer sysbus.uart0
 
 start
