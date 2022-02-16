@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# fail the entire script if any of commands fails
+set -e 
+
 VERSION=$1
 
 # mesh app dirs
@@ -40,11 +43,18 @@ build_basic5node () {
 
 # case statement for picking version to run
 case $VERSION in
-
   --randomized)
     echo "Building randomized version..."
 
     # if randomized mesh specified, load also number of nodes to generate
+    if [ $# -lt 2 ] 
+    then
+        echo "Specify number of nodes!"
+        exit 1
+    fi
+
+    # input validation is made in topology_randomizer script
+
     NODES_NUM=$2
     build_randomized $NODES_NUM
     build_mobile_broadcaster
@@ -60,7 +70,7 @@ case $VERSION in
   *)
     echo "Specify correct application version to build:
     --randomized   - generate random topology and build 
-    --basic        - generate basic 5 nodes minimal topology  
+    --basic        - generate basic 5 nodes minimal topology and build 
     " 
     ;;
 esac
