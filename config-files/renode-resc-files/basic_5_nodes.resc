@@ -1,3 +1,10 @@
+############################################################
+# This file is used for demonstration purposes and should 
+# not be modified or building process might break. If You 
+# want to implement Your own .resc file, create a new one 
+# and wire it manually to Renode.
+############################################################
+
 logLevel 0
 
 emulation CreateWirelessMedium "wireless"
