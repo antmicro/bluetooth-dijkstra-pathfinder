@@ -1,5 +1,6 @@
 # Bluetooth Dijkstra Pathfinder 
-This repository contains project files of custom Bluetooth ad - hoc mesh implementation, with Dijkstra's as routing algorithm.
+This repository contains project files of custom Bluetooth ad - hoc mesh 
+implementation, with Dijkstra's as routing algorithm.
 
 In folder dijkstra\_shortest\_path is my implementation of Dijkstra's shortest 
 path algorithm. It does work, although there is still a lot of room for improvements. 
@@ -11,14 +12,9 @@ In folder zephyr\_project You can find Zephyr project files. Destination platfor
 of this project is nRF52840 Dongle with Zephyr RTOS. For now it is tested on 
 Renode platform.
 
+
+
 Default Dijkstra graph used in zephyr version is:
-<pre>
-(1)    2   (2)
-  
-   1       4
-         
-(1)    0   (2)
-</pre>
 
 In brackets are distances between nodes and without brackets are nodes addresses. 
 This information is contained in graph.c file in initialization function.
@@ -26,12 +22,29 @@ This setup allows for simplest case where shortest path must be found. Solution 
 node 2 from node 0 is path through 0, 1, 2 with total distance of 2.
 
 ### Short description of a demo 
-Project in current state of development consists of 4 nodes in configuration 
-described above that create a BLE mesh. There is also one independent broadcaster,
-that is not really a part of a mesh, but it initiates a communication by sending
-a **directed** (in general all messages are directed, received only by a node 
-with address specified in advertisement configuration), advertisement to a node.
+It is possible to easily build project in 2 essential configurations, one 
+is basic 5 node configuration on which most of the development was performed 
+and another is a randomized configuration where user specifies a number of nodes
+that will be in the mesh and script randomizes it and builds the application.
 
+In both configurations there is mobile broadcaster that is not a part of the 
+mesh, but it initiates a communication. The message from this broadcaster is 
+directed to node with mesh id = 2. It is the first recipient of the message in 
+both build configurations.
+
+#### Basic 5 node configuration
+This configuration consists of 5 nodes in configuration described below that 
+create a BLE mesh. 
+
+![Basic 5 node configuration](./diagram_basic5node.png)
+
+#### Randomized
+In this configuration user has to provide number of nodes that will be
+randomized and script will randomize connections between them. Available range 
+is from 3 to 64 nodes, although in **current state only up to 9 nodes work in 
+simulation.**
+
+### Communication scheme
 In current state, communication cycle looks as following:
 1. Mobile broadcaster sends a message which is marked with destination - node 0.
 Message is directly advertised to node 2. Payload of this message is broadcast 
@@ -71,15 +84,104 @@ message queue and processing them. Processing involves:
 
 Threads are initialized in main and there also their priorities are set.
 
-### Running the application
-To build the project, go to zephyr-rtos directory and run build command:
-> cd zephyr-rtos && west build -b nrf52840dk_nrf52840 
+### Building the application
+It is possible to build the project in three ways described below.
+For standard builds, convinience script was prepared. It is called build_as.sh
+and is located in the root directory of the project. Below is presented a way 
+how to use this script.
 
-Then go back to the root of the project and build mobile broadcaster:
-> cd ../mobile_broadcaster && west build -b nrf52840dk_nrf52840 
+When building the application for the first time, user also should run:
 
-Now You should be ready to run a project. File named init.resc in project root
-directory is for simulation with Renode and should be run with it (use Renode 
-built from sources):
-> ./renode ~/path/to/init.resc
+```
+west init && west update
+```
+
+#### As basic 5 node application
+This build will use a standard 5 node configuration file - basic_5_nodes.json 
+located
+in config-files/mesh-topology-desc directory. This file will be fed into a 
+script that generates contents of graph initialization function and then 
+application will be built. Corresponding .resc file resides in 
+config-files/renode-resc-files.
+
+```
+cd bluetooth-dijkstra-pathfinder
+./build_as.sh --basic
+```
+
+Mobile broadcaster is built automatically.
+
+This build is mainly for application development, as it provides minimal use
+case scenario where Dijkstra's algorithm can calculate shortest path out of two
+possibilities.
+
+#### As randomized mesh
+When building as randomized mesh, script has to do a little bit more work. It 
+takes as an argument number of nodes that user wants to generate and passes it 
+to topology_randomizer.py script. This script creates configuration json file 
+with randomly connected nodes. This file also resides in 
+the config-files/mesh-topology-desc directory. The same script also generates 
+corresponding .resc file, in config-files/renode-resc-files. 
+
+To build, run:
+```
+cd bluetooth-dijkstra-pathfinder
+./build_as.sh --randomized \<number of nodes - [3, 64]\>
+```
+
+Mobile broadcaster is built automatically.
+
+This build config is meant for performance testing.
+
+#### Custom build
+If one is developing the application for specific use scenario, neither of 
+mentioned builds will be of much use, so to build with custom configuration
+one must take care of setting up topology_configuration.json file that is fed 
+to graph initialization function and also .resc Renode file that will be used
+to start the simulation. When this is done, run:
+```
+west build -b nrf52840dk_nrf52840 \
+        $SRC_DIR \
+        -d $BUILD_DIR \
+        -- -DMAX_MESH_SIZE=<your mesh size> \
+        -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/your_topology.json
+```
+Short description of arguments passed to build command (args after "--" are 
+pased to CMake):
+* -b nrf52840dk_nrf52840 app was designed for nRF52840 chip.
+* SRC_DIR and BUILD_DIR are optional if command is not run from this 
+applications zephyr project root dir (/zephyr-rtos).
+* -DMAX_MESH_SIZE - defines a size of the mesh, it has to be declared here 
+as this is then included in build process as preprocessor #define and used in 
+the application extensively.
+* DTOPOLOGY_CONFIG_PATH - path to topology_configuration.json file for
+graph_init function.
+
+When using this build method, mobile_broadcaster is **not** built automatically
+so it should be built with:
+
+```
+west build -b nrf52840dk_nrf52840 \
+        $MB_SRC_DIR\
+        -d $MB_BUILD_DIR
+```
+Where:
+* MB_SRC_DIR is directory with source for mobile broadcaster.
+* MB_BUILD_DIR directory where build files will be outputed.
+
+### Running the application 
+Application should be run with Renode software, so it is necessary to pass a 
+.resc file corresponding to chosen build configuration:
+
+```
+./renode /path/to/configuration.resc
+```
+
+For example, when building basic 5 nodes:
+
+```
+./renode /path/to/bluetooth-dijkstra-pathfinder/config-files/renode-resc-files/basic_5_nodes.resc
+```
+
+
 
