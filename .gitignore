@@ -107,7 +107,11 @@ dkms.conf
 /zephyr-rtos/build
 /mobile_broadcaster/build
 /build
-/zephyr-rtos/src/generated-scr
+
+# auto generated files
+/zephyr-rtos/src/generated-src
+/config-files/mesh-topology-desc/randomized_topology.json
+/config-files/renode-resc-files/randomized_topology.resc
 
 # caches
 /zephyr-rtos/.cache
