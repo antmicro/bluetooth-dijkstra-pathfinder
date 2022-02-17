@@ -183,5 +183,49 @@ For example, when building basic 5 nodes:
 ./renode /path/to/bluetooth-dijkstra-pathfinder/config-files/renode-resc-files/basic_5_nodes.resc
 ```
 
+#### Running tests with Robot testing framework 
+
+For now, there are few tests that can be performed on the application.
+Test should be run with Renode's test.sh script.
+
+##### Packet propagation time test
+This test will measure time between packet being sent and arriving to the 
+destination node. It expects that provided .resc file will have 
+mobile_broadcaster and sink nodes, as it sets up the terminal testers for this
+machines.
+
+The script has few default values inside, so it has to be run 
+with command line arguments to overwrite this defaults:
+```
+./test.sh /path/to/test_packet_travel_time.robot \
+    --variable SCRIPT_PATH:/path/to/resc/file.resc \
+    --variable LOG_PATH:/path/to/valid/log/file.log
+```
+
+Above is completely valid way to run the test, but the script was written with 
+a goal in mind to test average propagation times in the randomized mesh. So to 
+achieve that, tests_runner script was developed which will repeat that test 
+specified amount of times for randomized topologies to find an average 
+propagation times. To use it run:
+```
+./tests_runner.sh <number of nodes> /path/to/renode/rootdir
+```
+This will run tests multiple times and save result of each run into the folder
+in project directory tests/out/\<number of nodes\>nodes.log.
+
+**As mentioned above, mesh does not function properly for mesh sizes bigger than
+9.**
+
+##### Dijkstra algorithm test
+**This test has to be slightly changed to work with current version of the 
+application.**
+This test will run the app in Renode headless mode and wait for the outputed 
+path on UART analyzer. If the path is correct for current nodes configuration
+it will succed.
+
+
+
+
+
 
 
