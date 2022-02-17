@@ -40,14 +40,13 @@ template_to_load = """// node 0x{{ addr_t }}
     {% endif %}
     """
 
-# check if filepath exists
+# check if filepath was provided 
 if len(sys.argv) < 2:
-    print("Specify path to configuration file!")
-    exit()
+    sys.exit("Specify path to configuration file!")
 
-if os.path.isfile(sys.argv[1]):
-    print("Incorrect filepath to .json file with topology config:", sys.argv[1])
-    exit()
+# check if file exists 
+if not os.path.isfile(sys.argv[1]):
+    sys.exit("Incorrect filepath to .json file with topology config")
 
 # create jinja enviroment and load a template 
 env = Environment()
@@ -55,7 +54,9 @@ template = env.from_string(template_to_load)
 
 # fill the template with data from json config file
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
-config_file_path = os.path.join(project_dir, sys.argv[1])
+# config_file_path = os.path.join(project_dir, sys.argv[1])
+config_file_path = sys.argv[1]
+
 
 print("cnf file path")
 print(config_file_path)
