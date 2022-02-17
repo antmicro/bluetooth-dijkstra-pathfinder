@@ -14,7 +14,7 @@ Example:
 ./tests_runner.sh 9 ~/path/to/renode/renode
 "
 
-PROJECT_ROOT_DIR=..
+PROJECT_ROOT_DIR=${PWD}/..
 
 MIN_NODES_NUM=3
 MAX_NODES_NUM=64

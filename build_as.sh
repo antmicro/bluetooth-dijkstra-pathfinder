@@ -5,6 +5,9 @@ set -e
 
 VERSION=$1
 
+# project root directory
+PROJECT_ROOT_DIR=$PWD
+
 # mesh app dirs
 SRC_DIR=zephyr-rtos
 BUILD_DIR=zephyr-rtos/build
@@ -12,6 +15,9 @@ BUILD_DIR=zephyr-rtos/build
 # mobile broadcaster dirs
 MB_SRC_DIR=mobile_broadcaster
 MB_BUILD_DIR=mobile_broadcaster/build
+
+# config files dir
+CONFIG_FILES_DIR=$PROJECT_ROOT_DIR/config-files/mesh-topology-desc
 
 build_mobile_broadcaster () {
     west build -b nrf52840dk_nrf52840 \
@@ -29,7 +35,7 @@ build_randomized () {
         $SRC_DIR \
         -d $BUILD_DIR \
         -- -DMAX_MESH_SIZE=$1 \
-        -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/randomized_topology.json
+        -DTOPOLOGY_CONFIG_PATH:STRING=$CONFIG_FILES_DIR/randomized_topology.json
 }
 
 
@@ -38,7 +44,7 @@ build_basic5node () {
         $SRC_DIR \
         -d $BUILD_DIR \
         -- -DMAX_MESH_SIZE=5 \
-        -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/basic_5_nodes.json
+        -DTOPOLOGY_CONFIG_PATH:STRING=$CONFIG_FILES_DIR/basic_5_nodes.json
 }
 
 
