@@ -13,7 +13,7 @@ add_custom_target(generator ALL)
 # attach command to it
 add_custom_command(
   TARGET generator
-  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generator.py ${TOPOLOGY_CONFIG_PATH} 
+  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generator.py ${CMAKE_CURRENT_SOURCE_DIR}/${TOPOLOGY_CONFIG_PATH} 
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../${TOPOLOGY_CONFIG_PATH}
   VERBATIM)
 
