@@ -28,7 +28,8 @@ build_randomized () {
     west build -b nrf52840dk_nrf52840 \
         $SRC_DIR \
         -d $BUILD_DIR \
-        -- -DMAX_MESH_SIZE=$1 -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/randomized_topology.json
+        -- -DMAX_MESH_SIZE=$1 \
+        -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/randomized_topology.json
 }
 
 
