@@ -1,26 +1,29 @@
 #!/bin/bash
-# setup zephyr env
-#source ~/Projects/zephyr-project/zephyr/zephyr-env.sh
-#source ~/Projects/zephyr-project/.venv/bin/activate
-#pip3 install robotframework==4.0.1
 
-# TODO: add a timestamp for each logging session?
-# TODO: add mobile broadcaster build 
-# TODO: add $USAGE
+# fail script if one of the commands fails
+set -e
 
-USAGE="not implemented"
+USAGE="Script is automatic test runner for packet travel time measuring robot
+test. It runs a test and logs result to a file, until desired number of lines is
+reached. 
 
-PROJECT_ROOT_DIR=../
+\$1 - number of nodes, must be integer in range 3 - 64
+\$2 - path to Renode root directory 
+
+Example:
+./tests_runner.sh 9 ~/path/to/renode/renode
+"
+
+PROJECT_ROOT_DIR=..
 
 MIN_NODES_NUM=3
 MAX_NODES_NUM=64
 
 
 # input arguments 
-if [ $# -lt 2 ] 
-then
-    echo "Necessary arguments not provided!"
-    echo $USAGE
+if [ $# -lt 2 ]; then
+    echo "ERROR: Necessary arguments not provided!"
+    echo "$USAGE"
     exit 1
 fi
 
@@ -33,67 +36,85 @@ RENODE_ROOT_DIR=$2 #~/Repos/renode
 # Redirection of standard error is there to hide the "integer expression 
 # expected" message that bash prints out in case we do not have a number.
 
-# check if in range and int
-if ! [[ "$NODES_NUM" -eq "$NODES_NUM" ]] 2>/dev/null; then
-    echo noninteger
+# check if in range and if int
+if ! [ "$NODES_NUM" -eq "$NODES_NUM" ] 2>/dev/null; then
+    echo "ERROR: Number of nodes must be an integer!" 
+    echo "$USAGE"
     exit 1
-        exit 1
-else # TODO: NOT WORKING !!!
-    if [[ $NODES_NUM -ge $MIN_NODES_NUM ]] && [[ $NODES_NUM -le $MAX_NODES_NUM ]]
-    then
-        echo "Number of nodes must be integer between 3-64"
+else
+    if ! ([ "$NODES_NUM" -ge "$MIN_NODES_NUM" ] && [ "$NODES_NUM" -le "$MAX_NODES_NUM" ]); then
+        echo "ERROR: Number of nodes must be in range 3 - 64"
+        echo "$USAGE"
         exit 1
     fi
 fi
 
+
 # check if test.sh exists under provided directory 
-if ! [ -f "$RENODE_ROOT_DIR/test.sh" ] 
-then
-    echo "Provided directory does not contain Renode's test.sh script!"
+if ! [ -f "$RENODE_ROOT_DIR/test.sh" ]; then
+    echo "ERROR: Provided directory does not contain Renode's test.sh script!"
     echo "$USAGE"
     exit 1
 fi
 
-
-# debug 
-echo Exiting...
-exit 1
-
+# randomized topology config file path
+TOPOLOGY_CONFIG=$PROJECT_ROOT_DIR/config-files/mesh-topology-desc/randomized_topology.json
 
 # logging 
 LOG_FILES_DIR=$PROJECT_ROOT_DIR/tests/out
 LOG_FILE_NAME=${NODES_NUM}nodes.log
+LOG_FILE_PATH=$LOG_FILES_DIR/$LOG_FILE_NAME
 
-TOPOLOGY_RANDOMIZER_PATH=$PROJECT_ROOT_DIR/scripts
+# scripts path 
+SCRIPTS_PATH=$PROJECT_ROOT_DIR/scripts
 
-SOURCES_PATH=$PROJECT_ROOT_DIR/zephyr-rtos
-
-BUILD_DIR=$PROJECT_ROOT_DIR/zephyr-rtos/build
-
-
+# tests path
 ROBOT_TESTS_PATH=$PROJECT_ROOT_DIR/tests
 
-# make initial build
-west build -b nrf52840dk_nrf52840 $PROJECT_ROOT_DIR/zephyr-rtos \
-    --build-dir $PROJECT_ROOT_DIR/zephyr-rtos/build
+# build paths 
+SOURCES_DIR=$PROJECT_ROOT_DIR/zephyr-rtos
+BUILD_DIR=$PROJECT_ROOT_DIR/zephyr-rtos/build
+
+# mobile broadcaster build paths
+MB_SOURCES_DIR=$PROJECT_ROOT_DIR/mobile_broadcaster
+MB_BUILD_DIR=$PROJECT_ROOT_DIR/mobile_broadcaster/build
+
+
+# make sure that mobile broadcaster is built
+west build -b nrf52840dk_nrf52840 $MB_SOURCES_DIR\
+    --build-dir $MB_BUILD_DIR
+
 
 # make sure that log file exists, if not create it 
-mkdir $LOG_FILES_DIR && touch $LOG_FILES_DIR/$LOG_FILE_NAME
+mkdir -p $LOG_FILES_DIR && touch $LOG_FILES_DIR/$LOG_FILE_NAME
 
+
+# application logic 
 LINES=$(wc -l  $LOG_FILE_PATH | cut -f 1 -d " ")
 
 while [ $LINES -le 50 ] 
 do
-    # randomize
-    python3 $TOPOLOGY_RANDOMIZER_PATH/topology_randomizer.py $NODES_NUM
+    # randomize topology
+    python3 $SCRIPTS_PATH/topology_randomizer.py $NODES_NUM
 
     # build
-    west build -b nrf52840dk_nrf52840 $SOURCES_PATH --build-dir $BUILD_DIR 
+    west build -b nrf52840dk_nrf52840 $SOURCES_DIR \
+        --build-dir $BUILD_DIR \
+        -- -DMAX_MESH_SIZE=$NODES_NUM \
+        -DTOPOLOGY_CONFIG_PATH:STRING=$TOPOLOGY_CONFIG
     
-    # perform tests and save to file
-    $RENODE_ROOT_DIR/test.sh $ROBOT_TESTS_PATH/test_packet_travel_time.robot
+    # disable breaking the script when test fails, bcs some tests fail 
+    # due to lack of connection between start and dst nodes (randomization is 
+    # not perfect)
+    set +e
 
-    # read how many lines was written to output file 
+    # perform tests and save to file
+    $RENODE_ROOT_DIR/test.sh \
+    $ROBOT_TESTS_PATH/test_packet_travel_time.robot \
+        --variable NODES_NUM:$NODES_NUM
+    set -e 
+    
+    # read how many lines were written to output file 
     LINES=$(wc -l $LOG_FILE_PATH | cut -f 1 -d " ")
     
     echo NUMBER OF READ LINES: $LINES
