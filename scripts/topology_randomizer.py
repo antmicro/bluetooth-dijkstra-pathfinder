@@ -130,8 +130,8 @@ constant_contents_prepend = """
 logLevel 0
 
 emulation CreateWirelessMedium "wireless"
-emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
-emulation LogToWireshark "wireless"
+# emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
+# emulation LogToWireshark "wireless"
 emulation LogWirelessTraffic
 logLevel -1 wireless
 
