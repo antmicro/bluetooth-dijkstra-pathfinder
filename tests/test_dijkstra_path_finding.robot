@@ -7,7 +7,7 @@ Resource        ${RENODEKEYWORDS}
 
 *** Variables ***
 ${PROJECT_ROOT_DIR}=     ${CURDIR}/..
-${SCRIPT_PATH}=       ${PROJECT_ROOT_DIR}/config-files/renode-resc-files/basic_5_node.resc
+${SCRIPT_PATH}=       ${PROJECT_ROOT_DIR}/config-files/renode-resc-files/basic_5_nodes.resc
 
 *** Test Cases ***
 Should Print Route
