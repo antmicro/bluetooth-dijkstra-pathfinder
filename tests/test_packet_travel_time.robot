@@ -9,7 +9,7 @@ Library         DateTime
 # This are default values, they can be overwritten by a user by passing their
 # values as arguments when calling the test
 ${PROJECT_ROOT_DIR}=     ${CURDIR}/..
-${SCRIPT_PATH}=       ${PROJECT_ROOT_DIR}/config-files/renode-resc-files/randomized_topology.resc
+${SCRIPT_PATH}=       ${PROJECT_ROOT_DIR}/config-files/renode-resc-files/basic_5_nodes.resc
 ${LOG_PATH}=           ${PROJECT_ROOT_DIR}/tests/out/${NODES_NUM}nodes.log
 
 *** Test Cases ***
