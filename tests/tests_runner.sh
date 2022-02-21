@@ -50,9 +50,9 @@ else
 fi
 
 
-# check if test.sh exists under provided directory 
-if ! [ -f "$RENODE_ROOT_DIR/test.sh" ]; then
-    echo "ERROR: Provided directory does not contain Renode's test.sh script!"
+# check if renode-test exists under provided directory 
+if ! [ -f "$RENODE_ROOT_DIR/renode-test" ]; then
+    echo "ERROR: Provided directory does not contain renode-test script!"
     echo "$USAGE"
     exit 1
 fi
@@ -109,7 +109,7 @@ do
     set +e
 
     # perform tests and save to file
-    $RENODE_ROOT_DIR/test.sh \
+    $RENODE_ROOT_DIR/renode-test \
     $ROBOT_TESTS_PATH/test_packet_travel_time.robot \
         --variable NODES_NUM:$NODES_NUM
     set -e 

@@ -186,7 +186,7 @@ For example, when building basic 5 nodes:
 #### Running tests with Robot testing framework 
 
 For now, there are few tests that can be performed on the application.
-Test should be run with Renode's test.sh script.
+Test should be run with Renode's renode-test script.
 
 ##### Packet propagation time test
 This test will measure time between packet being sent and arriving to the 
@@ -197,7 +197,7 @@ machines.
 The script has few default values inside, so it has to be run 
 with command line arguments to overwrite this defaults:
 ```
-./test.sh /path/to/test_packet_travel_time.robot \
+./renode-test /path/to/test_packet_travel_time.robot \
     --variable SCRIPT_PATH:/path/to/resc/file.resc \
     --variable LOG_PATH:/path/to/valid/log/file.log
 ```
