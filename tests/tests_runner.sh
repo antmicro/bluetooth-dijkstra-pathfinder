@@ -92,7 +92,7 @@ mkdir -p $LOG_FILES_DIR && touch $LOG_FILES_DIR/$LOG_FILE_NAME
 # application logic 
 LINES=$(wc -l  $LOG_FILE_PATH | cut -f 1 -d " ")
 
-while [ $LINES -le 50 ] 
+while [ $LINES -le 10 ] 
 do
     # randomize topology
     python3 $SCRIPTS_PATH/topology_randomizer.py $NODES_NUM
