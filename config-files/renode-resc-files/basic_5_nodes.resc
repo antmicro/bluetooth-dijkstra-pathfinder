@@ -7,7 +7,7 @@
 
 logLevel 0
 
-emulation CreateWirelessMedium "wireless"
+emulation CreateBLEMedium "wireless"
 # emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
 # emulation LogToWireshark "wireless"
 #emulation LogWirelessTraffic
