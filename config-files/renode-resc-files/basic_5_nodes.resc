@@ -5,7 +5,7 @@
 # and wire it manually to Renode.
 ############################################################
 
-logLevel 0
+logLevel 3
 
 emulation CreateBLEMedium "wireless"
 # emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
@@ -33,12 +33,12 @@ showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 
 # logging 
-logLevel -1 sysbus.radio
+#logLevel -1 sysbus.radio
 #logLevel -1 sysbus.ppi
 #logLevel -1 sysbus.rtc0
 #logLevel -1 sysbus.timer0
 #logLevel -1 sysbus.timer1
-logLevel -1 sysbus.nvic
+#logLevel -1 sysbus.nvic
 sysbus LogPeripheralAccess sysbus.nvic
 #sysbus LogPeripheralAccess sysbus.ppi
 #sysbus LogPeripheralAccess sysbus.rtc0
@@ -65,12 +65,12 @@ showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 
 # logging 
-logLevel -1 sysbus.radio
+#logLevel -1 sysbus.radio
 #logLevel -1 sysbus.ppi
 #logLevel -1 sysbus.rtc0
 #logLevel -1 sysbus.timer0
 #logLevel -1 sysbus.timer1
-logLevel -1 sysbus.nvic
+#logLevel -1 sysbus.nvic
 sysbus LogPeripheralAccess sysbus.nvic
 #sysbus LogPeripheralAccess sysbus.ppi
 #sysbus LogPeripheralAccess sysbus.rtc0
@@ -95,13 +95,14 @@ emulation SetQuantum "0.00001"
 showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 
+logLevel 1 sysbus.uart0
 # logging 
-logLevel -1 sysbus.radio
+#logLevel -1 sysbus.radio
 #logLevel -1 sysbus.ppi
 #logLevel -1 sysbus.rtc0
 #logLevel -1 sysbus.timer0
 #logLevel -1 sysbus.timer1
-logLevel -1 sysbus.nvic
+#logLevel -1 sysbus.nvic
 sysbus LogPeripheralAccess sysbus.nvic
 #sysbus LogPeripheralAccess sysbus.ppi
 #sysbus LogPeripheralAccess sysbus.rtc0
@@ -127,12 +128,12 @@ showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 
 # logging 
-logLevel -1 sysbus.radio
+#logLevel -1 sysbus.radio
 #logLevel -1 sysbus.ppi
 #logLevel -1 sysbus.rtc0
 #logLevel -1 sysbus.timer0
 #logLevel -1 sysbus.timer1
-logLevel -1 sysbus.nvic
+#logLevel -1 sysbus.nvic
 sysbus LogPeripheralAccess sysbus.nvic
 #sysbus LogPeripheralAccess sysbus.ppi
 #sysbus LogPeripheralAccess sysbus.rtc0
