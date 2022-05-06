@@ -16,8 +16,23 @@
 #include <timing/timing.h>
 
 uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
-const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 8)
+const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 8)//TODO is it overwritten
 };
+
+
+/* Callbacks */
+void ble_scanned(struct bt_le_ext_adv *adv,
+        struct bt_le_ext_adv_scanned_info *info){
+    // adv - advertising set obj
+    // info - address adn type
+    printk("Scanned \n");
+}
+
+
+void ble_sent(struct bt_le_ext_adv *adv, 
+        struct bt_le_ext_adv_sent_info *info){
+    printk("Sent adv data \n");
+}
 
 
 void main(void)
@@ -50,7 +65,9 @@ void main(void)
     // Advertisement setup 
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
-        + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY;  
+        + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
+        + BT_LE_ADV_OPT_SCANNABLE
+        + BT_LE_ADV_OPT_NOTIFY_SCAN_REQ;
 
     struct bt_le_adv_param params = {
         .id = 0x0,
@@ -60,10 +77,15 @@ void main(void)
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_1 
     };
 
+    static struct bt_le_ext_adv_cb adv_callbacks = {
+        .sent = ble_sent,
+        .scanned = ble_scanned
+    };
+
     // create advertising set
 	struct bt_le_ext_adv *adv;
 	err = bt_le_ext_adv_create(
-            &params, NULL, &adv);
+            &params, &adv_callbacks, &adv);
     if(err){
         printk("Failed to create advertising set (err %d)\n",
                 err); 
@@ -72,15 +94,17 @@ void main(void)
     
     // Data setup
     // First byte is ***mesh address*** of final destination 
-    uint8_t mfg_data[9]; 
-    memcpy(&mfg_data[1], mfg_data, sizeof(mfg_data));
-    mfg_data[0] = 0x00; 
-    const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 9)
-    };
+    //uint8_t mfg_data[9]; TODO: here add some data, for now its whatever
+    //memcpy(&mfg_data[1], mfg_data, sizeof(mfg_data));
+    
+    mfg_data[0] = 0x00;
+    const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 8)};
 
     // set advertising set ad and sd 
-    err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad),
-           NULL, 0);
+    err = bt_le_ext_adv_set_data(adv, 
+            NULL, 0, // When scannable then ad == NULL
+            ad, ARRAY_SIZE(ad));
+
     if(err){
         printk("Failed to set adv data (err %d)\n",
                 err); 

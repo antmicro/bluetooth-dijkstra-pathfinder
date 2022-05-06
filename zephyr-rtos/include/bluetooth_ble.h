@@ -41,5 +41,10 @@ void bt_direct_msg_received_cb(
         const struct bt_le_scan_recv_info *info,
 		      struct net_buf_simple *buf);
 
+void ble_scanned(
+        struct bt_le_ext_adv *adv,
+        struct bt_le_ext_adv_scanned_info *info);
 
+void ble_sent(struct bt_le_ext_adv *adv, 
+        struct bt_le_ext_adv_sent_info *info);
 #endif

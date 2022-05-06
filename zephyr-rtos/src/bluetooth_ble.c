@@ -11,7 +11,7 @@ K_FIFO_DEFINE(common_packets_to_send_q);
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
-		.type       = BT_LE_SCAN_TYPE_PASSIVE,  // opt code scan is for long range
+		.type       = BT_LE_SCAN_TYPE_ACTIVE,  // opt code scan is for long range
 		.options    = 0,//BT_LE_SCAN_OPT_CODED | BT_LE_SCAN_OPT_FILTER_DUPLICATE, //long range //+ ,
 		.interval   = 0x0060, //BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = 0x0060//BT_GAP_SCAN_FAST_WINDOW,
@@ -29,6 +29,7 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
         + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
+        + BT_LE_ADV_OPT_SCANNABLE           // Add for active scanning
         + BT_LE_ADV_OPT_NOTIFY_SCAN_REQ;
   
     struct bt_le_adv_param params = {
@@ -37,6 +38,12 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
         .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, // 30ms  
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_1, // 60ms 
     };
+
+    static struct bt_le_ext_adv_cb adv_callbacks = {
+        .sent = ble_sent,
+        .scanned = ble_scanned
+    };
+    
     // TODO: handle unreserved nodes !!!
     // get addr from string to proper format
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
@@ -61,11 +68,12 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
         params.peer = &receiver_addr;
 
         // 2nd param is callbacks struct for adv 
-        err = bt_le_ext_adv_create(&params, NULL, &adv_set[i]);
+        err = bt_le_ext_adv_create(&params, &adv_callbacks, &adv_set[i]);
         if(err){
             printk("Error creating advertising set! err: %d\n", err);
         }
     }
+
 }
 
 
@@ -124,7 +132,7 @@ void create_packet_thread_entry(struct node_t *graph){
 
             // calculate next node from dijkstra algorithm
             printk("Calculating Dijkstra's algorithm...\n");
-            int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE, 
+            int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE,
                     common_self_mesh_id, dst_mesh_id);
 
             if(next_node_mesh_id < 0){
@@ -166,11 +174,16 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         uint8_t *extracted_data = &(tx_packet->data.data[2]);
 
         // create bt data 
-        struct bt_data ad[] = {BT_DATA(common_self_mesh_id, extracted_data, 8) };
+        struct bt_data ad[] = {BT_DATA(common_self_mesh_id, extracted_data, 8)};
+
+        // to whatever, for identification of ad message only
+        //uint8_t temp_data[] = {0x09, 0x09, 0x09, 0x09, 0x09 ,0x09, 0x09, 0x09}; 
+        //struct bt_data sd[] = {BT_DATA(common_self_mesh_id, temp_data, 8)};
 
         // set data to one from received packet  
-        err = bt_le_ext_adv_set_data(current_set, ad,
-                ARRAY_SIZE(ad), NULL, 0);
+        err = bt_le_ext_adv_set_data(current_set,
+                NULL, 0, 
+                ad, ARRAY_SIZE(ad));
         if(err){
             printk("Error setting advertisement data: %d\n", err);
         }
@@ -211,5 +224,19 @@ void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
         printk("Error queue put: %d, queue purged\n", err);
         k_msgq_purge(&common_received_packets_q);
     }
+}
+
+
+void ble_scanned(struct bt_le_ext_adv *adv,
+        struct bt_le_ext_adv_scanned_info *info){
+    // adv - advertising set obj
+    // info - address adn type
+    printk("Scanned \n");
+}
+
+
+void ble_sent(struct bt_le_ext_adv *adv, 
+        struct bt_le_ext_adv_sent_info *info){
+    printk("Sent adv data \n");
 }
 
