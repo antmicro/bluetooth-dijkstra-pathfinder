@@ -16,8 +16,6 @@
 #include <timing/timing.h>
 
 uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
-const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 8)//TODO is it overwritten
-};
 
 
 /* Callbacks */
@@ -37,7 +35,7 @@ void ble_sent(struct bt_le_ext_adv *adv,
 
 void main(void)
 {
-	int err;
+    int err;
 
 	printk("Starting Broadcaster\n");
 
