@@ -4,15 +4,20 @@
 #include "../include/dijkstra.h"
 #include <timing/timing.h>
 
-K_MSGQ_DEFINE(common_received_packets_q, sizeof(struct net_buf_simple), 10, 4);
+/* Queues for message passing and processing */
+K_MSGQ_DEFINE(common_received_packets_q,
+        sizeof(struct net_buf_simple), 10, 4);
 K_FIFO_DEFINE(common_packets_to_send_q);
+
+/* Events for indicating if message was sent and scanned succesfully */
+K_EVENT_DEFINE(ble_sending_completed);
 
 /* Setup functions */
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
-		.type       = BT_LE_SCAN_TYPE_ACTIVE,  // opt code scan is for long range
-		.options    = 0,//BT_LE_SCAN_OPT_CODED | BT_LE_SCAN_OPT_FILTER_DUPLICATE, //long range //+ ,
+		.type       = BT_LE_SCAN_TYPE_ACTIVE,  
+		.options    = 0,//BT_LE_SCAN_OPT_CODED | 
 		.interval   = 0x0060, //BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = 0x0060//BT_GAP_SCAN_FAST_WINDOW,
 	};
@@ -116,7 +121,8 @@ void create_packet_thread_entry(struct node_t *graph){
                
                 // copy time stamp to a buffer
                 uint64_t packet_send_time = 0;
-                memcpy(&packet_send_time, &buf.data[3], sizeof(packet_send_time));
+                memcpy(&packet_send_time, &buf.data[3],
+                        sizeof(packet_send_time));
                 
                 // get current time in ns
                 receive_time = timing_counter_get(); 
@@ -198,6 +204,17 @@ void ble_send_packet_thread_entry(struct node_t *graph,
                     current_set, 
                     BT_LE_EXT_ADV_START_PARAM(0, 5)); 
         }while(err);
+        // Post event transmission finished  
+        k_event_post(&ble_sending_completed, BLE_FINISHED_TRANSMISSION_EVENT);
+
+        uint32_t events;
+        events = k_event_wait_all(&ble_sending_completed,
+                BLE_TRANSMISSION_SUCCESS, true, K_MSEC(50));
+        if(events == 0){
+            printk("Node %d has not scanned for data! \n",
+                    tx_packet->next_node_mesh_id);
+            // TODO: add routing table modification here 
+        }
     }
 }
 
@@ -231,12 +248,15 @@ void ble_scanned(struct bt_le_ext_adv *adv,
         struct bt_le_ext_adv_scanned_info *info){
     // adv - advertising set obj
     // info - address adn type
-    printk("Scanned \n");
+    printk("Sent scan data \n");
+    k_event_post(&ble_sending_completed, BLE_SCANNED_EVENT); 
 }
 
 
 void ble_sent(struct bt_le_ext_adv *adv, 
         struct bt_le_ext_adv_sent_info *info){
+    // Fired after a num of adv ev or timeout, no need to count
     printk("Sent adv data \n");
+    k_event_post(&ble_sending_completed, BLE_SENT_ADV_EVENT);
 }
 

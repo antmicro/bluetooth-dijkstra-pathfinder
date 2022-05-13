@@ -1,5 +1,6 @@
 #ifndef BLUETOOTH_BLE_H
 #define BLUETOOTH_BLE_H
+
 #include <sys/printk.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/bluetooth.h>
@@ -10,6 +11,12 @@
 #include "graph.h"
 
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
+
+/* Events definitions */
+#define BLE_SENT_ADV_EVENT                0x8 // bit 0 in 32 bit
+#define BLE_SCANNED_EVENT                 0x4 // bit 1 in 32 bit 
+#define BLE_FINISHED_TRANSMISSION_EVENT   0x2 // bit 2 in 32 bit
+#define BLE_TRANSMISSION_SUCCESS          0xE // bits 1,2,3
 
 /* Global queues for BLE ad - hoc */
 extern struct k_msgq common_received_packets_q;
