@@ -204,16 +204,25 @@ void ble_send_packet_thread_entry(struct node_t *graph,
                     current_set, 
                     BT_LE_EXT_ADV_START_PARAM(0, 5)); 
         }while(err);
-        // Post event transmission finished  
-        k_event_post(&ble_sending_completed, BLE_FINISHED_TRANSMISSION_EVENT);
 
         uint32_t events;
         events = k_event_wait_all(&ble_sending_completed,
-                BLE_TRANSMISSION_SUCCESS, true, K_MSEC(50));
+                BLE_SCANNED_EVENT, true, K_MSEC(1000));
         if(events == 0){
-            printk("Node %d has not scanned for data! \n",
+            printk("ERROR: Node %d has not scanned for data! \n",
                     tx_packet->next_node_mesh_id);
-            // TODO: add routing table modification here 
+            printk("Events: %X\n", ble_sending_completed.events); 
+            
+            // Set new dist between self and next node as infinity (255)
+            // basically disabling node from communiaction
+            graph_update_distance(graph,
+                    common_self_mesh_id, tx_packet->next_node_mesh_id,
+                    INF);
+            // Update routine so its not so binary. 
+            
+            // Put the packet again into fifo to try to send to another 
+            // node after adjusting the graph
+            k_fifo_put(&common_packets_to_send_q, tx_packet);
         }
     }
 }
@@ -248,7 +257,10 @@ void ble_scanned(struct bt_le_ext_adv *adv,
         struct bt_le_ext_adv_scanned_info *info){
     // adv - advertising set obj
     // info - address adn type
-    printk("Sent scan data \n");
+    char addr_str[BT_ADDR_LE_STR_LEN];
+    bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
+    
+    printk("Sent scan data to the node with addr: %s\n", addr_str);
     k_event_post(&ble_sending_completed, BLE_SCANNED_EVENT); 
 }
 
@@ -257,6 +269,5 @@ void ble_sent(struct bt_le_ext_adv *adv,
         struct bt_le_ext_adv_sent_info *info){
     // Fired after a num of adv ev or timeout, no need to count
     printk("Sent adv data \n");
-    k_event_post(&ble_sending_completed, BLE_SENT_ADV_EVENT);
 }
 
