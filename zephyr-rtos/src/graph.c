@@ -13,6 +13,25 @@ void reset_td_visited(struct node_t *graph){
 }
 
 
+void graph_update_distance(struct node_t *graph,
+        uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist){
+    struct node_t *node1 = &graph[mesh_id_1];
+    struct node_t *node2 = &graph[mesh_id_2];
+    // Do it both ways TODO: change it so the code is not copied
+    for(uint8_t i = 0; i < node1->paths_size; i++){
+        if(node1->paths[i].addr == mesh_id_2){
+            node1->paths->distance = new_dist;
+        }
+    }
+    for(uint8_t i = 0; i < node2->paths_size; i++){
+        if(node2->paths[i].addr == mesh_id_1){
+            node1->paths->distance = new_dist;
+        }
+    }
+}
+
+
+/* Utilities */
 uint8_t identify_self_in_graph(struct node_t *graph){
     // get all configured identities 
     bt_addr_le_t identities[CONFIG_BT_ID_MAX];

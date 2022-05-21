@@ -39,6 +39,8 @@ extern uint8_t common_self_mesh_id; // TODO: maybe make it into abstract data ty
 //uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex);
 uint8_t graph_init(struct node_t *graph);
 void reset_td_visited(struct node_t *graph);
+void graph_update_distance(struct node_t *graph,
+        uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist);
 uint8_t identify_self_in_graph(struct node_t *graph);
 uint8_t get_mesh_id_by_ble_addr(struct node_t *graph, char *ble_addr, uint8_t *mesh_id);
 
