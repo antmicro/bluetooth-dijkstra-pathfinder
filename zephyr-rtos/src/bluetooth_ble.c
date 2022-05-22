@@ -204,26 +204,33 @@ void ble_send_packet_thread_entry(struct node_t *graph,
                     current_set, 
                     BT_LE_EXT_ADV_START_PARAM(0, 5)); 
         }while(err);
-
+        
         uint32_t events;
+
         events = k_event_wait_all(&ble_sending_completed,
                 BLE_SCANNED_EVENT, true, K_MSEC(1000));
         if(events == 0){
             printk("ERROR: Node %d has not scanned for data! \n",
                     tx_packet->next_node_mesh_id);
             printk("Events: %X\n", ble_sending_completed.events); 
-            
-            // Set new dist between self and next node as infinity (255)
-            // basically disabling node from communiaction
-            graph_update_distance(graph,
-                    common_self_mesh_id, tx_packet->next_node_mesh_id,
-                    INF);
-            // Update routine so its not so binary. 
-            
-            // Put the packet again into fifo to try to send to another 
-            // node after adjusting the graph
-            k_fifo_put(&common_packets_to_send_q, tx_packet);
         }
+
+        /*
+         * Calculate new tentative_distance on the basis of the number 
+         * of unsuccessful transmission sequences. Update the number of 
+         * unsuccessful transmissions and set the new td.
+         * */
+        node_update_missed_transmissions(
+                    &graph[tx_packet->next_node_mesh_id], events);
+        uint8_t new_td = calc_td_from_missed_transmissions(
+                    graph[tx_packet->next_node_mesh_id].missed_transmissions);
+        graph_set_distance(graph,
+                    common_self_mesh_id, tx_packet->next_node_mesh_id,
+                    new_td);
+        
+        // If transmission unsuccessful, put packet to fifo again    
+        if(!events) 
+            k_fifo_put(&common_packets_to_send_q, tx_packet);
     }
 }
 

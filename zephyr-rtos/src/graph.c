@@ -1,9 +1,10 @@
 #include "../include/graph.h"
 #include <bluetooth/bluetooth.h>
+#include <math.h>
 
 uint8_t common_self_mesh_id = 255;
 
-void reset_td_visited(struct node_t *graph){
+void reset_td_visited(struct node_t graph[]){
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         if((graph + i)->reserved){
             (graph + i)->tentative_distance = INF;
@@ -13,7 +14,7 @@ void reset_td_visited(struct node_t *graph){
 }
 
 
-void graph_update_distance(struct node_t *graph,
+void graph_set_distance(struct node_t graph[],
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist){
     struct node_t *node1 = &graph[mesh_id_1];
     struct node_t *node2 = &graph[mesh_id_2];
@@ -28,6 +29,22 @@ void graph_update_distance(struct node_t *graph,
             node1->paths->distance = new_dist;
         }
     }
+}
+
+// TODO: Should have some decay time, so the communication is retried
+void node_update_missed_transmissions(struct node_t *node, 
+        bool transmission_success){
+    if(transmission_success && node->missed_transmissions > 0){
+        node->missed_transmissions--;
+    }
+    else node->missed_transmissions++;
+}
+
+
+uint8_t calc_td_from_missed_transmissions(uint64_t missed_transmissions){
+    float a = 0.5; 
+    float y = a * missed_transmissions * missed_transmissions + 1.0;
+    return (uint8_t)y;
 }
 
 

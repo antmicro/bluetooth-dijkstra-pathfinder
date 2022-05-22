@@ -29,6 +29,7 @@ template_to_load = """// node 0x{{ addr_t }}
     graph[{{ addr_t }}].reserved = {{ reserved_t }};
     graph[{{ addr_t }}].visited = false;
     graph[{{ addr_t }}].tentative_distance = INF;
+    graph[{{ addr_t }}].missed_transmissions = 0;
     graph[{{ addr_t }}].paths_size = {{ paths_size_t }};
     {% if paths_size_t is greaterthan 0 %}
     graph[{{ addr_t }}].paths = k_malloc(sizeof(struct path_t) * graph[{{addr_t}}].paths_size);
