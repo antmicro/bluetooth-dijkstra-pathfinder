@@ -63,14 +63,14 @@ void main(void)
     // Advertisement setup 
     uint32_t ext_adv_aptions = 
         BT_LE_ADV_OPT_EXT_ADV
-        + BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
+        //+ BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY
         + BT_LE_ADV_OPT_SCANNABLE
         + BT_LE_ADV_OPT_NOTIFY_SCAN_REQ;
 
     struct bt_le_adv_param params = {
         .id = 0x0,
         .options = ext_adv_aptions,
-        .peer = &receiver_addr,
+        .peer = NULL,//&receiver_addr,
         .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, 
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_1 
     };
