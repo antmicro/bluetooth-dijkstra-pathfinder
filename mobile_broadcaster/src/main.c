@@ -58,7 +58,6 @@ void main(void)
     char r_identity[129];
     bt_addr_le_to_str(&receiver_addr, r_identity, sizeof(r_identity)); 
     printk("Sending to node with identity: %s\n", r_identity); 
-    printk("Sending to node with mesh id: 2\n");
 
     // Advertisement setup 
     uint32_t ext_adv_aptions = 
@@ -71,8 +70,8 @@ void main(void)
         .id = 0x0,
         .options = ext_adv_aptions,
         .peer = NULL,//&receiver_addr,
-        .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, 
-        .interval_max = BT_GAP_ADV_FAST_INT_MAX_1 
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, 
+        .interval_max = BT_GAP_ADV_FAST_INT_MAX_2 
     };
 
     static struct bt_le_ext_adv_cb adv_callbacks = {
@@ -111,7 +110,7 @@ void main(void)
 
     // start advertising
     err = bt_le_ext_adv_start(adv,
-        BT_LE_EXT_ADV_START_PARAM(0, 20));
+        BT_LE_EXT_ADV_START_PARAM(0, 50));
         //BT_LE_EXT_ADV_START_DEFAULT);
     if (err) {
         printk("Advertising failed to start (err %d)\n", err);

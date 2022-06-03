@@ -17,7 +17,7 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
     // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
 		.type       = BT_LE_SCAN_TYPE_ACTIVE,  
-		.options    = 0,//BT_LE_SCAN_OPT_CODED | 
+		.options    = BT_LE_SCAN_OPT_NONE,//BT_LE_SCAN_OPT_CODED | 
 		.interval   = 0x0060, //BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = 0x0060//BT_GAP_SCAN_FAST_WINDOW,
 	};
@@ -40,8 +40,8 @@ void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set){
     struct bt_le_adv_param params = {
         .id = 0x0,
         .options = ext_adv_aptions,
-        .interval_min = BT_GAP_ADV_FAST_INT_MIN_1, // 30ms  
-        .interval_max = BT_GAP_ADV_FAST_INT_MAX_1, // 60ms 
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, // 30ms  
+        .interval_max = BT_GAP_ADV_FAST_INT_MAX_2, // 60ms 
     };
 
     static struct bt_le_ext_adv_cb adv_callbacks = {
