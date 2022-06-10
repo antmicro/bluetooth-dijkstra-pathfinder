@@ -10,8 +10,8 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
-#define RCV_ADDR_IDX 2
-#define DST_ADDR_IDX 3
+#define DST_ADDR_IDX 2
+#define RCV_ADDR_IDX 3
 #define BROADCAST_ADDR 0x7F // 127
 #define ROUTING_TABLE_ID 0x7E //126
 

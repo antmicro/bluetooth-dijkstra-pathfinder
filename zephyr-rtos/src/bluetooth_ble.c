@@ -250,13 +250,14 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     // check if receiver 
     bool is_receiver = buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
             buf->data[DST_ADDR_IDX] == ROUTING_TABLE_ID;
+    
     printk("######################################################\n");
     printk("Received data from node with address: %s\n", addr_str);
     printk("Data: %s\n", data);
 
     // add to queue
     if(is_receiver){
-        printk("Current node is the receiver of this msg: %d \n", 
+        printk("Current node is the receiver of this msg: %X \n", 
                 buf->data[RCV_ADDR_IDX]);
         int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
         if(err){ 
