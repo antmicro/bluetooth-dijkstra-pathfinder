@@ -27,7 +27,6 @@ extern struct k_fifo common_packets_to_send_q;
 // TODO: make local mesh address into typedef for clarity
 struct ble_tx_packet_data {
     void *fifo_reserved;
-    uint8_t next_node_mesh_id; 
     struct net_buf_simple data;    
 };
 
@@ -38,12 +37,9 @@ typedef struct {
 
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
-void ble_adv_sets_setup(struct node_t *graph, struct bt_le_ext_adv **adv_set);
 void create_packet_thread_entry(struct node_t *graph);
 void ble_send_packet_thread_entry(struct node_t *graph,
         struct bt_le_scan_param *params);
-void get_mesh_id_from_data(struct net_buf_simple *buf, 
-        uint8_t *mesh_id);
 
 // callbacks 
 void bt_msg_received_cb(
@@ -56,4 +52,8 @@ void ble_scanned(
 
 void ble_sent(struct bt_le_ext_adv *adv, 
         struct bt_le_ext_adv_sent_info *info);
+
+/* Utility functions */
+bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id);
+
 #endif
