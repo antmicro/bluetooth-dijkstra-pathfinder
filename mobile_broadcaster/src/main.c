@@ -1,11 +1,3 @@
-/* main.c - Application main entry point */
-
-/*
- * Copyright (c) 2015-2016 Intel Corporation
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <zephyr/types.h>
 #include <stddef.h>
 #include <sys/printk.h>
@@ -15,8 +7,11 @@
 #include <bluetooth/hci.h>
 #include <timing/timing.h>
 
-uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
+#define RCV_ADDR_IDX 0
+#define DST_ADDR_IDX 1
+#define BROADCAST_ADDR 0x7F // 127
 
+uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
 
 void main(void)
 {
@@ -49,13 +44,16 @@ void main(void)
     //uint8_t mfg_data[9]; TODO: here add some data, for now its whatever
     //memcpy(&mfg_data[1], mfg_data, sizeof(mfg_data));
     
-    mfg_data[0] = 0x00;
-    const struct bt_data ad[] = {BT_DATA(0xff, mfg_data, 8)};
+    mfg_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // Broadcast addr 
+    mfg_data[DST_ADDR_IDX] = 0x00; // Destination addr
+    const struct bt_data sd[] = {BT_DATA(0xff, mfg_data, 8)};
+    static const struct bt_data ad[] = {
+	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};
 
     // change ext adv to regular
     err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
             ad, ARRAY_SIZE(ad),
-            NULL, 0);
+            sd, ARRAY_SIZE(sd));
 
     if (err) {
         printk("Advertising failed to start (err %d)\n", err);

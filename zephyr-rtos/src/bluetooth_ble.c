@@ -14,9 +14,8 @@ K_EVENT_DEFINE(ble_sending_completed);
 
 /* Setup functions */
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
-    // directed messaging scan params
     *(scan_params) = (struct bt_le_scan_param){
-		.type       = BT_LE_SCAN_TYPE_ACTIVE,  
+		.type       = BT_LE_SCAN_TYPE_PASSIVE,  
 		.options    = BT_LE_SCAN_OPT_NONE,//BT_LE_SCAN_OPT_CODED | 
 		.interval   = 0x0060, //BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = 0x0060//BT_GAP_SCAN_FAST_WINDOW,
@@ -24,7 +23,7 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
     
     // register a callback for packet reception
     static struct bt_le_scan_cb scan_callbacks = {
-        .recv = bt_direct_msg_received_cb,
+        .recv = bt_msg_received_cb,
     };
     bt_le_scan_cb_register(&scan_callbacks);
 }
@@ -196,13 +195,16 @@ void ble_send_packet_thread_entry(struct node_t *graph,
 
         printk("######################################################\n");
         printk("Advertising to node: %d\n", tx_packet->next_node_mesh_id);
+        printk("Advertising to node with addr_bt_le: %s \n",
+                graph[tx_packet->next_node_mesh_id].addr_bt_le);
         printk("######################################################\n");
         
         // wait until previous adv finished and advertise current msg
         do{
             err = bt_le_ext_adv_start(
                     current_set, 
-                    BT_LE_EXT_ADV_START_PARAM(0, 5)); 
+                    BT_LE_EXT_ADV_START_PARAM(10, 5)); 
+            printk("Sending status: %d \n", err);
         }while(err);
         
         uint32_t events;
@@ -236,27 +238,33 @@ void ble_send_packet_thread_entry(struct node_t *graph,
 
 
 /* Callbacks */
-void bt_direct_msg_received_cb(const struct bt_le_scan_recv_info *info,
+void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
               struct net_buf_simple *buf){
     char addr_str[BT_ADDR_LE_STR_LEN];
-    char data_str[31];
+    char data[31];
     
     // formatting 
-    bin2hex(buf->data, buf->len, data_str, sizeof(data_str));
+    bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
-
-    // print
+        
+    // check if receiver 
+    bool is_receiver = buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
+            buf->data[DST_ADDR_IDX] == ROUTING_TABLE_ID;
     printk("######################################################\n");
     printk("Received data from node with address: %s\n", addr_str);
-    printk("Data: %s\n", data_str);
-    printk("######################################################\n");
-    
-    // add to queue  
-    int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
-    if(err){ // TODO: change this purge, this is little extreme 
-        printk("Error queue put: %d, queue purged\n", err);
-        k_msgq_purge(&common_received_packets_q);
+    printk("Data: %s\n", data);
+
+    // add to queue
+    if(is_receiver){
+        printk("Current node is the receiver of this msg: %d \n", 
+                buf->data[RCV_ADDR_IDX]);
+        int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
+        if(err){ 
+            printk("Error queue put: %d, queue purged\n", err);
+            k_msgq_purge(&common_received_packets_q);
+        }
     }
+    printk("######################################################\n");
 }
 
 

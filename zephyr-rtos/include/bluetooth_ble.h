@@ -10,6 +10,11 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
+#define RCV_ADDR_IDX 2
+#define DST_ADDR_IDX 3
+#define BROADCAST_ADDR 0x7F // 127
+#define ROUTING_TABLE_ID 0x7E //126
+
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
 
 /* Events definitions */
@@ -41,7 +46,7 @@ void get_mesh_id_from_data(struct net_buf_simple *buf,
         uint8_t *mesh_id);
 
 // callbacks 
-void bt_direct_msg_received_cb(
+void bt_msg_received_cb(
         const struct bt_le_scan_recv_info *info,
 		      struct net_buf_simple *buf);
 
