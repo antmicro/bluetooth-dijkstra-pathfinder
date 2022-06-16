@@ -7,6 +7,9 @@
 /* Queues for message passing and processing */
 K_MSGQ_DEFINE(common_received_packets_q,
         sizeof(struct net_buf_simple), 10, 4);
+K_MSGQ_DEFINE(awaiting_ack,
+        sizeof(struct net_buf_simple), 1, 4);
+
 K_FIFO_DEFINE(common_packets_to_send_q);
 
 /* Events for indicating if message was sent and scanned succesfully */
@@ -94,7 +97,7 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         int err;
         uint8_t next_node_mesh_id = tx_packet->data.data[RCV_ADDR_IDX];
         
-        // hack to bypass auto prepended type / header   
+        // hack to bypass auto prepended type 
         uint8_t *extracted_data = &(tx_packet->data.data[2]);
 
         // create bt data 
@@ -104,17 +107,15 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         printk("######################################################\n");
         printk("Advertising to node: %d\n", next_node_mesh_id);
         printk("######################################################\n");
-        
+
         // wait until previous adv finished and advertise current msg
         do{
             err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
             ad, ARRAY_SIZE(ad),
             NULL, 0);
-            printk("Sending status: %d \n", err);
         }while(err);
         
         uint32_t events;
-
         events = k_event_wait_all(&ble_sending_completed,
                 BLE_SCANNED_EVENT, true, K_MSEC(1000));
         if(events == 0){
@@ -161,7 +162,6 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
     // check if receiver 
     bool is_receiver = ble_is_receiver(buf, common_self_mesh_id);
-    
     // add to queue
     if(is_receiver){
         printk("Current node is the receiver of this msg: %X \n", 
@@ -197,10 +197,14 @@ void ble_sent(struct bt_le_ext_adv *adv,
 /* Utility functions */
 bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id){
     bool rec = buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
-            buf->data[DST_ADDR_IDX] == ROUTING_TABLE_ID ||
             buf->data[RCV_ADDR_IDX] == common_self_mesh_id;
     
     return rec;
 }
+
+bool ble_is_ack(struct net_buf_simple *buf){
+    return false;
+}
+
 
 

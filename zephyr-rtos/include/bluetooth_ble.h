@@ -10,10 +10,15 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
-#define DST_ADDR_IDX 2
-#define RCV_ADDR_IDX 3
+#define MSG_TYPE_IDX 2
+#define DST_ADDR_IDX 3
+#define RCV_ADDR_IDX 4
+
+#define MSG_TYPE_DATA 0x1
+#define MSG_TYPE_ROUTING_TAB 0x2
+#define MSG_TYPE_ACK 0x3
+
 #define BROADCAST_ADDR 0x7F // 127
-#define ROUTING_TABLE_ID 0x7E //126
 
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
 
@@ -35,6 +40,10 @@ typedef struct {
     struct net_buf_simple buf;
 }__attribute__((aligned(4))) ble_packet_buffer_alligned;
 
+struct ble_ack_info {
+    uint8_t node_id;
+    uint32_t time_stamp;
+};
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void create_packet_thread_entry(struct node_t *graph);

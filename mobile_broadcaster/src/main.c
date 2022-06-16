@@ -7,8 +7,9 @@
 #include <bluetooth/hci.h>
 #include <timing/timing.h>
 
-#define RCV_ADDR_IDX 1
-#define DST_ADDR_IDX 0
+#define MSG_TYPE_IDX 0
+#define DST_ADDR_IDX 1
+#define RCV_ADDR_IDX 2
 #define BROADCAST_ADDR 0x7F // 127
 
 uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
