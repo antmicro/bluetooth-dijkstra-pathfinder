@@ -47,6 +47,7 @@ void main(void)
     
     mfg_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // Broadcast addr 
     mfg_data[DST_ADDR_IDX] = 0x00; // Destination addr
+    mfg_data[MSG_TYPE_IDX] = 0x1; // MSG_TYPE_DATA 
     const struct bt_data sd[] = {BT_DATA(0xff, mfg_data, 8)};
     static const struct bt_data ad[] = {
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};

@@ -162,15 +162,36 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
     // check if receiver 
     bool is_receiver = ble_is_receiver(buf, common_self_mesh_id);
+    
+
     // add to queue
     if(is_receiver){
         printk("Current node is the receiver of this msg: %X \n", 
                 buf->data[RCV_ADDR_IDX]);
-        int err = k_msgq_put(&common_received_packets_q, buf, K_NO_WAIT);
-        if(err){ 
-            printk("Error queue put: %d, queue purged\n", err);
-            k_msgq_purge(&common_received_packets_q);
+        
+        uint8_t msg_type = buf->data[MSG_TYPE_IDX];
+        switch(msg_type){
+            case MSG_TYPE_DATA:
+                {
+                    int err = k_msgq_put(
+                            &common_received_packets_q, 
+                            buf, K_NO_WAIT);
+                    if(err){ 
+                        printk("Error queue put: %d, queue purged\n", err);
+                        k_msgq_purge(&common_received_packets_q);
+                    }
+                }
+                break;
+
+            case MSG_TYPE_ACK:
+                printk("ERROR: Not implemented.\n");
+                break;
+
+            case MSG_TYPE_ROUTING_TAB:
+                printk("ERROR: Not implemented.\n");
+                break;
         }
+        
     }
     printk("######################################################\n");
 }
@@ -198,7 +219,6 @@ void ble_sent(struct bt_le_ext_adv *adv,
 bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id){
     bool rec = buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
             buf->data[RCV_ADDR_IDX] == common_self_mesh_id;
-    
     return rec;
 }
 
