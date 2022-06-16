@@ -13,6 +13,8 @@
 #define MSG_TYPE_IDX 2
 #define DST_ADDR_IDX 3
 #define RCV_ADDR_IDX 4
+#define TIME_STAMP_UPPER_IDX 5
+#define TIME_STAMP_LOWER_IDX 6
 
 #define MSG_TYPE_DATA 0x1
 #define MSG_TYPE_ROUTING_TAB 0x2
@@ -42,7 +44,7 @@ typedef struct {
 
 struct ble_ack_info {
     uint8_t node_id;
-    uint32_t time_stamp;
+    uint16_t time_stamp;
 };
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
@@ -64,5 +66,5 @@ void ble_sent(struct bt_le_ext_adv *adv,
 
 /* Utility functions */
 bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id);
-
+void ble_add_packet_timestamp(uint8_t data[]);
 #endif

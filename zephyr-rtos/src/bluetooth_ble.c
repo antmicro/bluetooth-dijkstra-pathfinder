@@ -8,7 +8,7 @@
 K_MSGQ_DEFINE(common_received_packets_q,
         sizeof(struct net_buf_simple), 10, 4);
 K_MSGQ_DEFINE(awaiting_ack,
-        sizeof(struct net_buf_simple), 1, 4);
+        sizeof(struct ble_ack_info), 1, 4);
 
 K_FIFO_DEFINE(common_packets_to_send_q);
 
@@ -99,11 +99,12 @@ void ble_send_packet_thread_entry(struct node_t *graph,
         
         // hack to bypass auto prepended type 
         uint8_t *extracted_data = &(tx_packet->data.data[2]);
-
+        ble_add_packet_timestamp(extracted_data);
+        
         // create bt data 
         struct bt_data ad[] = {BT_DATA(common_self_mesh_id,
                 extracted_data, 8)};
-
+        
         printk("######################################################\n");
         printk("Advertising to node: %d\n", next_node_mesh_id);
         printk("######################################################\n");
@@ -162,9 +163,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
     // check if receiver 
     bool is_receiver = ble_is_receiver(buf, common_self_mesh_id);
-    
 
-    // add to queue
     if(is_receiver){
         printk("Current node is the receiver of this msg: %X \n", 
                 buf->data[RCV_ADDR_IDX]);
@@ -226,5 +225,14 @@ bool ble_is_ack(struct net_buf_simple *buf){
     return false;
 }
 
+void ble_add_packet_timestamp(uint8_t data[]){
+    uint8_t timestamp_lower, timestamp_upper;
+    uint32_t cycles32 = k_cycle_get_32();
 
+    // Get only lower 16 bits
+    timestamp_lower = 0x00FF & cycles32;
+    timestamp_upper = (0xFF00 & cycles32) >> 8;
+    data[TIME_STAMP_UPPER_IDX] = timestamp_upper;
+    data[TIME_STAMP_LOWER_IDX] = timestamp_lower;
+}
 
