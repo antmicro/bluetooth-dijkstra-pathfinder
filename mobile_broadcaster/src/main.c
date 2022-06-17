@@ -56,7 +56,6 @@ void main(void)
     
     
     do{
-        k_msleep(1000);
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
                 ad, ARRAY_SIZE(ad),
                 sd, ARRAY_SIZE(sd));
@@ -66,7 +65,7 @@ void main(void)
             return;
         }
 
-        k_msleep(1000);
+        k_msleep(200);
 
         err = bt_le_adv_stop();
         if (err) {
