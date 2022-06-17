@@ -2,6 +2,7 @@
 #include <zephyr.h>
 #include <kernel/thread_stack.h>
 #include "../include/dijkstra.h"
+#include "kernel.h"
 #include <timing/timing.h>
 
 /* Queues for message passing and processing */
@@ -19,6 +20,7 @@ K_FIFO_DEFINE(common_packets_to_send_q);
 /* Events for indicating if message was sent and scanned succesfully */
 K_EVENT_DEFINE(ack_received);
 
+K_MUTEX_DEFINE(ble_send_mutex);
 
 /* Setup functions */
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
@@ -61,10 +63,10 @@ void create_packet_thread_entry(struct node_t *graph){
 
                 continue;
             }
-            printk("Packet's final destination is node: %d\n", dst_mesh_id);
+            //printk("Packet's final destination is node: %d\n", dst_mesh_id);
 
             // calculate next node from dijkstra algorithm
-            printk("Calculating Dijkstra's algorithm...\n");
+            //printk("Calculating Dijkstra's algorithm...\n");
             int next_node_mesh_id = dijkstra_shortest_path(
                     graph, MAX_MESH_SIZE,
                     common_self_mesh_id, 
@@ -76,7 +78,7 @@ void create_packet_thread_entry(struct node_t *graph){
             else{
                 // if all is good, create a packet and queue it to tx 
                 buf.data[RCV_ADDR_IDX] = next_node_mesh_id; 
-                printk("Next hop: %d\n", next_node_mesh_id);
+                //printk("Next hop: %d\n", next_node_mesh_id);
                 struct ble_tx_packet_data tx_packet = {
                     .data = buf
                 };
@@ -122,16 +124,24 @@ void ble_send_packet_thread_entry(struct node_t *graph,
             printk("ERROR: Failed to put into awaiting_ack q.\n");
         }
 
-        printk("######################################################\n");
+        //printk("######################################################\n");
         printk("Advertising to node: %d\n", next_node_mesh_id);
-        printk("######################################################\n");
+        //printk("######################################################\n");
 
         // wait until previous adv finished and advertise current msg
+        k_mutex_lock(&ble_send_mutex, K_FOREVER);
         do{
             err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
             ad, ARRAY_SIZE(ad),
             NULL, 0);
+            printk("ERROR: %d\n", err);
         }while(err);
+        
+        // Wait a moment and stop transmission so ack thread can send
+        k_msleep(300);
+        err = bt_le_adv_stop();
+        k_mutex_unlock(&ble_send_mutex);
+
         
         uint32_t events;
         events = k_event_wait_all(&ack_received,
@@ -169,11 +179,11 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2,  void *unused3){
     while(1){
         printk("Waiting for ack msg to send...\n");
         int err = k_msgq_get(&sending_ack_q, &ack_info, K_FOREVER);
+        printk("Got ack message to send\n");
         if(err){
             printk("ERROR: Reading from ack msg queue failed.\n");
             return;
         }
-        
         // all indexing here must be definedidx - 2 TODO fix this
         // Prep ack packet
         uint8_t ack_data[] = {
@@ -187,17 +197,22 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2,  void *unused3){
 
         struct bt_data ack_ad[] = {BT_DATA(common_self_mesh_id, 
                 ack_data, ARRAY_SIZE(ack_data))};
-
+        
+        k_mutex_lock(&ble_send_mutex, K_FOREVER);
         do{
             err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
             ack_ad, ARRAY_SIZE(ack_ad),
             NULL, 0);
+            printk("Err %d \n", err);
         }while(err);
         
-		k_msleep(1000);
-        printk("ACK SENT Sent the ack message.\n");
-
+		k_msleep(300);
+        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+        printk("ACK SENT.\n");
+        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+        
         err = bt_le_adv_stop();
+        k_mutex_unlock(&ble_send_mutex);
         if(err){
             printk("ERROR: Advertising failed to stop. \n");
             return;
@@ -215,24 +230,26 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
         
-    printk("######################################################\n");
-    printk("Received data from node with address: %s\n", addr_str);
-    printk("Data: %s\n", data);
+    //printk("######################################################\n");
+    //printk("Received data from node with address: %s\n", addr_str);
+    //printk("Data: %s\n", data);
 
     // check if receiver 
     bool is_receiver = ble_is_receiver(buf, common_self_mesh_id);
 
     if(is_receiver){
-        printk("Current node is the receiver of this msg: %X \n", 
-                buf->data[RCV_ADDR_IDX]);
+        //printk("Current node is the receiver of this msg: %X \n", 
+        //        buf->data[RCV_ADDR_IDX]);
         
         int err;
         uint8_t msg_type = buf->data[MSG_TYPE_IDX];
         switch(msg_type){
             case MSG_TYPE_DATA:
                 {
+                    //printk("Received DATA MSG\n");
                     // Do not send ack if msg is on broadcast addr
                     if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
+                        printk("Prepping to send ack\n");
                         // Queue ack for the msg sender
                         ble_ack_info ack_info = {
                             .node_id = buf->data[SENDER_ID_IDX],
@@ -278,8 +295,6 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                                 &ack_received,
                                 BLE_ACK_RECEIVED_EVENT); 
                     }
-                    
-
                     break;
                 }
                 
@@ -289,7 +304,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
         }
         
     }
-    printk("######################################################\n");
+    //printk("######################################################\n");
 }
 
 
