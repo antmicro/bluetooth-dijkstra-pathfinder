@@ -45,6 +45,7 @@ build_basic5node () {
         -d $BUILD_DIR \
         -- -DMAX_MESH_SIZE=5 \
         -DTOPOLOGY_CONFIG_PATH:STRING=$CONFIG_FILES_DIR/basic_5_nodes.json
+    #west build -t puncover -d $BUILD_DIR
 }
 
 

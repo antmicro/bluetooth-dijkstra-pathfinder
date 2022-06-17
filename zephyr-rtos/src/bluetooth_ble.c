@@ -7,10 +7,12 @@
 /* Queues for message passing and processing */
 K_MSGQ_DEFINE(common_received_packets_q,
         sizeof(struct net_buf_simple), 10, 4);
+
+
 K_MSGQ_DEFINE(awaiting_ack,
-        sizeof(struct ble_ack_info), 1, 4);
+        sizeof(ble_ack_info), 1, 4);
 K_MSGQ_DEFINE(sending_ack_q,
-        sizeof(struct ble_ack_info), 1, 4);
+        sizeof(ble_ack_info), 1, 4);
 
 K_FIFO_DEFINE(common_packets_to_send_q);
 
@@ -42,6 +44,7 @@ void create_packet_thread_entry(struct node_t *graph){
     int err;
          
     while(1){
+        printk("Waiting for rx packet.. \n");
         err = k_msgq_get(&common_received_packets_q, &buf, K_FOREVER);
                
         if(err){
@@ -109,7 +112,7 @@ void ble_send_packet_thread_entry(struct node_t *graph,
                 extracted_data, 8)};
         
         // Add a flag indicating waiting on ACK from the receiver node
-        struct ble_ack_info ack_info = {
+        ble_ack_info ack_info = {
             .node_id = next_node_mesh_id,
             .time_stamp = timestamp
         };
@@ -160,8 +163,8 @@ void ble_send_packet_thread_entry(struct node_t *graph,
     }
 }
 
-void ble_send_ack_thread_entry(){
-    struct ble_ack_info ack_info;
+void ble_send_ack_thread_entry(void *unused1, void *unused2,  void *unused3){
+    ble_ack_info ack_info;
 
     while(1){
         printk("Waiting for ack msg to send...\n");
@@ -192,6 +195,7 @@ void ble_send_ack_thread_entry(){
         }while(err);
         
 		k_msleep(1000);
+        printk("ACK SENT Sent the ack message.\n");
 
         err = bt_le_adv_stop();
         if(err){
@@ -230,7 +234,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     // Do not send ack if msg is on broadcast addr
                     if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
                         // Queue ack for the msg sender
-                        struct ble_ack_info ack_info = {
+                        ble_ack_info ack_info = {
                             .node_id = buf->data[SENDER_ID_IDX],
                             .time_stamp = ble_get_packet_timestamp(buf->data)
                         };
@@ -258,7 +262,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                 {
                     // Check if message's header content is correct 
                     // with awaited
-                    struct ble_ack_info a_info;
+                    ble_ack_info a_info;
                     err = k_msgq_peek(&awaiting_ack, &a_info);           
                     if(err){
                         printk("ERROR: No info about awaited ack!\n");

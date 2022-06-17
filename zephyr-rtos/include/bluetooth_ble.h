@@ -29,8 +29,8 @@
 #define BLE_ACK_RECEIVED_EVENT 0x1 
 
 /* Global queues for BLE ad - hoc */
-extern struct k_msgq common_received_packets_q;
-extern struct k_fifo common_packets_to_send_q;
+//extern struct k_msgq common_received_packets_q;
+//extern struct k_fifo common_packets_to_send_q;
 
 // TODO: make local mesh address into typedef for clarity
 struct ble_tx_packet_data {
@@ -43,10 +43,10 @@ typedef struct {
     struct net_buf_simple buf;
 }__attribute__((aligned(4))) ble_packet_buffer_alligned;
 
-struct ble_ack_info {
+typedef struct {
     uint8_t node_id;
     uint16_t time_stamp;
-};
+}__attribute__((aligned(4))) ble_ack_info;
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void create_packet_thread_entry(struct node_t *graph);
