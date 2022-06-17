@@ -10,6 +10,7 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
+#define SENDER_ID_IDX 1
 #define MSG_TYPE_IDX 2
 #define DST_ADDR_IDX 3
 #define RCV_ADDR_IDX 4
@@ -25,7 +26,7 @@
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
 
 /* Events definitions */
-#define BLE_SCANNED_EVENT                 0x1 
+#define BLE_ACK_RECEIVED_EVENT 0x1 
 
 /* Global queues for BLE ad - hoc */
 extern struct k_msgq common_received_packets_q;
@@ -51,6 +52,8 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void create_packet_thread_entry(struct node_t *graph);
 void ble_send_packet_thread_entry(struct node_t *graph,
         struct bt_le_scan_param *params);
+void ble_send_ack_thread_entry();
+
 
 // callbacks 
 void bt_msg_received_cb(
@@ -66,5 +69,6 @@ void ble_sent(struct bt_le_ext_adv *adv,
 
 /* Utility functions */
 bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id);
-void ble_add_packet_timestamp(uint8_t data[]);
+uint16_t ble_add_packet_timestamp(uint8_t data[]);
+uint16_t ble_get_packet_timestamp(uint8_t data[]);
 #endif

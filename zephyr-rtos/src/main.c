@@ -29,10 +29,15 @@ K_THREAD_STACK_DEFINE(create_packet_thread_stack,
 K_THREAD_STACK_DEFINE(ble_send_packet_thread_stack, 
         BLE_SEND_PACKET_THREAD_STACK_SIZE);
 
+// data transmitter thread data  
+#define BLE_SEND_ACK_THREAD_STACK_SIZE 256 
+#define BLE_SEND_ACK_THREAD_PRIO       2 
+K_THREAD_STACK_DEFINE(ble_send_ack_thread_stack, 
+        BLE_SEND_ACK_THREAD_STACK_SIZE);
+
 
 void main(void)
 {
-    // TODO: move important variables to the top for better visibility
     /* Graph Initialization */
     struct node_t graph[MAX_MESH_SIZE];
     uint8_t graph_init_error_code = graph_init(graph);
@@ -77,8 +82,18 @@ void main(void)
             ble_send_packet_thread_entry,
             &graph, &scan_params, NULL,
             BLE_SEND_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
+    
+    /*
+    struct k_thread ble_send_ack_thread;
+    k_tid_t ble_send_ack_thread_id = k_thread_create(&ble_send_ack_thread,
+            ble_send_ack_thread_stack,
+            K_THREAD_STACK_SIZEOF(ble_send_ack_thread_stack),
+            ble_send_ack_thread_entry,
+            NULL, NULL, NULL,
+            BLE_SEND_ACK_THREAD_PRIO, 0, K_NO_WAIT);
+    */
      
-
+    printk("Here\n");
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 
     if(err){
