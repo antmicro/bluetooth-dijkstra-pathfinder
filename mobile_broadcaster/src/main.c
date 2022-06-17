@@ -52,15 +52,31 @@ void main(void)
     static const struct bt_data ad[] = {
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};
 
-    // change ext adv to regular
-    err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
-            ad, ARRAY_SIZE(ad),
-            sd, ARRAY_SIZE(sd));
+    
+    
+    
+    do{
+        k_msleep(1000);
+        err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
+                ad, ARRAY_SIZE(ad),
+                sd, ARRAY_SIZE(sd));
 
-    if (err) {
-        printk("Advertising failed to start (err %d)\n", err);
-        return;
-    }
+        if (err) {
+            printk("Advertising failed to start (err %d)\n", err);
+            return;
+        }
+
+        k_msleep(1000);
+
+        err = bt_le_adv_stop();
+        if (err) {
+            printk("Advertising failed to stop (err %d)\n", err);
+            return;
+        }
+        
+        k_msleep(1000);
+
+    }while(true);
 
     printk("MOBILE BROADCASTER ADV START\n");
 }
