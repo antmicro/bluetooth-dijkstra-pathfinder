@@ -58,7 +58,7 @@ void main(void)
     do{
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
                 ad, ARRAY_SIZE(ad),
-                sd, ARRAY_SIZE(sd));
+                NULL, 0);
 
         if (err) {
             printk("Advertising failed to start (err %d)\n", err);

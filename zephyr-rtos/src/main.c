@@ -29,8 +29,8 @@ K_THREAD_STACK_DEFINE(create_packet_thread_stack,
 K_THREAD_STACK_DEFINE(ble_send_packet_thread_stack, 
         BLE_SEND_PACKET_THREAD_STACK_SIZE);
 
-#define BLE_SEND_ACK_THREAD_STACK_SIZE 500
-#define BLE_SEND_ACK_THREAD_PRIO       1
+#define BLE_SEND_ACK_THREAD_STACK_SIZE 1024 
+#define BLE_SEND_ACK_THREAD_PRIO       3
 K_THREAD_DEFINE(send_ack_thred_id, BLE_SEND_ACK_THREAD_STACK_SIZE,
                 ble_send_ack_thread_entry, NULL, NULL, NULL,
                 BLE_SEND_ACK_THREAD_PRIO, 0, 0);
