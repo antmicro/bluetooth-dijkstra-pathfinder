@@ -13,6 +13,7 @@
 #define BROADCAST_ADDR 0x7F // 127
 
 uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
+uint8_t mfg_data2[] = {0x02, 0x02, 0x02, 0x02, 0x02 ,0x02, 0x02, 0x02}; 
 
 void main(void)
 {
@@ -48,12 +49,10 @@ void main(void)
     mfg_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // Broadcast addr 
     mfg_data[DST_ADDR_IDX] = 0x00; // Destination addr
     mfg_data[MSG_TYPE_IDX] = 0x1; // MSG_TYPE_DATA 
-    const struct bt_data sd[] = {BT_DATA(0xff, mfg_data, 8)};
-    static const struct bt_data ad[] = {
+    const struct bt_data ad[] = {
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};
-
-    
-    
+    const struct bt_data ad2[] = {
+	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data2, 8)};
     
     do{
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
@@ -74,6 +73,20 @@ void main(void)
         }
         
         k_msleep(1000);
+        //mfg_data[5]++;
+        /* 
+        err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, ad2, ARRAY_SIZE(ad2), NULL, 0);
+        k_msleep(200);
+
+        err = bt_le_adv_stop();
+        if (err) {
+            printk("Advertising failed to stop (err %d)\n", err);
+            return;
+        }
+        
+        k_msleep(1000);
+        //mfg_data[5]++;
+        */
 
     }while(true);
 

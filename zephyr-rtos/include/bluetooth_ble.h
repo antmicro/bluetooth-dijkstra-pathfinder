@@ -23,6 +23,8 @@
 
 #define BROADCAST_ADDR 0x7F // 127
 
+#define BLE_MSG_LEN 8
+
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
 
 /* Events definitions */
@@ -49,7 +51,8 @@ typedef struct {
 }__attribute__((aligned(4))) ble_ack_info;
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
-void create_packet_thread_entry(struct node_t *graph);
+void ble_prep_data_packet_thread_entry(struct node_t *graph);
+void ble_prep_ack_thread_entry();
 void ble_send_packet_thread_entry(struct node_t *graph,
         struct bt_le_scan_param *params);
 void ble_send_ack_thread_entry();

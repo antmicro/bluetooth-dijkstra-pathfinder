@@ -43,12 +43,12 @@ showAnalyzer sysbus.uart0
 #logLevel -1 sysbus.timer0
 #logLevel -1 sysbus.timer1
 #logLevel -1 sysbus.nvic
-sysbus LogPeripheralAccess sysbus.nvic
+#sysbus LogPeripheralAccess sysbus.nvic
 #sysbus LogPeripheralAccess sysbus.ppi
 #sysbus LogPeripheralAccess sysbus.rtc0
 #sysbus LogPeripheralAccess sysbus.timer0
 #sysbus LogPeripheralAccess sysbus.timer1
-sysbus LogPeripheralAccess sysbus.radio
+#sysbus LogPeripheralAccess sysbus.radio
 
 #############################################################
 
@@ -90,20 +90,20 @@ logLevel 1 sysbus.uart0
 
 #############################################################
 
-mach add "node4"
-mach set "node4"
-machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+#mach add "node4"
+#mach set "node4"
+#machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
 # set unique identification address 
-sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000004 false
+#sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000004 false
 
 # Wireless
-connector Connect sysbus.radio wireless
-wireless SetPosition sysbus.radio 3 3 0
-wireless SetRangeWirelessFunction 5
+#connector Connect sysbus.radio wireless
+#wireless SetPosition sysbus.radio 3 3 0
+#wireless SetRangeWirelessFunction 5
 
 # analyzers 
-showAnalyzer sysbus.uart0
+#showAnalyzer sysbus.uart0
 
 ###########################################################
 # mesh end 
@@ -135,8 +135,8 @@ macro reset
     mach set "node2"
     sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
 
-    mach set "node4"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
+#    mach set "node4"
+#    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
     
     # mesh end
 
