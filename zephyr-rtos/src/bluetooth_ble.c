@@ -8,11 +8,11 @@
 /* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message
 K_MSGQ_DEFINE(awaiting_ack,
-        sizeof(ble_ack_info), 1, 4);
+        sizeof(ble_sender_info), 1, 4);
 
 // Queues for threads prepping messages
-K_MSGQ_DEFINE(ack_packets_to_send_q,
-        sizeof(ble_ack_info), 10, 4);
+K_MSGQ_DEFINE(ack_receivers_q,
+        sizeof(ble_sender_info), 10, 4);
 K_MSGQ_DEFINE(data_packets_to_send_q,
         sizeof(struct net_buf_simple), 10, 4);
 
@@ -81,10 +81,10 @@ void ble_prep_ack_thread_entry(
         void *unused1,
         void *unused2,
         void *unused3) {
-    ble_ack_info ack_info;
+    ble_sender_info ack_info;
     while(1){
         printk("Waiting for ack msg to send...\n");
-        int err = k_msgq_get(&ack_packets_to_send_q, &ack_info, K_FOREVER);
+        int err = k_msgq_get(&ack_receivers_q, &ack_info, K_FOREVER);
         printk("Got ack message to send\n");
         printk("Timestamp: %d\n", ack_info.time_stamp);
         if(err){
@@ -137,7 +137,7 @@ void ble_send_packet_thread_entry(
         if(ad[MSG_TYPE_IDX - 2] == MSG_TYPE_DATA) {
             uint16_t timestamp = ble_add_packet_timestamp(ad);
             uint8_t next_node_mesh_id = ad[RCV_ADDR_IDX - 2];
-            ble_ack_info ack_info = {
+            ble_sender_info ack_info = {
                 .node_id = next_node_mesh_id,
                 .time_stamp = timestamp
             };
@@ -240,11 +240,11 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     // Do not send ack if msg is on broadcast addr
                     if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
                         // Queue ack for the msg sender
-                        ble_ack_info ack_info = {
+                        ble_sender_info ack_info = {
                             .node_id = buf->data[SENDER_ID_IDX],
                             .time_stamp = ble_get_packet_timestamp(buf->data)
                         };
-                        err = k_msgq_put(&ack_packets_to_send_q, 
+                        err = k_msgq_put(&ack_receivers_q, 
                                 &ack_info, K_NO_WAIT);
                         if(err){
                             printk("ERROR: Failed to put to ack \
@@ -269,20 +269,20 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                 {
                     // Check if message's header content is correct 
                     // with awaited
-                    ble_ack_info a_info;
+                    ble_sender_info a_info;
                     err = k_msgq_peek(&awaiting_ack, &a_info);
                     if(err){
                         printk("ERROR: No info about awaited ack!\n");
                         return;
                     }
-                    printk("RECEIVED ACK MSG FROM: %d\n", 
-                            buf->data[SENDER_ID_IDX]);
                     bool correct_id = 
                         a_info.node_id == buf->data[RCV_ADDR_IDX];
                     uint16_t timestamp16 = ble_get_packet_timestamp(
                             buf->data);
                     bool correct_timestamp = timestamp16 == a_info.time_stamp;
                     if(correct_id && correct_timestamp){
+                        printk("RECEIVED ACK MSG FROM: %d\n", 
+                            buf->data[SENDER_ID_IDX]);
                         k_event_post(
                                 &ack_received,
                                 BLE_ACK_RECEIVED_EVENT); 

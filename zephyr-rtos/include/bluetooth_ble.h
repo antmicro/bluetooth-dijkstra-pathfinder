@@ -48,7 +48,7 @@ typedef struct {
 typedef struct {
     uint8_t node_id;
     uint16_t time_stamp;
-}__attribute__((aligned(4))) ble_ack_info;
+}__attribute__((aligned(4))) ble_sender_info;
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void ble_prep_data_packet_thread_entry(struct node_t *graph);
