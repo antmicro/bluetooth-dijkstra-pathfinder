@@ -49,8 +49,8 @@ void ble_prep_data_packet_thread_entry(
         struct net_buf_simple buf; 
         int err = k_msgq_get(&data_packets_to_send_q, &buf, K_FOREVER);
         if(err){
-            printk("Error reading from queue: %d \n!\n", err);
-            //return;
+            printk("ERROR: reading from queue: %d \n!\n", err);
+            return;
         }
         
         uint8_t dst_mesh_id = buf.data[DST_ADDR_IDX];
@@ -63,6 +63,7 @@ void ble_prep_data_packet_thread_entry(
                 common_self_mesh_id, dst_mesh_id);
         if(next_node_mesh_id < 0) {
             printk("ERROR: Dijkstra algorithm failed.\n");
+            return;
         }
         buf.data[RCV_ADDR_IDX] = next_node_mesh_id;
         
@@ -71,6 +72,7 @@ void ble_prep_data_packet_thread_entry(
         err = k_msgq_put(&ready_packets_to_send_q, extracted_data, K_NO_WAIT);
         if(err) {
             printk("ERROR: problem putting data packet to send queue: %d\n", err);
+            return;
         }
     }
 }
@@ -87,7 +89,7 @@ void ble_prep_ack_thread_entry(
         printk("Timestamp: %d\n", ack_info.time_stamp);
         if(err){
             printk("ERROR: Reading from ack msg queue failed.\n");
-            //return;
+            return;
         }
         // all indexing here must be definedidx - 2 TODO fix this
         // Prep ack packet
@@ -104,7 +106,7 @@ void ble_prep_ack_thread_entry(
         err = k_msgq_put(&ready_packets_to_send_q, ack_data, K_NO_WAIT);
         if(err) {
             printk("Error putting an ack data to send queue: %d\n.", err);
-            //return;
+            return;
         }
     }
 }
@@ -127,6 +129,7 @@ void ble_send_packet_thread_entry(
         err = k_msgq_get(&ready_packets_to_send_q, &ad, K_FOREVER);
         if(err) {
             printk("ERROR: could not get packet to send from a queue.\n");
+            return;
         }
         printk("Sending a msg.\n");
     
@@ -142,6 +145,7 @@ void ble_send_packet_thread_entry(
             err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
             if(err){
                 printk("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
+                return;
             }
         }
         
@@ -164,6 +168,7 @@ void ble_send_packet_thread_entry(
         err = bt_le_adv_stop();
         if(err) {
             printk("ERROR: Failed to stop advertising %d.\n", err);
+            return;
         }
         printk("Finished advertising.\n");
         
@@ -244,7 +249,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         if(err){
                             printk("ERROR: Failed to put to ack \
                                     send queue\n");
-                            //return;
+                            return;
                         }
                     }
                     
@@ -255,6 +260,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     if(err){ 
                         printk("Error queue put: %d, queue purged\n", err);
                         k_msgq_purge(&data_packets_to_send_q);
+                        return;
                     }
                 }
                 break;
@@ -267,7 +273,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     err = k_msgq_peek(&awaiting_ack, &a_info);
                     if(err){
                         printk("ERROR: No info about awaited ack!\n");
-                        //return;
+                        return;
                     }
                     printk("RECEIVED ACK MSG FROM: %d\n", 
                             buf->data[SENDER_ID_IDX]);
