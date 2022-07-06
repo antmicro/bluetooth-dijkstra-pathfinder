@@ -56,8 +56,6 @@ mach add "node1"
 mach set "node1"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
-machine StartGdbServer 3333
-
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000001 false
 
@@ -75,6 +73,8 @@ mach add "node2"
 mach set "node2"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
+machine StartGdbServer 3333
+
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000002 false
 
@@ -82,6 +82,10 @@ sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000002 false
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 0 6 0
 wireless SetRangeWirelessFunction 5
+
+# Log
+logLevel -1 sysbus.radio
+sysbus LogPeripheralAccess sysbus.radio
 
 # analyzers 
 showAnalyzer sysbus.uart0

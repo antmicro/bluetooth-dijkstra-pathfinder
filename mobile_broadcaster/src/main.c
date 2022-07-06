@@ -53,7 +53,7 @@ void main(void)
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};
     const struct bt_data ad2[] = {
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data2, 8)};
-    
+        
     do{
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
                 ad, ARRAY_SIZE(ad),
@@ -71,10 +71,11 @@ void main(void)
             printk("Advertising failed to stop (err %d)\n", err);
             return;
         }
+        printk("Advertised\n");
         
         k_msleep(1000);
         //mfg_data[5]++;
-        /* 
+         
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, ad2, ARRAY_SIZE(ad2), NULL, 0);
         k_msleep(200);
 
@@ -86,9 +87,10 @@ void main(void)
         
         k_msleep(1000);
         //mfg_data[5]++;
-        */
+        
 
     }while(true);
 
     printk("MOBILE BROADCASTER ADV START\n");
 }
+
