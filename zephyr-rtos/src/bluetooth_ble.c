@@ -17,8 +17,6 @@ K_MSGQ_DEFINE(ack_packets_to_send_q,
 K_MSGQ_DEFINE(data_packets_to_send_q,
         sizeof(struct net_buf_simple), 10, 4);
 
-//K_FIFO_DEFINE(data_packets_to_send_q);
-
 // Queue for messages to send
 K_MSGQ_DEFINE(ready_packets_to_send_q, 
         BLE_MSG_LEN, 10, 4); // TODO verify values here!!!
@@ -33,8 +31,8 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
     *(scan_params) = (struct bt_le_scan_param){
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,  
 		.options    = BT_LE_SCAN_OPT_NONE,//BT_LE_SCAN_OPT_CODED | 
-		.interval   = 0x0060, //BT_GAP_SCAN_FAST_INTERVAL,
-		.window     = 0x0060//BT_GAP_SCAN_FAST_WINDOW,
+		.interval   =  0x0060, //
+		.window     =  0x0060 //
 	};
     
     // register a callback for packet reception
@@ -72,12 +70,7 @@ void ble_prep_data_packet_thread_entry(
         uint16_t timestamp = ble_add_packet_timestamp(&buf.data[2]);
         uint8_t *extracted_data = &(buf.data[2]);
         
-        // create bt data 
-        struct bt_data ad = BT_DATA(common_self_mesh_id,
-                extracted_data, BLE_MSG_LEN);
-        //printk("Size of prepped data packet: %d\n", sizeof(ad));
-        
-        err = k_msgq_put(&ready_packets_to_send_q, &ad, K_NO_WAIT);
+        err = k_msgq_put(&ready_packets_to_send_q, extracted_data, K_NO_WAIT);
         if(err) {
             printk("ERROR: problem putting data packet to send queue: %d\n", err);
         }
@@ -105,8 +98,6 @@ void ble_prep_ack_thread_entry(
         void *unused3) {
     ble_ack_info ack_info;
     while(1){
-        printk("(ack)Used space in the ready packets q: %d\n",
-                k_msgq_num_used_get(&ready_packets_to_send_q));
         printk("Waiting for ack msg to send...\n");
         int err = k_msgq_get(&ack_packets_to_send_q, &ack_info, K_FOREVER);
         printk("Got ack message to send\n");
@@ -126,12 +117,8 @@ void ble_prep_ack_thread_entry(
         ack_data[RCV_ADDR_IDX - 2] = ack_info.node_id; // node to ack to
         ack_data[TIME_STAMP_UPPER_IDX - 2] = 0xFF00 & ack_info.time_stamp;
         ack_data[TIME_STAMP_LOWER_IDX - 2] = 0x00FF & ack_info.time_stamp;
-
-        struct bt_data ack_ad = BT_DATA(common_self_mesh_id, 
-                ack_data, BLE_MSG_LEN);
         
-        //printk("Size of prepped ack packet: %d\n", sizeof(ack_ad));
-        err = k_msgq_put(&ready_packets_to_send_q, &ack_ad, K_NO_WAIT);
+        err = k_msgq_put(&ready_packets_to_send_q, ack_data, K_NO_WAIT);
         if(err) {
             printk("Error putting an ack data to send queue: %d\n.", err);
             //return;
@@ -145,7 +132,14 @@ void ble_send_packet_thread_entry(
         struct bt_le_scan_param *params
         ) {
     int err;
-    struct bt_data ad; 
+    // Initialization  
+    static uint8_t ad[BLE_MSG_LEN]; 
+    static struct bt_data ad_arr[] = {
+            BT_DATA(0xAA, ad, BLE_MSG_LEN) 
+    };
+    // Replace 0xAA with self mesh id 
+    ad_arr[0].type = common_self_mesh_id;
+
     while(1){
         printk("(data)Used space in the ready packets q: %d\n",
                 k_msgq_num_used_get(&ready_packets_to_send_q));
@@ -161,7 +155,8 @@ void ble_send_packet_thread_entry(
                 BT_GAP_ADV_FAST_INT_MIN_1,
                 BT_GAP_ADV_FAST_INT_MAX_1,
                 NULL);
-        struct bt_data ad_arr[] = {ad}; 
+        
+        // BT_LE_ADV_NCONN
         err = bt_le_adv_start(&adv_tx_params, 
         ad_arr, ARRAY_SIZE(ad_arr), 
         NULL, 0);
@@ -170,7 +165,7 @@ void ble_send_packet_thread_entry(
             //return;
         }
         // Wait a moment and stop transmission so ack thread can send
-        k_msleep(500);
+        k_sleep(K_MSEC(300));
         err = bt_le_adv_stop();
         if(err) {
             printk("ERROR: Failed to stop advertising %d.\n", err);

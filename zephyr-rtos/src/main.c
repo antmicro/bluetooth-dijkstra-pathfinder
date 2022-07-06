@@ -28,13 +28,14 @@ K_THREAD_STACK_DEFINE(prep_ack_thread_stack,
         PREP_ACK_THREAD_S_SIZE);
 
 #define SEND_PACKET_THREAD_S_SIZE 1024 
-#define SEND_PACKET_THREAD_PRIO 1 
+#define SEND_PACKET_THREAD_PRIO 2 
 K_THREAD_STACK_DEFINE(send_packet_thread_stack, 
         SEND_PACKET_THREAD_S_SIZE);
 
 K_THREAD_DEFINE(prep_ack_thread, PREP_ACK_THREAD_S_SIZE,
 ble_prep_ack_thread_entry, NULL, NULL, NULL,
 PREP_ACK_THREAD_PRIO, 0, 0);
+
 
 void main(void)
 {
@@ -71,16 +72,8 @@ void main(void)
             ble_prep_data_packet_thread_entry,
             &graph, NULL, NULL,
             PREP_DATA_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
-    /* 
-    struct k_thread prep_ack_thread;
-    k_tid_t prep_ack_thread_id = k_thread_create(&prep_ack_thread,
-            prep_ack_thread_stack,
-            K_THREAD_STACK_SIZEOF(prep_ack_thread_stack),
-            ble_prep_ack_thread_entry,
-            NULL, NULL, NULL,
-            PREP_ACK_THREAD_PRIO, 0, K_NO_WAIT);
-    */
-
+    k_thread_name_set(&prep_data_packet_thread, "prep_data_packet_thread");
+     
     struct k_thread send_packet_thread;
     k_tid_t send_packet_thread_id = k_thread_create(&send_packet_thread,
             send_packet_thread_stack,
@@ -88,7 +81,8 @@ void main(void)
             ble_send_packet_thread_entry,
             &graph, &scan_params, NULL,
             SEND_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
-     
+    k_thread_name_set(&send_packet_thread, "send_packet_thread");
+    
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 
     if(err){
@@ -99,10 +93,12 @@ void main(void)
     while (1) {
         const struct device *dev;
         dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-
+        
         //printk("Graph initialization status code: %d\n", graph_init_error_code);
         //printk("Graph mutex lock count: %d \n", graph_mutex.lock_count);
-		k_msleep(SLEEP_TIME_MS);
+	    	
+        k_msleep(SLEEP_TIME_MS);
+        //thread_analyzer_print();
 	}
 }
 
