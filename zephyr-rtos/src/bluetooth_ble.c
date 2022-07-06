@@ -6,7 +6,6 @@
 #include <timing/timing.h>
 
 /* Queues for message passing and processing */
-
 // Holds single instance of info about awaited ack message
 K_MSGQ_DEFINE(awaiting_ack,
         sizeof(ble_ack_info), 1, 4);
@@ -31,8 +30,8 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
     *(scan_params) = (struct bt_le_scan_param){
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,  
 		.options    = BT_LE_SCAN_OPT_NONE,//BT_LE_SCAN_OPT_CODED | 
-		.interval   =  0x0060, //
-		.window     =  0x0060 //
+		.interval   =  0x0060, 
+		.window     =  0x0060 
 	};
     
     // register a callback for packet reception
@@ -67,27 +66,11 @@ void ble_prep_data_packet_thread_entry(
         }
         buf.data[RCV_ADDR_IDX] = next_node_mesh_id;
         
-        uint16_t timestamp = ble_add_packet_timestamp(&buf.data[2]);
         uint8_t *extracted_data = &(buf.data[2]);
         
         err = k_msgq_put(&ready_packets_to_send_q, extracted_data, K_NO_WAIT);
         if(err) {
             printk("ERROR: problem putting data packet to send queue: %d\n", err);
-        }
-
-        // ############################## 
-        // Add a flag indicating waiting on ACK from the receiver node
-        ble_ack_info ack_info = {
-            .node_id = next_node_mesh_id,
-            .time_stamp = timestamp
-        };
-        
-        err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
-        if(err){
-            printk("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
-            k_msgq_purge(&awaiting_ack);
-            k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
-            // TODO: fix this
         }
     }
 }
@@ -141,13 +124,26 @@ void ble_send_packet_thread_entry(
     ad_arr[0].type = common_self_mesh_id;
 
     while(1){
-        printk("(data)Used space in the ready packets q: %d\n",
-                k_msgq_num_used_get(&ready_packets_to_send_q));
         err = k_msgq_get(&ready_packets_to_send_q, &ad, K_FOREVER);
         if(err) {
             printk("ERROR: could not get packet to send from a queue.\n");
         }
         printk("Sending a msg.\n");
+    
+        // If sending data, add flag indicating waiting for ack and modify time
+        if(ad[MSG_TYPE_IDX - 2] == MSG_TYPE_DATA) {
+            uint16_t timestamp = ble_add_packet_timestamp(ad);
+            uint8_t next_node_mesh_id = ad[RCV_ADDR_IDX - 2];
+            ble_ack_info ack_info = {
+                .node_id = next_node_mesh_id,
+                .time_stamp = timestamp
+            };
+
+            err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
+            if(err){
+                printk("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
+            }
+        }
         
         // Prep adv params
         struct bt_le_adv_param adv_tx_params = BT_LE_ADV_PARAM_INIT(
@@ -156,13 +152,12 @@ void ble_send_packet_thread_entry(
                 BT_GAP_ADV_FAST_INT_MAX_1,
                 NULL);
         
-        // BT_LE_ADV_NCONN
         err = bt_le_adv_start(&adv_tx_params, 
         ad_arr, ARRAY_SIZE(ad_arr), 
         NULL, 0);
         if(err) {
-            printk("ERROR while advertising data: %d\n", err);
-            //return;
+            printk("ERROR: could not start advertising : %d\n", err);
+            return;
         }
         // Wait a moment and stop transmission so ack thread can send
         k_sleep(K_MSEC(300));
@@ -171,6 +166,13 @@ void ble_send_packet_thread_entry(
             printk("ERROR: Failed to stop advertising %d.\n", err);
         }
         printk("Finished advertising.\n");
+        
+        // Cleanly take back previously set awaiting ack flag
+        err = k_msgq_get(&awaiting_ack, NULL, K_NO_WAIT);
+        if(err) {
+            printk("ERROR: Could not take down awaiting_ack flag.\n");
+            return;
+        }
         
         /*
         uint32_t events;
