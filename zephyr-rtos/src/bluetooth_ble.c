@@ -4,6 +4,7 @@
 #include "../include/dijkstra.h"
 #include "kernel.h"
 #include <timing/timing.h>
+#include <assert.h>
 
 /* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message
@@ -24,6 +25,9 @@ K_MSGQ_DEFINE(ready_packets_to_send_q,
 K_EVENT_DEFINE(ack_received);
 
 K_MUTEX_DEFINE(ble_send_mutex);
+
+// Static initialization of circular buffer with recently received packets
+RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 10);
 
 /* Setup functions */
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
@@ -218,50 +222,69 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     char addr_str[BT_ADDR_LE_STR_LEN];
     char data[31];
     
+    // Check if circular buffer should be popped 
+    static int64_t prev_t = 0; 
+    int64_t current_t = k_uptime_get();
+    int64_t delta = current_t - prev_t;
+    if(delta > CB_POP_TIME_MS) { // TODO: Adjust timing of this operation 
+        printk("Popping tail from circular buffer with recently rcvd pkts.\n");
+        rcv_pkts_cb_pop(&rcv_pkts_circular_buffer);
+    }
+    prev_t = current_t;
+
     // formatting 
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
         
-    //printk("######################################################\n");
-
-    // check if receiver 
-    bool is_receiver = ble_is_receiver(buf, common_self_mesh_id);
-
     printk("Received data from node with address: %s\n", addr_str);
     printk("Data: %s\n", data);
-    if(is_receiver){
+
+    // Check if is receiver, proceed if yes
+    if(ble_is_receiver(buf, common_self_mesh_id)){
         int err;
         uint8_t msg_type = buf->data[MSG_TYPE_IDX];
         switch(msg_type){
             case MSG_TYPE_DATA:
                 {
-                    printk("RECEIVED DATA MSG from %d.\n", 
-                            buf->data[SENDER_ID_IDX]);
-                    // Do not send ack if msg is on broadcast addr
-                    if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
-                        // Queue ack for the msg sender
-                        ble_sender_info ack_info = {
+                    // Extract sender id and timestamp
+                    ble_sender_info sender_info = {
                             .node_id = buf->data[SENDER_ID_IDX],
                             .time_stamp = ble_get_packet_timestamp(buf->data)
-                        };
-                        err = k_msgq_put(&ack_receivers_q, 
-                                &ack_info, K_NO_WAIT);
-                        if(err){
-                            printk("ERROR: Failed to put to ack \
-                                    send queue\n");
+                    };
+                    
+                    // If packet was not received before, process it 
+                    if(!rcv_pkts_cb_is_in_cb(
+                                &rcv_pkts_circular_buffer, &sender_info)) {
+                        printk("RECEIVED NEW DATA MSG from %d.\n", 
+                                buf->data[SENDER_ID_IDX]);
+                        
+                        // Add to circular buffer with recent messages
+                        rcv_pkts_cb_push(&rcv_pkts_circular_buffer, &sender_info);
+
+                        // Do not send ack if msg is on broadcast addr
+                        if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
+                            // Queue ack for the msg sender
+                            err = k_msgq_put(&ack_receivers_q, 
+                                    &sender_info, K_NO_WAIT);
+                            if(err){
+                                printk("ERROR: Failed to put to ack \
+                                        send queue\n");
+                                return;
+                            }
+                        }
+                        
+                        // Queue message to process further
+                        err = k_msgq_put(
+                                &data_packets_to_send_q, 
+                                buf, K_NO_WAIT);
+                        if(err){ 
+                            printk("Error queue put: %d, queue purged\n", err);
+                            k_msgq_purge(&data_packets_to_send_q);
                             return;
                         }
                     }
-                    
-                    // Queue message to process further
-                    err = k_msgq_put(
-                            &data_packets_to_send_q, 
-                            buf, K_NO_WAIT);
-                    if(err){ 
-                        printk("Error queue put: %d, queue purged\n", err);
-                        k_msgq_purge(&data_packets_to_send_q);
-                        return;
-                    }
+                    else printk("DUPLICATE MESSAGE FROM %d, DISCARDED\n", 
+                            buf->data[SENDER_ID_IDX]);
                 }
                 break;
 
@@ -296,7 +319,6 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
         }
         
     }
-    //printk("######################################################\n");
 }
 
 
@@ -318,6 +340,58 @@ void ble_sent(struct bt_le_ext_adv *adv,
 }
 
 /* Utility functions */
+void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item) {
+    *(cb->head) = *item;
+    cb->head++;
+    
+    // Increase count
+    cb->count++;
+    if(cb->head == cb->buff_end) { // we dont write to end, its not valid 
+        // In next call, write to the beginning of the buffer 
+        cb->head = cb->buff_start;
+        
+        // This means, discard the first element -> shift tail if it points to 
+        // that element
+        if(cb->tail == cb->buff_start) cb->tail++;
+        
+    }
+    // If head catches tail, shift tail and put it at the start if relapse
+    // also decrease count, as one element was added with the cost of another 
+    if(cb->head == cb->tail) {
+        printk("Hi\n");
+        cb->tail++;
+        cb->count--;
+        if(cb->tail == cb->buff_end) cb->tail = cb->buff_start;
+    }
+    // Test
+    assert(cb->count <= cb->capacity);
+}
+
+
+void rcv_pkts_cb_pop(rcv_pkts_cb *cb) {
+    if(cb->count > 0) {
+        cb->tail++;
+        if(cb->tail == cb->buff_end) cb->tail = cb->buff_start;
+        cb->count--;
+    }
+}
+
+
+bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item) {
+    ble_sender_info *ptr = cb->tail;
+    while(ptr != cb->head) {
+        if(
+                item->node_id == ptr->node_id && 
+                item->time_stamp == ptr->time_stamp) {
+            return true;        
+        }
+        ptr++;
+        if(ptr == cb->buff_end) ptr = cb->buff_start;
+    }
+    return false;
+}
+
+
 bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id){
     bool rec = buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
             buf->data[RCV_ADDR_IDX] == common_self_mesh_id;
