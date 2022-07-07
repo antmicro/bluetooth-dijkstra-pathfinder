@@ -100,7 +100,7 @@ void ble_prep_ack_thread_entry(
         uint8_t ack_data[] = {
             0x05, 0x05, 0x05, 0x05, 0x05 ,0x05, 0x05, 0x05
         };
-
+        // 09 01 03 ff 02 0061050505
         ack_data[MSG_TYPE_IDX - 2] = MSG_TYPE_ACK;
         ack_data[DST_ADDR_IDX - 2] = 0xFF; //whatever, ignored
         ack_data[RCV_ADDR_IDX - 2] = ack_info.node_id; // node to ack to
@@ -145,7 +145,8 @@ void ble_send_packet_thread_entry(
                 .node_id = next_node_mesh_id,
                 .time_stamp = timestamp
             };
-
+            printk("Awaiting for ack from node %d and with timestamp: %d\n",
+                    next_node_mesh_id, timestamp);
             err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
             if(err){
                 printk("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
@@ -179,7 +180,7 @@ void ble_send_packet_thread_entry(
         // Cleanly take back previously set awaiting ack flag
         err = k_msgq_get(&awaiting_ack, NULL, K_NO_WAIT);
         if(err) {
-            printk("ERROR: Could not take down awaiting_ack flag.\n");
+            printk("ERROR: Could not take down awaiting_ack flag: %d\n", err);
             return;
         }
         
@@ -298,8 +299,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         printk("ERROR: No info about awaited ack!\n");
                         return;
                     }
-                    bool correct_id = 
-                        a_info.node_id == buf->data[RCV_ADDR_IDX];
+                    bool correct_id = a_info.node_id == buf->data[SENDER_ID_IDX];
                     uint16_t timestamp16 = ble_get_packet_timestamp(
                             buf->data);
                     bool correct_timestamp = timestamp16 == a_info.time_stamp;
