@@ -7,9 +7,10 @@
 #include <bluetooth/hci.h>
 #include <timing/timing.h>
 
-#define MSG_TYPE_IDX 0
-#define DST_ADDR_IDX 1
-#define RCV_ADDR_IDX 2
+#define SENDER_ID_IDX 0
+#define MSG_TYPE_IDX 1
+#define DST_ADDR_IDX 2
+#define RCV_ADDR_IDX 3
 #define BROADCAST_ADDR 0x7F // 127
 
 uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
@@ -46,13 +47,15 @@ void main(void)
     //uint8_t mfg_data[9]; TODO: here add some data, for now its whatever
     //memcpy(&mfg_data[1], mfg_data, sizeof(mfg_data));
     
+    uint8_t mobile_broadcaster_name = 0xFF;
+    mfg_data[SENDER_ID_IDX] = mobile_broadcaster_name;
     mfg_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // Broadcast addr 
     mfg_data[DST_ADDR_IDX] = 0x00; // Destination addr
     mfg_data[MSG_TYPE_IDX] = 0x1; // MSG_TYPE_DATA 
     const struct bt_data ad[] = {
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};
     const struct bt_data ad2[] = {
-	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data2, 8)};
+	    BT_DATA(mobile_broadcaster_name, mfg_data2, 8)};
         
     do{
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 

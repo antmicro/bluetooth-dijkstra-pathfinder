@@ -15,11 +15,11 @@ K_MSGQ_DEFINE(awaiting_ack,
 K_MSGQ_DEFINE(ack_receivers_q,
         sizeof(ble_sender_info), 10, 4);
 K_MSGQ_DEFINE(data_packets_to_send_q,
-        sizeof(struct net_buf_simple), 10, 4);
+        BLE_MSG_LEN, 10, 4);
 
 // Queue for messages to send
 K_MSGQ_DEFINE(ready_packets_to_send_q, 
-        BLE_MSG_LEN, 10, 4); // TODO verify values here!!!
+        BLE_MSG_LEN, 10, 4); 
 
 /* Events for indicating if message was sent and scanned succesfully */
 K_EVENT_DEFINE(ack_received);
@@ -50,30 +50,36 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params){
 void ble_prep_data_packet_thread_entry(
         struct node_t *graph) {
     while(1){
-        struct net_buf_simple buf; 
-        int err = k_msgq_get(&data_packets_to_send_q, &buf, K_FOREVER);
+        uint8_t ble_data[BLE_MSG_LEN];
+        int err = k_msgq_get(&data_packets_to_send_q, ble_data, K_FOREVER);
         if(err){
             printk("ERROR: reading from queue: %d \n!\n", err);
             return;
         }
         
-        uint8_t dst_mesh_id = buf.data[DST_ADDR_IDX];
+        // If current node is destination node of the packet, do not send further
+        uint8_t dst_mesh_id = ble_data[DST_ADDR_IDX];
         if(dst_mesh_id == common_self_mesh_id) {
             printk("FINAL DESTINATION REACHED\n");
             continue;
         } 
-
+        
+        // Calculate shortest path with Dijkstra algorithm
         uint8_t next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE,
                 common_self_mesh_id, dst_mesh_id);
         if(next_node_mesh_id < 0) {
             printk("ERROR: Dijkstra algorithm failed.\n");
             return;
         }
-        buf.data[RCV_ADDR_IDX] = next_node_mesh_id;
         
-        uint8_t *extracted_data = &(buf.data[2]);
+        // Set self as a sender 
+        ble_data[SENDER_ID_IDX] = common_self_mesh_id;
+
+        // Set the next node in the packet header
+        ble_data[RCV_ADDR_IDX] = next_node_mesh_id;
         
-        err = k_msgq_put(&ready_packets_to_send_q, extracted_data, K_NO_WAIT);
+        // Pass the message to sending thread
+        err = k_msgq_put(&ready_packets_to_send_q, ble_data, K_NO_WAIT);
         if(err) {
             printk("ERROR: problem putting data packet to send queue: %d\n", err);
             return;
@@ -81,30 +87,28 @@ void ble_prep_data_packet_thread_entry(
     }
 }
 
+
 void ble_prep_ack_thread_entry(
         void *unused1,
         void *unused2,
         void *unused3) {
     ble_sender_info ack_info;
     while(1){
-        printk("Waiting for ack msg to send...\n");
         int err = k_msgq_get(&ack_receivers_q, &ack_info, K_FOREVER);
-        printk("Got ack message to send\n");
-        printk("Timestamp: %d\n", ack_info.time_stamp);
         if(err){
             printk("ERROR: Reading from ack msg queue failed.\n");
             return;
         }
-        // all indexing here must be definedidx - 2 TODO fix this
         // Prep ack packet
         uint8_t ack_data[] = {
             0x05, 0x05, 0x05, 0x05, 0x05 ,0x05, 0x05, 0x05
         };
-        ack_data[MSG_TYPE_IDX - 2] = MSG_TYPE_ACK;
-        ack_data[DST_ADDR_IDX - 2] = 0xFF; //whatever, ignored
-        ack_data[RCV_ADDR_IDX - 2] = ack_info.node_id; // node to ack to
-        ack_data[TIME_STAMP_MSB_IDX - 2] = (0xFF00 & ack_info.time_stamp) >> 8;
-        ack_data[TIME_STAMP_LSB_IDX - 2] = 0x00FF & ack_info.time_stamp;
+        ack_data[SENDER_ID_IDX] = common_self_mesh_id;
+        ack_data[MSG_TYPE_IDX] = MSG_TYPE_ACK;
+        ack_data[DST_ADDR_IDX] = 0xFF; //whatever, ignored
+        ack_data[RCV_ADDR_IDX] = ack_info.node_id; // node to ack to
+        ack_data[TIME_STAMP_MSB_IDX] = (0xFF00 & ack_info.time_stamp) >> 8;
+        ack_data[TIME_STAMP_LSB_IDX] = 0x00FF & ack_info.time_stamp;
         
         err = k_msgq_put(&ready_packets_to_send_q, ack_data, K_NO_WAIT);
         if(err) {
@@ -134,13 +138,13 @@ void ble_send_packet_thread_entry(
             printk("ERROR: could not get packet to send from a queue.\n");
             return;
         }
-        printk("Sending a msg.\n");
+        printk("Sending a message.\n");
     
         // If sending data, add flag indicating waiting for ack and modify time
-        bool is_data_msg = ad[MSG_TYPE_IDX - 2] == MSG_TYPE_DATA;
+        bool is_data_msg = ad[MSG_TYPE_IDX] == MSG_TYPE_DATA;
         if(is_data_msg) {
             uint16_t timestamp = ble_add_packet_timestamp(ad);
-            uint8_t next_node_mesh_id = ad[RCV_ADDR_IDX - 2];
+            uint8_t next_node_mesh_id = ad[RCV_ADDR_IDX];
             ble_sender_info ack_info = {
                 .node_id = next_node_mesh_id,
                 .time_stamp = timestamp,
@@ -169,8 +173,10 @@ void ble_send_packet_thread_entry(
             printk("ERROR: could not start advertising : %d\n", err);
             return;
         }
-        // Wait a moment and stop transmission so ack thread can send
-        k_sleep(K_MSEC(300));
+
+        // Wait for ack, returned value is ignored if ack is not required
+        bool got_ack = ble_wait_for_ack(300);
+
         err = bt_le_adv_stop();
         if(err) {
             printk("ERROR: Failed to stop advertising %d.\n", err);
@@ -178,45 +184,32 @@ void ble_send_packet_thread_entry(
         }
         printk("Finished advertising.\n");
         
-        // Cleanly take back previously set awaiting ack flag for data msg
+        // Take back previously set awaiting ack flag for data msg
         if(is_data_msg) {
             err = k_msgq_get(&awaiting_ack, NULL, K_MSEC(50));
             if(err) {
                 printk("ERROR: Could not take down awaiting_ack flag: %d\n", err);
                 return;
             }
-        }
         
-        
-        /*
-        uint32_t events;
-        events = k_event_wait_all(&ack_received,
-                BLE_ACK_RECEIVED_EVENT, true, K_MSEC(1000));
-        if(events == 0){
-            printk("ERROR: Node %d has not acknowledged! \n",
-                    next_node_mesh_id);
-            printk("Events: %X\n", ack_received.events); 
-        }
-        */
+            // Calculate new tentative_distance on the basis of the number 
+            // of unsuccessful transmission sequences. Update the number of 
+            // unsuccessful transmissions and set the new td.
+             
+            // TODO: Ugly, beautify this
+            node_update_missed_transmissions(
+                        &graph[ad[RCV_ADDR_IDX]], got_ack);
+            uint8_t new_td = calc_td_from_missed_transmissions(
+                        graph[ad[RCV_ADDR_IDX]].missed_transmissions);
+            graph_set_distance(graph,
+                        common_self_mesh_id, ad[RCV_ADDR_IDX], new_td);
 
-        /*
-         * Calculate new tentative_distance on the basis of the number 
-         * of unsuccessful transmission sequences. Update the number of 
-         * unsuccessful transmissions and set the new td.
-         * */
-        /*
-        node_update_missed_transmissions(
-                    &graph[tx_packet->next_node_mesh_id], events);
-        uint8_t new_td = calc_td_from_missed_transmissions(
-                    graph[tx_packet->next_node_mesh_id].missed_transmissions);
-        graph_set_distance(graph,
-                    common_self_mesh_id, tx_packet->next_node_mesh_id,
-                    new_td);
-        
-        // If transmission unsuccessful, put packet to fifo again    
-        if(!events) 
-            k_fifo_put(&common_packets_to_send_q, tx_packet);
-        */
+            // Put the message again into the queue and try to send it again
+            if(!got_ack) {
+                printk("Did not receive ACK.\n");
+                k_msgq_put(&data_packets_to_send_q, ad, K_NO_WAIT);
+            }
+        }
     }
 }
 
@@ -232,7 +225,6 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     int64_t current_t = k_uptime_get();
     int64_t delta = current_t - prev_t;
     if(delta > CB_POP_TIME_MS) { // TODO: Adjust timing of this operation 
-        printk("Popping tail from circular buffer with recently rcvd pkts.\n");
         rcv_pkts_cb_pop(&rcv_pkts_circular_buffer);
     }
     prev_t = current_t;
@@ -243,17 +235,21 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
         
     printk("Received data from node with address: %s\n", addr_str);
     printk("Data: %s\n", data);
+    
+    // Strip the buffer into simple byte array
+    uint8_t ble_data[BLE_MSG_LEN]; 
+    memcpy(ble_data, &(buf->data[2]), BLE_MSG_LEN);
 
     // Check if is receiver, proceed if yes
-    if(ble_is_receiver(buf, common_self_mesh_id)){
+    if(ble_is_receiver(ble_data, common_self_mesh_id)){
         int err;
-        uint8_t msg_type = buf->data[MSG_TYPE_IDX];
+        uint8_t msg_type = ble_data[MSG_TYPE_IDX];
         
         // Extract sender id, timestamp and msg type to determine processing 
         // path and check if it is a duplicate 
         ble_sender_info sender_info = {
-                .node_id = buf->data[SENDER_ID_IDX],
-                .time_stamp = ble_get_packet_timestamp(buf->data),
+                .node_id = ble_data[SENDER_ID_IDX],
+                .time_stamp = ble_get_packet_timestamp(ble_data),
                 .msg_type = msg_type
         };
         
@@ -266,10 +262,10 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                 case MSG_TYPE_DATA:
                     {
                         printk("RECEIVED NEW DATA MSG from %d.\n", 
-                                buf->data[SENDER_ID_IDX]);
+                                ble_data[SENDER_ID_IDX]);
                         
                         // Do not send ack if msg is on broadcast addr
-                        if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
+                        if(!(ble_data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
                             // Queue ack for the msg sender
                             err = k_msgq_put(&ack_receivers_q, 
                                     &sender_info, K_NO_WAIT);
@@ -283,7 +279,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         // Queue message to process further
                         err = k_msgq_put(
                                 &data_packets_to_send_q, 
-                                buf, K_NO_WAIT);
+                                ble_data, K_NO_WAIT);
                         if(err){ 
                             printk("Error queue put: %d, queue purged\n", err);
                             k_msgq_purge(&data_packets_to_send_q);
@@ -303,17 +299,15 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                             return;
                         }
 
-                        bool correct_id = a_info.node_id == buf->data[SENDER_ID_IDX];
-                        // TODO: read this from the sender info
-                        uint16_t timestamp16 = ble_get_packet_timestamp(
-                                buf->data);
+                        bool correct_id = a_info.node_id == ble_data[SENDER_ID_IDX];
+                        uint16_t timestamp16 = sender_info.time_stamp;
                         bool correct_timestamp = timestamp16 == a_info.time_stamp;
-                        printk("Timestamp of received ack: %d\n", timestamp16); 
                         if(correct_id && correct_timestamp){
                             printk("RECEIVED ACK MSG FROM: %d\n", 
-                                buf->data[SENDER_ID_IDX]);
+                                ble_data[SENDER_ID_IDX]);
                             
                             // Wake up sending thread so it can stop transmission
+                            // as ack was already received
                             k_wakeup(send_packet_thread_id);
                             k_event_post(
                                     &ack_received,
@@ -327,28 +321,9 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     break;
             }
         }
-        else printk("DUPLICATE MESSAGE FROM %d, DISCARDED\n", 
-                buf->data[SENDER_ID_IDX]);
     }
 }
 
-
-void ble_scanned(struct bt_le_ext_adv *adv,
-        struct bt_le_ext_adv_scanned_info *info){
-    // adv - advertising set obj
-    // info - address adn type
-    char addr_str[BT_ADDR_LE_STR_LEN];
-    bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
-    
-    printk("Sent scan data to the node with addr: %s\n", addr_str);
-}
-
-
-void ble_sent(struct bt_le_ext_adv *adv, 
-        struct bt_le_ext_adv_sent_info *info){
-    // Fired after a num of adv ev or timeout, no need to count
-    printk("Sent adv data \n");
-}
 
 /* Utility functions */
 void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item) {
@@ -404,9 +379,9 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item) {
 }
 
 
-bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id){
-    bool rec = buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
-            buf->data[RCV_ADDR_IDX] == common_self_mesh_id;
+bool ble_is_receiver(uint8_t data[],uint8_t common_self_mesh_id){
+    bool rec = data[RCV_ADDR_IDX] == BROADCAST_ADDR || 
+            data[RCV_ADDR_IDX] == common_self_mesh_id;
     return rec;
 }
 
@@ -418,8 +393,8 @@ uint16_t ble_add_packet_timestamp(uint8_t data[]){
     // Get only lower 16 bits
     timestamp_lower = 0x00FF & cycles32;
     timestamp_upper = (0xFF00 & cycles32) >> 8;
-    data[TIME_STAMP_MSB_IDX - 2] = timestamp_upper;
-    data[TIME_STAMP_LSB_IDX - 2] = timestamp_lower;
+    data[TIME_STAMP_MSB_IDX] = timestamp_upper;
+    data[TIME_STAMP_LSB_IDX] = timestamp_lower;
     return cycles32 & 0xFFFF;
 }
 
@@ -430,4 +405,7 @@ uint16_t ble_get_packet_timestamp(uint8_t data[]){
     return timestamp;
 }
 
-
+bool ble_wait_for_ack(int32_t timeout_ms) {
+    int32_t time_remaining = k_msleep(timeout_ms);
+    return time_remaining > 0;
+}

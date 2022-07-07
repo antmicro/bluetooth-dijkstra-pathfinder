@@ -28,6 +28,7 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000000 false
 
+
 # Wireless
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 0 0 0
@@ -59,6 +60,8 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000001 false
 
+machine StartGdbServer 3333
+
 # Wireless
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio -3 3 0
@@ -73,7 +76,6 @@ mach add "node2"
 mach set "node2"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
-machine StartGdbServer 3333
 
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000002 false

@@ -10,12 +10,13 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
-#define SENDER_ID_IDX 1
-#define MSG_TYPE_IDX 2
-#define DST_ADDR_IDX 3
-#define RCV_ADDR_IDX 4
-#define TIME_STAMP_MSB_IDX 5
-#define TIME_STAMP_LSB_IDX 6
+// ff 01 00 04 01010101
+#define SENDER_ID_IDX 0
+#define MSG_TYPE_IDX 1
+#define DST_ADDR_IDX 2
+#define RCV_ADDR_IDX 3
+#define TIME_STAMP_MSB_IDX 4
+#define TIME_STAMP_LSB_IDX 5
 
 #define MSG_TYPE_DATA 0x1
 #define MSG_TYPE_ROUTING_TAB 0x2
@@ -77,7 +78,7 @@ void ble_sent(struct bt_le_ext_adv *adv,
         struct bt_le_ext_adv_sent_info *info);
 
 /* Utility functions */
-bool ble_is_receiver(struct net_buf_simple *buf,uint8_t common_self_mesh_id);
+bool ble_is_receiver(uint8_t data[],uint8_t common_self_mesh_id);
 
 uint16_t ble_add_packet_timestamp(uint8_t data[]);
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
@@ -98,6 +99,8 @@ uint16_t ble_get_packet_timestamp(uint8_t data[]);
 void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item);
 void rcv_pkts_cb_pop(rcv_pkts_cb *cb);
 bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item);
+
+bool ble_wait_for_ack(int32_t timeout_ms);
 #endif
 
 
