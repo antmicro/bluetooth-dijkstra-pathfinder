@@ -32,9 +32,8 @@
 /* Events definitions */
 #define BLE_ACK_RECEIVED_EVENT 0x1 
 
-/* Global queues for BLE ad - hoc */
-//extern struct k_msgq common_received_packets_q;
-//extern struct k_fifo common_packets_to_send_q;
+// Global variable with sender thread id to wake it up
+extern k_tid_t send_packet_thread_id;
 
 // TODO: make local mesh address into typedef for clarity
 struct ble_tx_packet_data {

@@ -36,7 +36,7 @@ K_THREAD_DEFINE(prep_ack_thread, PREP_ACK_THREAD_S_SIZE,
 ble_prep_ack_thread_entry, NULL, NULL, NULL,
 PREP_ACK_THREAD_PRIO, 0, 0);
 
-
+k_tid_t send_packet_thread_id;
 void main(void)
 {
     /* Graph Initialization */
@@ -75,7 +75,7 @@ void main(void)
     k_thread_name_set(&prep_data_packet_thread, "prep_data_packet_thread");
      
     struct k_thread send_packet_thread;
-    k_tid_t send_packet_thread_id = k_thread_create(&send_packet_thread,
+    send_packet_thread_id = k_thread_create(&send_packet_thread,
             send_packet_thread_stack,
             K_THREAD_STACK_SIZEOF(send_packet_thread_stack),
             ble_send_packet_thread_entry,

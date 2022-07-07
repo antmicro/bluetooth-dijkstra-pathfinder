@@ -308,6 +308,9 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         if(correct_id && correct_timestamp){
                             printk("RECEIVED ACK MSG FROM: %d\n", 
                                 buf->data[SENDER_ID_IDX]);
+                            
+                            // Wake up sending thread so it can stop transmission
+                            k_wakeup(send_packet_thread_id);
                             k_event_post(
                                     &ack_received,
                                     BLE_ACK_RECEIVED_EVENT); 
