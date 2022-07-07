@@ -45,6 +45,7 @@ struct ble_tx_packet_data {
 typedef struct {
     uint8_t node_id;
     uint16_t time_stamp;
+    uint8_t msg_type;
 }__attribute__((aligned(4))) ble_sender_info;
 
 typedef struct {
