@@ -138,7 +138,8 @@ void ble_send_packet_thread_entry(
         printk("Sending a msg.\n");
     
         // If sending data, add flag indicating waiting for ack and modify time
-        if(ad[MSG_TYPE_IDX - 2] == MSG_TYPE_DATA) {
+        bool is_data_msg = ad[MSG_TYPE_IDX - 2] == MSG_TYPE_DATA;
+        if(is_data_msg) {
             uint16_t timestamp = ble_add_packet_timestamp(ad);
             uint8_t next_node_mesh_id = ad[RCV_ADDR_IDX - 2];
             ble_sender_info ack_info = {
@@ -156,7 +157,7 @@ void ble_send_packet_thread_entry(
         }
         
         // Prep adv params
-        struct bt_le_adv_param adv_tx_params = BT_LE_ADV_PARAM_INIT(
+        static struct bt_le_adv_param adv_tx_params = BT_LE_ADV_PARAM_INIT(
                 BT_LE_ADV_OPT_USE_IDENTITY,
                 BT_GAP_ADV_FAST_INT_MIN_1,
                 BT_GAP_ADV_FAST_INT_MAX_1,
@@ -178,12 +179,15 @@ void ble_send_packet_thread_entry(
         }
         printk("Finished advertising.\n");
         
-        // Cleanly take back previously set awaiting ack flag
-        err = k_msgq_get(&awaiting_ack, NULL, K_NO_WAIT);
-        if(err) {
-            printk("ERROR: Could not take down awaiting_ack flag: %d\n", err);
-            return;
+        // Cleanly take back previously set awaiting ack flag for data msg
+        if(is_data_msg) {
+            err = k_msgq_get(&awaiting_ack, NULL, K_MSEC(50));
+            if(err) {
+                printk("ERROR: Could not take down awaiting_ack flag: %d\n", err);
+                return;
+            }
         }
+        
         
         /*
         uint32_t events;
