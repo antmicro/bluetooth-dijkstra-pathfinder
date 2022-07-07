@@ -103,8 +103,8 @@ void ble_prep_ack_thread_entry(
         ack_data[MSG_TYPE_IDX - 2] = MSG_TYPE_ACK;
         ack_data[DST_ADDR_IDX - 2] = 0xFF; //whatever, ignored
         ack_data[RCV_ADDR_IDX - 2] = ack_info.node_id; // node to ack to
-        ack_data[TIME_STAMP_UPPER_IDX - 2] = (0xFF00 & ack_info.time_stamp) >> 8;
-        ack_data[TIME_STAMP_LOWER_IDX - 2] = 0x00FF & ack_info.time_stamp;
+        ack_data[TIME_STAMP_MSB_IDX - 2] = (0xFF00 & ack_info.time_stamp) >> 8;
+        ack_data[TIME_STAMP_LSB_IDX - 2] = 0x00FF & ack_info.time_stamp;
         
         err = k_msgq_put(&ready_packets_to_send_q, ack_data, K_NO_WAIT);
         if(err) {
@@ -418,15 +418,15 @@ uint16_t ble_add_packet_timestamp(uint8_t data[]){
     // Get only lower 16 bits
     timestamp_lower = 0x00FF & cycles32;
     timestamp_upper = (0xFF00 & cycles32) >> 8;
-    data[TIME_STAMP_UPPER_IDX - 2] = timestamp_upper;
-    data[TIME_STAMP_LOWER_IDX - 2] = timestamp_lower;
+    data[TIME_STAMP_MSB_IDX - 2] = timestamp_upper;
+    data[TIME_STAMP_LSB_IDX - 2] = timestamp_lower;
     return cycles32 & 0xFFFF;
 }
 
 
 uint16_t ble_get_packet_timestamp(uint8_t data[]){
-    uint16_t timestamp = (data[TIME_STAMP_UPPER_IDX] << 8) | 
-        data[TIME_STAMP_LOWER_IDX];
+    uint16_t timestamp = (data[TIME_STAMP_MSB_IDX] << 8) | 
+        data[TIME_STAMP_LSB_IDX];
     return timestamp;
 }
 
