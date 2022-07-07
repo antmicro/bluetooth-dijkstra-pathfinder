@@ -143,7 +143,8 @@ void ble_send_packet_thread_entry(
             uint8_t next_node_mesh_id = ad[RCV_ADDR_IDX - 2];
             ble_sender_info ack_info = {
                 .node_id = next_node_mesh_id,
-                .time_stamp = timestamp
+                .time_stamp = timestamp,
+                .msg_type = 0x0 // Unused here
             };
             printk("Awaiting for ack from node %d and with timestamp: %d\n",
                     next_node_mesh_id, timestamp);
@@ -244,24 +245,26 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     if(ble_is_receiver(buf, common_self_mesh_id)){
         int err;
         uint8_t msg_type = buf->data[MSG_TYPE_IDX];
-        switch(msg_type){
-            case MSG_TYPE_DATA:
-                {
-                    // Extract sender id and timestamp
-                    ble_sender_info sender_info = {
-                            .node_id = buf->data[SENDER_ID_IDX],
-                            .time_stamp = ble_get_packet_timestamp(buf->data)
-                    };
-                    
-                    // If packet was not received before, process it 
-                    if(!rcv_pkts_cb_is_in_cb(
-                                &rcv_pkts_circular_buffer, &sender_info)) {
+        
+        // Extract sender id, timestamp and msg type to determine processing 
+        // path and check if it is a duplicate 
+        ble_sender_info sender_info = {
+                .node_id = buf->data[SENDER_ID_IDX],
+                .time_stamp = ble_get_packet_timestamp(buf->data),
+                .msg_type = msg_type
+        };
+
+        // If packet was not received before, process it 
+        if(!rcv_pkts_cb_is_in_cb(
+                    &rcv_pkts_circular_buffer, &sender_info)) {
+            // Also add it to the recently received packets memory 
+            rcv_pkts_cb_push(&rcv_pkts_circular_buffer, &sender_info);
+            switch(msg_type){
+                case MSG_TYPE_DATA:
+                    {
                         printk("RECEIVED NEW DATA MSG from %d.\n", 
                                 buf->data[SENDER_ID_IDX]);
                         
-                        // Add to circular buffer with recent messages
-                        rcv_pkts_cb_push(&rcv_pkts_circular_buffer, &sender_info);
-
                         // Do not send ack if msg is on broadcast addr
                         if(!(buf->data[RCV_ADDR_IDX] == BROADCAST_ADDR)){
                             // Queue ack for the msg sender
@@ -284,40 +287,41 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                             return;
                         }
                     }
-                    else printk("DUPLICATE MESSAGE FROM %d, DISCARDED\n", 
-                            buf->data[SENDER_ID_IDX]);
-                }
-                break;
-
-            case MSG_TYPE_ACK:
-                {
-                    // Check if message's header content is correct 
-                    // with awaited
-                    ble_sender_info a_info;
-                    err = k_msgq_peek(&awaiting_ack, &a_info);
-                    if(err){
-                        printk("ERROR: No info about awaited ack!\n");
-                        return;
-                    }
-                    bool correct_id = a_info.node_id == buf->data[SENDER_ID_IDX];
-                    uint16_t timestamp16 = ble_get_packet_timestamp(
-                            buf->data);
-                    bool correct_timestamp = timestamp16 == a_info.time_stamp;
-                    if(correct_id && correct_timestamp){
-                        printk("RECEIVED ACK MSG FROM: %d\n", 
-                            buf->data[SENDER_ID_IDX]);
-                        k_event_post(
-                                &ack_received,
-                                BLE_ACK_RECEIVED_EVENT); 
-                    }
                     break;
-                }
-                
-            case MSG_TYPE_ROUTING_TAB:
-                printk("ERROR: Not implemented.\n");
-                break;
+
+                case MSG_TYPE_ACK:
+                    {
+                        // Check if message's header content is correct 
+                        // with awaited
+                        ble_sender_info a_info;
+                        err = k_msgq_peek(&awaiting_ack, &a_info);
+                        if(err){
+                            printk("ERROR: No info about awaited ack!\n");
+                            return;
+                        }
+
+                        bool correct_id = a_info.node_id == buf->data[SENDER_ID_IDX];
+                        uint16_t timestamp16 = ble_get_packet_timestamp(
+                                buf->data);
+                        bool correct_timestamp = timestamp16 == a_info.time_stamp;
+                        
+                        if(correct_id && correct_timestamp){
+                            printk("RECEIVED ACK MSG FROM: %d\n", 
+                                buf->data[SENDER_ID_IDX]);
+                            k_event_post(
+                                    &ack_received,
+                                    BLE_ACK_RECEIVED_EVENT); 
+                        }
+                        break;
+                    }
+                    
+                case MSG_TYPE_ROUTING_TAB:
+                    printk("ERROR: Not implemented.\n");
+                    break;
+            }
         }
-        
+        else printk("DUPLICATE MESSAGE FROM %d, DISCARDED\n", 
+                buf->data[SENDER_ID_IDX]);
     }
 }
 
@@ -382,7 +386,8 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item) {
     while(ptr != cb->head) {
         if(
                 item->node_id == ptr->node_id && 
-                item->time_stamp == ptr->time_stamp) {
+                item->time_stamp == ptr->time_stamp &&
+                item->msg_type == ptr->msg_type) {
             return true;        
         }
         ptr++;
