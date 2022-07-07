@@ -75,20 +75,6 @@ void main(void)
         
         k_msleep(1000);
         //mfg_data[5]++;
-         
-        err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, ad2, ARRAY_SIZE(ad2), NULL, 0);
-        k_msleep(200);
-
-        err = bt_le_adv_stop();
-        if (err) {
-            printk("Advertising failed to stop (err %d)\n", err);
-            return;
-        }
-        
-        k_msleep(1000);
-        //mfg_data[5]++;
-        
-
     }while(true);
 
     printk("MOBILE BROADCASTER ADV START\n");
