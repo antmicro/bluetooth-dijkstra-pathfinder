@@ -100,11 +100,10 @@ void ble_prep_ack_thread_entry(
         uint8_t ack_data[] = {
             0x05, 0x05, 0x05, 0x05, 0x05 ,0x05, 0x05, 0x05
         };
-        // 09 01 03 ff 02 0061050505
         ack_data[MSG_TYPE_IDX - 2] = MSG_TYPE_ACK;
         ack_data[DST_ADDR_IDX - 2] = 0xFF; //whatever, ignored
         ack_data[RCV_ADDR_IDX - 2] = ack_info.node_id; // node to ack to
-        ack_data[TIME_STAMP_UPPER_IDX - 2] = 0xFF00 & ack_info.time_stamp;
+        ack_data[TIME_STAMP_UPPER_IDX - 2] = (0xFF00 & ack_info.time_stamp) >> 8;
         ack_data[TIME_STAMP_LOWER_IDX - 2] = 0x00FF & ack_info.time_stamp;
         
         err = k_msgq_put(&ready_packets_to_send_q, ack_data, K_NO_WAIT);
@@ -257,7 +256,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                 .time_stamp = ble_get_packet_timestamp(buf->data),
                 .msg_type = msg_type
         };
-
+        
         // If packet was not received before, process it 
         if(!rcv_pkts_cb_is_in_cb(
                     &rcv_pkts_circular_buffer, &sender_info)) {
@@ -305,10 +304,11 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         }
 
                         bool correct_id = a_info.node_id == buf->data[SENDER_ID_IDX];
+                        // TODO: read this from the sender info
                         uint16_t timestamp16 = ble_get_packet_timestamp(
                                 buf->data);
                         bool correct_timestamp = timestamp16 == a_info.time_stamp;
-                        
+                        printk("Timestamp of received ack: %d\n", timestamp16); 
                         if(correct_id && correct_timestamp){
                             printk("RECEIVED ACK MSG FROM: %d\n", 
                                 buf->data[SENDER_ID_IDX]);
