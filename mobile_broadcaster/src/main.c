@@ -11,10 +11,11 @@
 #define MSG_TYPE_IDX 1
 #define DST_ADDR_IDX 2
 #define RCV_ADDR_IDX 3
+#define TIME_STAMP_MSB_IDX 4
+#define TIME_STAMP_LSB_IDX 5
 #define BROADCAST_ADDR 0x7F // 127
 
-uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
-uint8_t mfg_data2[] = {0x02, 0x02, 0x02, 0x02, 0x02 ,0x02, 0x02, 0x02}; 
+static uint8_t mfg_data[] = {0x01, 0x01, 0x01, 0x01, 0x01 ,0x01, 0x01, 0x01}; 
 
 void main(void)
 {
@@ -29,35 +30,24 @@ void main(void)
 		return;
 	}
 
-    // Receiver address 
-    bt_addr_le_t receiver_addr = {
-        .type = BT_ADDR_LE_RANDOM,
-        .a = { // set it to receiver addr 
-            //      LSB                           MSB
-			//.val = {0x01, 0x00, 0x00, 0x00, 0x00 ,0xC0} 
-			.val = {0x02, 0x00, 0x00, 0x00, 0x00 ,0xC0} 
-        }
-    };
-    char r_identity[129];
-    bt_addr_le_to_str(&receiver_addr, r_identity, sizeof(r_identity)); 
-    printk("Sending to node with identity: %s\n", r_identity); 
-
-    // Data setup
-    // First byte is ***mesh address*** of final destination 
-    //uint8_t mfg_data[9]; TODO: here add some data, for now its whatever
-    //memcpy(&mfg_data[1], mfg_data, sizeof(mfg_data));
-    
-    uint8_t mobile_broadcaster_name = 0xFF;
-    mfg_data[SENDER_ID_IDX] = mobile_broadcaster_name;
+    mfg_data[SENDER_ID_IDX] = 0xFF;
     mfg_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // Broadcast addr 
     mfg_data[DST_ADDR_IDX] = 0x00; // Destination addr
     mfg_data[MSG_TYPE_IDX] = 0x1; // MSG_TYPE_DATA 
-    const struct bt_data ad[] = {
+    
+    static const struct bt_data ad[] = {
 	    BT_DATA(BT_DATA_NAME_COMPLETE, mfg_data, 8)};
-    const struct bt_data ad2[] = {
-	    BT_DATA(mobile_broadcaster_name, mfg_data2, 8)};
-        
+   
     do{
+        uint8_t timestamp_lower, timestamp_upper;
+        uint32_t cycles32 = k_cycle_get_32();
+
+        // Get only lower 16 bits
+        timestamp_lower = 0x00FF & cycles32;
+        timestamp_upper = (0xFF00 & cycles32) >> 8;
+        mfg_data[TIME_STAMP_MSB_IDX] = timestamp_upper;
+        mfg_data[TIME_STAMP_LSB_IDX] = timestamp_lower;
+
         err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, 
                 ad, ARRAY_SIZE(ad),
                 NULL, 0);
@@ -67,7 +57,7 @@ void main(void)
             return;
         }
 
-        k_msleep(200);
+        k_msleep(100);
 
         err = bt_le_adv_stop();
         if (err) {
@@ -76,7 +66,7 @@ void main(void)
         }
         printk("Advertised\n");
         
-        k_msleep(1000);
+        k_msleep(500);
         //mfg_data[5]++;
     }while(true);
 
