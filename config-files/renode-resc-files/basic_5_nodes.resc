@@ -60,7 +60,6 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000001 false
 
-machine StartGdbServer 3333
 
 # Wireless
 connector Connect sysbus.radio wireless
@@ -76,6 +75,7 @@ mach add "node2"
 mach set "node2"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
+machine StartGdbServer 3333
 
 # set unique identification address 
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000002 false
@@ -86,8 +86,8 @@ wireless SetPosition sysbus.radio 0 6 0
 wireless SetRangeWirelessFunction 5
 
 # Log
-logLevel -1 sysbus.radio
-sysbus LogPeripheralAccess sysbus.radio
+#logLevel -1 sysbus.radio
+#sysbus LogPeripheralAccess sysbus.radio
 
 # analyzers 
 showAnalyzer sysbus.uart0
@@ -121,8 +121,8 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
 # Wireless 
 connector Connect sysbus.radio wireless
-wireless SetPosition sysbus.radio 3 6 0
-wireless SetRangeWirelessFunction 5
+wireless SetPosition sysbus.radio 100 100 0
+wireless SetRangeWirelessFunction 2
 
 # analyzers 
 showAnalyzer sysbus.uart0
@@ -149,6 +149,11 @@ macro reset
     mach set "mobile_broadcaster"
     sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
 """
+
+i @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/renode-commands/move_radio.py
+
 runMacro $reset
+start
+watch "move" 1000
 
 
