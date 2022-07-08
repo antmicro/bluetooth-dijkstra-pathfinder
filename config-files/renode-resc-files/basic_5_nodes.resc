@@ -121,8 +121,8 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
 # Wireless 
 connector Connect sysbus.radio wireless
-wireless SetPosition sysbus.radio 100 100 0
-wireless SetRangeWirelessFunction 2
+wireless SetPosition sysbus.radio 0 0 0
+wireless SetRangeWirelessFunction 5 
 
 # analyzers 
 showAnalyzer sysbus.uart0
@@ -154,6 +154,6 @@ i @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/renode-commands/move
 
 runMacro $reset
 start
-watch "move" 1000
+watch "move" 2000 
 
 
