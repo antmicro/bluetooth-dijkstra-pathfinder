@@ -21,12 +21,12 @@ void graph_set_distance(struct node_t graph[],
     // Do it both ways TODO: change it so the code is not copied
     for(uint8_t i = 0; i < node1->paths_size; i++){
         if(node1->paths[i].addr == mesh_id_2){
-            node1->paths->distance = new_dist;
+            node1->paths[i].distance = new_dist;
         }
     }
     for(uint8_t i = 0; i < node2->paths_size; i++){
         if(node2->paths[i].addr == mesh_id_1){
-            node1->paths->distance = new_dist;
+            node2->paths[i].distance = new_dist;
         }
     }
 }

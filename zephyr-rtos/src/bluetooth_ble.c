@@ -201,6 +201,7 @@ void ble_send_packet_thread_entry(
                         &graph[ad[RCV_ADDR_IDX]], got_ack);
             uint8_t new_td = calc_td_from_missed_transmissions(
                         graph[ad[RCV_ADDR_IDX]].missed_transmissions);
+            printk("New calculated TD: %d\n", new_td);
             graph_set_distance(graph,
                         common_self_mesh_id, ad[RCV_ADDR_IDX], new_td);
 
@@ -233,8 +234,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
         
-    printk("Received data from node with address: %s\n", addr_str);
-    printk("Data: %s\n", data);
+    //printk("Received data from node with address: %s\n", addr_str);
+    //printk("Data: %s\n", data);
     
     // Strip the buffer into simple byte array
     uint8_t ble_data[BLE_MSG_LEN]; 
