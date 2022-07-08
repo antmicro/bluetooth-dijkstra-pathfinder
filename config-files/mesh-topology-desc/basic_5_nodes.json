@@ -43,7 +43,7 @@
          },
          {
             "addr":4,
-            "distance":10
+            "distance":1
          }
       ]
    },
@@ -64,7 +64,7 @@
       "paths":[
          {
             "addr":2,
-            "distance":10
+            "distance":1
          },
          {
             "addr":0,
