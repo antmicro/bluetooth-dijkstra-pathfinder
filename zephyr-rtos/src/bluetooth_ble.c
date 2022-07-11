@@ -15,7 +15,7 @@ K_MSGQ_DEFINE(awaiting_ack,
 K_MSGQ_DEFINE(ack_receivers_q,
         sizeof(ble_sender_info), 10, 4);
 K_MSGQ_DEFINE(data_packets_to_send_q,
-        BLE_MSG_LEN, 10, 4);
+        sizeof(struct ble_packet_info), 10, 4);
 
 // Queue for messages to send
 K_MSGQ_DEFINE(ready_packets_to_send_q, 
@@ -48,27 +48,21 @@ void ble_send_data_packet_thread_entry(
         struct node_t *graph) {
     while(1){
         // Reserved memory for data and array for sending by BLE
-        static uint8_t ble_data[BLE_MSG_LEN];
+        static struct ble_packet_info pkt_info;
         static struct bt_data ad_arr[] = {
-            BT_DATA(0xAA, ble_data, BLE_MSG_LEN) 
+            BT_DATA(0xAA, pkt_info.ble_data, BLE_MSG_LEN) 
         };
 
         // Get the packet content from the queue
-        int err = k_msgq_get(&data_packets_to_send_q, ble_data, K_FOREVER);
+        int err = k_msgq_get(&data_packets_to_send_q, &pkt_info, K_FOREVER);
         if(err){
             printk("ERROR: reading from queue: %d \n!\n", err);
             return;
         }
         
-        // If current node is destination node of the packet, do not send further
-        uint8_t dst_mesh_id = ble_data[DST_ADDR_IDX];
-        if(dst_mesh_id == common_self_mesh_id) {
-            printk("FINAL DESTINATION REACHED\n");
-            continue;
-        } 
-        
         /* Message preparation */
         // Calculate shortest path with Dijkstra algorithm
+        uint8_t dst_mesh_id = pkt_info.ble_data[DST_ADDR_IDX];
         uint8_t next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE,
                 common_self_mesh_id, dst_mesh_id);
         if(next_node_mesh_id < 0) {
@@ -77,9 +71,9 @@ void ble_send_data_packet_thread_entry(
         }
         
         // Header settings 
-        ble_data[SENDER_ID_IDX] = common_self_mesh_id;
-        ble_data[RCV_ADDR_IDX] = next_node_mesh_id;
-        uint16_t timestamp = ble_add_packet_timestamp(ble_data);
+        pkt_info.ble_data[SENDER_ID_IDX] = common_self_mesh_id;
+        pkt_info.ble_data[RCV_ADDR_IDX] = next_node_mesh_id;
+        uint16_t timestamp = ble_add_packet_timestamp(pkt_info.ble_data);
         
         // Awaiting ack for this packet
         ble_sender_info ack_info = {
@@ -107,6 +101,7 @@ void ble_send_data_packet_thread_entry(
                 NULL);
         
         /* Sending a data message */
+        printk("Started advertising.\n");
         err = bt_le_adv_start(&adv_tx_params, 
         ad_arr, ARRAY_SIZE(ad_arr), 
         NULL, 0);
@@ -127,25 +122,30 @@ void ble_send_data_packet_thread_entry(
         k_mutex_unlock(&ble_send_mutex);
 
         printk("Finished advertising.\n");
+        pkt_info.resend_counter++;
+        printk("Resend counter: %d\n", pkt_info.resend_counter);
         
         // Remove flag indicating awaited ack
         err = k_msgq_get(&awaiting_ack, NULL, K_MSEC(50));
         
         // Distance recalculation and update 
         node_update_missed_transmissions(
-                        &graph[ble_data[RCV_ADDR_IDX]], got_ack);
+                        &graph[pkt_info.ble_data[RCV_ADDR_IDX]], got_ack);
         uint8_t new_td = calc_td_from_missed_transmissions(
-                    graph[ble_data[RCV_ADDR_IDX]].missed_transmissions);
+                    graph[pkt_info.ble_data[RCV_ADDR_IDX]].missed_transmissions);
         printk("New calculated TD: %d\n", new_td);
         graph_set_distance(graph,
-                    common_self_mesh_id, ble_data[RCV_ADDR_IDX], new_td);
+                    common_self_mesh_id, pkt_info.ble_data[RCV_ADDR_IDX], new_td);
 
         // Put the message again into the queue and try to send it again
         if(!got_ack) {
             printk("##############################\n");
-            printk("Did not receive ACK from node %d.\n", ble_data[RCV_ADDR_IDX]);
+            printk("Did not receive ACK from node %d.\n", pkt_info.ble_data[RCV_ADDR_IDX]);
             printk("##############################\n");
-            k_msgq_put(&data_packets_to_send_q, ble_data, K_NO_WAIT);
+            
+            // Do not resend infinitely
+            if(pkt_info.resend_counter < 3)k_msgq_put(
+                    &data_packets_to_send_q, pkt_info.ble_data, K_NO_WAIT);
         }
     }
 }
@@ -237,7 +237,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     printk("Data: %s\n", data);
     
     // Strip the buffer into simple byte array
-    uint8_t ble_data[BLE_MSG_LEN]; 
+    static uint8_t ble_data[BLE_MSG_LEN]; 
     memcpy(ble_data, &(buf->data[2]), BLE_MSG_LEN);
 
     // Check if is receiver, proceed if yes
@@ -276,10 +276,22 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                             }
                         }
                         
+                        uint8_t dst_mesh_id = ble_data[DST_ADDR_IDX];
+                        if(dst_mesh_id == common_self_mesh_id) {
+                            printk("FINAL DESTINATION REACHED\n");
+                            // Do something with the data
+                            return;
+                        }
+                        
                         // Queue message to process further
+                        struct ble_packet_info pkt_info = {
+                            .resend_counter = 0
+                        };
+                        memcpy(pkt_info.ble_data, ble_data, BLE_MSG_LEN);
+
                         err = k_msgq_put(
                                 &data_packets_to_send_q, 
-                                ble_data, K_NO_WAIT);
+                                &pkt_info, K_NO_WAIT);
                         if(err){ 
                             printk("Error queue put: %d, queue purged\n", err);
                             k_msgq_purge(&data_packets_to_send_q);
