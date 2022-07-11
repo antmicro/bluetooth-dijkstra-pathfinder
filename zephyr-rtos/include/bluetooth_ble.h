@@ -10,7 +10,6 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
-// ff 01 00 04 01010101
 #define SENDER_ID_IDX 0
 #define MSG_TYPE_IDX 1
 #define DST_ADDR_IDX 2
@@ -30,11 +29,8 @@
 
 #define CB_POP_TIME_MS 900
 
-/* Events definitions */
-#define BLE_ACK_RECEIVED_EVENT 0x1 
-
 // Global variable with sender thread id to wake it up
-extern k_tid_t send_packet_thread_id;
+extern k_tid_t send_data_packet_thread_id;
 
 // TODO: make local mesh address into typedef for clarity
 struct ble_tx_packet_data {
@@ -58,11 +54,10 @@ typedef struct {
 } rcv_pkts_cb;
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
-void ble_prep_data_packet_thread_entry(struct node_t *graph);
-void ble_prep_ack_thread_entry();
-void ble_send_packet_thread_entry(struct node_t *graph,
-        struct bt_le_scan_param *params);
+void ble_send_data_packet_thread_entry(struct node_t *graph);
 void ble_send_ack_thread_entry();
+//void ble_send_packet_thread_entry(struct node_t *graph,
+//        struct bt_le_scan_param *params);
 
 
 // callbacks 

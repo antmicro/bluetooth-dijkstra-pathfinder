@@ -17,26 +17,21 @@
 #define SLEEP_TIME_MS   1000
 
 /* Threads data */
-#define PREP_DATA_PACKET_THREAD_S_SIZE 1024
-#define PREP_DATA_PACKET_THREAD_PRIO 2 
-K_THREAD_STACK_DEFINE(prep_data_packet_thread_stack, 
-        PREP_DATA_PACKET_THREAD_S_SIZE);
+#define SEND_DATA_PACKET_THREAD_S_SIZE 1024
+#define SEND_DATA_PACKET_THREAD_PRIO 2 
+K_THREAD_STACK_DEFINE(send_data_packet_thread_stack, 
+        SEND_DATA_PACKET_THREAD_S_SIZE);
 
-#define PREP_ACK_THREAD_S_SIZE 1024
-#define PREP_ACK_THREAD_PRIO 2 
-K_THREAD_STACK_DEFINE(prep_ack_thread_stack, 
-        PREP_ACK_THREAD_S_SIZE);
+#define SEND_ACK_THREAD_S_SIZE 1024
+#define SEND_ACK_THREAD_PRIO 1 
+K_THREAD_STACK_DEFINE(send_ack_thread_stack, 
+        SEND_ACK_THREAD_S_SIZE);
 
-#define SEND_PACKET_THREAD_S_SIZE 1024 
-#define SEND_PACKET_THREAD_PRIO 2 
-K_THREAD_STACK_DEFINE(send_packet_thread_stack, 
-        SEND_PACKET_THREAD_S_SIZE);
+K_THREAD_DEFINE(send_ack_thread, SEND_ACK_THREAD_S_SIZE,
+ble_send_ack_thread_entry, NULL, NULL, NULL,
+SEND_ACK_THREAD_PRIO, 0, 0);
 
-K_THREAD_DEFINE(prep_ack_thread, PREP_ACK_THREAD_S_SIZE,
-ble_prep_ack_thread_entry, NULL, NULL, NULL,
-PREP_ACK_THREAD_PRIO, 0, 0);
-
-k_tid_t send_packet_thread_id;
+k_tid_t send_data_packet_thread_id;
 void main(void)
 {
     /* Graph Initialization */
@@ -65,23 +60,14 @@ void main(void)
     printk("BUILT FOR %d NUMBER OF NODES\n", MAX_MESH_SIZE);
 
     /* Create Bluetooth LE threads */
-    struct k_thread prep_data_packet_thread;
-    k_tid_t prep_data_packet_thread_id = k_thread_create(&prep_data_packet_thread, 
-            prep_data_packet_thread_stack,
-            K_THREAD_STACK_SIZEOF(prep_data_packet_thread_stack),
-            ble_prep_data_packet_thread_entry,
+    struct k_thread send_data_packet_thread;
+    send_data_packet_thread_id = k_thread_create(&send_data_packet_thread, 
+            send_data_packet_thread_stack,
+            K_THREAD_STACK_SIZEOF(send_data_packet_thread_stack),
+            ble_send_data_packet_thread_entry,
             &graph, NULL, NULL,
-            PREP_DATA_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
-    k_thread_name_set(&prep_data_packet_thread, "prep_data_packet_thread");
-     
-    struct k_thread send_packet_thread;
-    send_packet_thread_id = k_thread_create(&send_packet_thread,
-            send_packet_thread_stack,
-            K_THREAD_STACK_SIZEOF(send_packet_thread_stack),
-            ble_send_packet_thread_entry,
-            &graph, &scan_params, NULL,
-            SEND_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
-    k_thread_name_set(&send_packet_thread, "send_packet_thread");
+            SEND_DATA_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
+    k_thread_name_set(&send_data_packet_thread, "send_data_packet_thread");
     
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 
@@ -98,7 +84,6 @@ void main(void)
         //printk("Graph mutex lock count: %d \n", graph_mutex.lock_count);
 	    	
         k_msleep(SLEEP_TIME_MS);
-        //thread_analyzer_print();
 	}
 }
 
