@@ -32,17 +32,18 @@
 // Global variable with sender thread id to wake it up
 extern k_tid_t send_data_packet_thread_id;
 
-// TODO: make local mesh address into typedef for clarity
-struct ble_tx_packet_data {
-    void *fifo_reserved;
-    struct net_buf_simple data;    
-};
-
 typedef struct {
     uint8_t node_id;
     uint16_t time_stamp;
     uint8_t msg_type;
 }__attribute__((aligned(4))) ble_sender_info;
+
+
+struct ble_packet_info {
+    uint8_t ble_data[BLE_MSG_LEN];
+    uint8_t resend_counter;
+};
+
 
 typedef struct {
     ble_sender_info *buff_start;
@@ -56,8 +57,6 @@ typedef struct {
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void ble_send_data_packet_thread_entry(struct node_t *graph);
 void ble_send_ack_thread_entry();
-//void ble_send_packet_thread_entry(struct node_t *graph,
-//        struct bt_le_scan_param *params);
 
 
 // callbacks 
