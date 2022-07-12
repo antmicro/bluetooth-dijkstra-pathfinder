@@ -400,7 +400,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     }
                     
                 case MSG_TYPE_ROUTING_TAB:
-                    printk("ERROR: Not implemented.\n");
+                    load_routing_table(graph, ble_data, ROUTING_TABLE_LEN);
                     break;
             }
         }

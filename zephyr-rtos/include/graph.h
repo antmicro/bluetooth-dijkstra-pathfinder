@@ -33,8 +33,8 @@ struct node_t{
 
 // global variable with address of this node 
 extern uint8_t common_self_mesh_id; 
+extern struct node_t graph[MAX_MESH_SIZE];
 
-//uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex);
 uint8_t graph_init(struct node_t *graph);
 void reset_td_visited(struct node_t *graph);
 
@@ -46,6 +46,8 @@ uint8_t calc_td_from_missed_transmissions(uint64_t missed_transmissions);
 
 void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_size);
 size_t node_get_size_in_bytes(struct node_t *node);
+void load_routing_table(struct node_t graph[], uint8_t buff[], uint8_t size);
+void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist);
 
 uint8_t identify_self_in_graph(struct node_t *graph);
 uint8_t get_mesh_id_by_ble_addr(struct node_t *graph, char *ble_addr, uint8_t *mesh_id);

@@ -37,10 +37,11 @@ ble_send_ack_thread_entry, NULL, NULL, NULL,
 SEND_ACK_THREAD_PRIO, 0, 0);
 
 k_tid_t send_data_packet_thread_id;
+struct node_t graph[MAX_MESH_SIZE];
+
 void main(void)
 {
     /* Graph Initialization */
-    struct node_t graph[MAX_MESH_SIZE];
     uint8_t graph_init_error_code = graph_init(graph);
     if(graph_init_error_code){
         printk("Graph initialization failed! \n");
@@ -80,7 +81,7 @@ void main(void)
             K_THREAD_STACK_SIZEOF(send_rt_thread_stack),
             ble_send_rt_thread_entry,
             &graph, NULL, NULL,
-            SEND_RT_THREAD_PRIO, 0, K_MSEC(10));
+            SEND_RT_THREAD_PRIO, 0, K_MSEC(200));
     
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 
