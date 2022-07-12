@@ -16,6 +16,7 @@
 #define RCV_ADDR_IDX 3
 #define TIME_STAMP_MSB_IDX 4
 #define TIME_STAMP_LSB_IDX 5
+#define HEADER_SIZE 6
 
 #define MSG_TYPE_DATA 0x1
 #define MSG_TYPE_ROUTING_TAB 0x2
@@ -24,6 +25,7 @@
 #define BROADCAST_ADDR 0x7F // 127
 
 #define BLE_MSG_LEN 8
+#define ROUTING_TABLE_LEN 83
 
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
 
@@ -57,6 +59,7 @@ typedef struct {
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void ble_send_data_packet_thread_entry(struct node_t *graph);
 void ble_send_ack_thread_entry();
+void ble_send_rt_thread_entry(struct node_t *graph);
 
 
 // callbacks 
@@ -73,7 +76,6 @@ void ble_sent(struct bt_le_ext_adv *adv,
 
 /* Utility functions */
 bool ble_is_receiver(uint8_t data[],uint8_t common_self_mesh_id);
-
 uint16_t ble_add_packet_timestamp(uint8_t data[]);
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
 

@@ -213,6 +213,92 @@ void ble_send_ack_thread_entry(
 }
 
 
+void ble_send_rt_thread_entry(struct node_t *graph) {
+    while(true) {
+        static uint8_t ble_data[ROUTING_TABLE_LEN];
+        uint8_t idx = 0;
+        
+        // Prep header
+        ble_data[SENDER_ID_IDX] = common_self_mesh_id;
+        ble_data[MSG_TYPE_IDX] = MSG_TYPE_ROUTING_TAB;
+        ble_data[DST_ADDR_IDX] = 0xFF; //whatever, ignored
+        ble_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // node to ack to
+        ble_add_packet_timestamp(ble_data);
+        
+        // Fill the ble_data buffer
+        for(uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
+            struct node_t *node = graph + i;
+            size_t size = node_get_size_in_bytes(node);
+            uint8_t buffer[size]; 
+            node_to_byte_array(node, buffer, size);
+            idx += size;
+            memcpy(&ble_data[idx + HEADER_SIZE], buffer, size);
+        } 
+
+        // Send
+        static struct bt_data add_arr[] = {
+            BT_DATA(0xAA, ble_data, ROUTING_TABLE_LEN)
+        };
+
+        static struct bt_le_adv_param adv_tx_params = BT_LE_ADV_PARAM_INIT(
+                BT_LE_ADV_OPT_USE_IDENTITY + BT_LE_ADV_OPT_EXT_ADV,
+                BT_GAP_ADV_FAST_INT_MIN_1,
+                BT_GAP_ADV_FAST_INT_MAX_1,
+                NULL);
+        
+        // For ext advertising create an advertising set
+        struct bt_le_ext_adv *adv_set;
+        int err = bt_le_ext_adv_create(&adv_tx_params, NULL, &adv_set);
+        if(err) {
+            printk("ERROR: could not create an advertising set: %d \n", err);
+        }
+        printk("THE SIZE OF ADV DATA IS %ld \n", ARRAY_SIZE(add_arr));
+        err = bt_le_ext_adv_set_data(adv_set, 
+                add_arr, ARRAY_SIZE(add_arr),
+                NULL, 0);
+        if(err) { 
+            printk("ERROR: could not set data to the adv set %d\n", err);
+        } 
+
+        // Lock the BLE device 
+        k_mutex_lock(&ble_send_mutex, K_FOREVER);
+        
+        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+        printk("Advertising routing table.\n");
+        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+        
+        err = bt_le_ext_adv_start(
+                adv_set, 
+                BT_LE_EXT_ADV_START_PARAM(100, 1));
+
+        /*
+        err = bt_le_adv_start(&adv_tx_params,
+                add_arr, ARRAY_SIZE(add_arr),
+                NULL, 0);
+        */
+
+        if(err) {
+            printk("ERROR: could not start advertising routing table: %d.\n", err);
+            return;
+        }
+
+        k_msleep(200);
+
+        err = bt_le_adv_stop();
+        if(err) {
+            printk("ERROR: could not stop advertising routing table.\n");
+        }
+        k_mutex_unlock(&ble_send_mutex);
+        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+        printk("Finished advertising routing table\n");
+        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+
+        // Wait, don't send too often
+        k_msleep(10000);
+    }
+}
+
+
 /* Callbacks */
 void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
               struct net_buf_simple *buf){

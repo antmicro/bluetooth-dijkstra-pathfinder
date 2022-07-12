@@ -27,6 +27,11 @@ K_THREAD_STACK_DEFINE(send_data_packet_thread_stack,
 K_THREAD_STACK_DEFINE(send_ack_thread_stack, 
         SEND_ACK_THREAD_S_SIZE);
 
+#define SEND_RT_THREAD_S_SIZE 1024
+#define SEND_RT_THREAD_PRIO 3
+K_THREAD_STACK_DEFINE(send_rt_thread_stack,
+        SEND_RT_THREAD_S_SIZE);
+
 K_THREAD_DEFINE(send_ack_thread, SEND_ACK_THREAD_S_SIZE,
 ble_send_ack_thread_entry, NULL, NULL, NULL,
 SEND_ACK_THREAD_PRIO, 0, 0);
@@ -68,6 +73,14 @@ void main(void)
             &graph, NULL, NULL,
             SEND_DATA_PACKET_THREAD_PRIO, 0, K_NO_WAIT);
     k_thread_name_set(&send_data_packet_thread, "send_data_packet_thread");
+
+    struct k_thread send_rt_thread;
+    k_tid_t send_rt_thread_id = k_thread_create(&send_rt_thread,
+            send_rt_thread_stack,
+            K_THREAD_STACK_SIZEOF(send_rt_thread_stack),
+            ble_send_rt_thread_entry,
+            &graph, NULL, NULL,
+            SEND_RT_THREAD_PRIO, 0, K_MSEC(10));
     
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 

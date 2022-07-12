@@ -31,6 +31,7 @@ void graph_set_distance(struct node_t graph[],
     }
 }
 
+
 // TODO: Should have some decay time, so the communication is retried
 void node_update_missed_transmissions(struct node_t *node, 
         bool transmission_success){
@@ -45,6 +46,34 @@ uint8_t calc_td_from_missed_transmissions(uint64_t missed_transmissions){
     float a = 0.5; 
     float y = a * missed_transmissions * missed_transmissions + 1.0;
     return (uint8_t)y;
+}
+
+
+/* Routing table propagation */
+void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_size) {
+    // First two fields in buffer are always the same and identify the node
+    // with relation to which the rest of connections is made
+    buffer[0] = node->addr;
+    buffer[1] = node->paths_size;
+
+    // Rest of fields represent the connections of that node
+    for(uint8_t i = 0; i < node->paths_size; i++) {
+        uint8_t neighbor_addr_idx = 2 * i + 2 + 0;
+        uint8_t neighbor_dist_idx = 2 * i + 2 + 1;
+        buffer[neighbor_addr_idx] = (node->paths + i)->addr;
+        buffer[neighbor_dist_idx] = (node->paths + i)->distance;
+    }
+}
+
+
+size_t node_get_size_in_bytes(struct node_t *node) {
+    // Check if the node is reserved
+    if(!node->reserved) return 0;
+    
+    // Include only those fields that will be sent in routing table 
+    size_t byte_size = sizeof(node->addr) + sizeof(node->paths_size) 
+        * (sizeof(node->paths->addr) + sizeof(node->paths->distance));
+    return byte_size;
 }
 
 

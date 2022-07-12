@@ -154,6 +154,6 @@ i @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/renode-commands/move
 
 runMacro $reset
 start
-watch "move" 10000 
+#watch "move" 10000 
 
 
