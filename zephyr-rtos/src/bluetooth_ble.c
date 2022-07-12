@@ -263,20 +263,9 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         // Lock the BLE device 
         k_mutex_lock(&ble_send_mutex, K_FOREVER);
         
-        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-        printk("Advertising routing table.\n");
-        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-        
         err = bt_le_ext_adv_start(
                 adv_set, 
                 BT_LE_EXT_ADV_START_PARAM(100, 1));
-
-        /*
-        err = bt_le_adv_start(&adv_tx_params,
-                add_arr, ARRAY_SIZE(add_arr),
-                NULL, 0);
-        */
-
         if(err) {
             printk("ERROR: could not start advertising routing table: %d.\n", err);
             return;
@@ -289,9 +278,6 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
             printk("ERROR: could not stop advertising routing table.\n");
         }
         k_mutex_unlock(&ble_send_mutex);
-        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-        printk("Finished advertising routing table\n");
-        printk("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 
         // Wait, don't send too often
         k_msleep(10000);
