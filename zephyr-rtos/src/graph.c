@@ -118,6 +118,19 @@ void load_routing_table(struct node_t graph[], uint8_t buff[], uint8_t size) {
 }
 
 
+void print_graph(struct node_t graph[]) {
+    printk("Mesh topology:\n");
+    for(uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
+        printk("Node %d\n", graph[i].addr);
+        printk("Connected to: \n");
+        for(uint8_t j = 0; j < graph[i].paths_size; j++) {
+            printk("    Node %d with distance: %d \n",
+                    graph[i].paths[j].addr, graph[i].paths[j].distance);
+        }
+    }
+}
+
+
 void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist) {
     for(uint8_t i = 0; i < node->paths_size; i++) {
         if(node->paths[i].addr == neigh_addr) {

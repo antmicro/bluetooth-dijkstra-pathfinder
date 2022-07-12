@@ -81,7 +81,7 @@ void main(void)
             K_THREAD_STACK_SIZEOF(send_rt_thread_stack),
             ble_send_rt_thread_entry,
             &graph, NULL, NULL,
-            SEND_RT_THREAD_PRIO, 0, K_MSEC(200));
+            SEND_RT_THREAD_PRIO, 0, K_MSEC(2000));
     
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 

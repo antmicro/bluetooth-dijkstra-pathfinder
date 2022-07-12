@@ -48,6 +48,7 @@ void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_si
 size_t node_get_size_in_bytes(struct node_t *node);
 void load_routing_table(struct node_t graph[], uint8_t buff[], uint8_t size);
 void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist);
+void print_graph(struct node_t graph[]);
 
 uint8_t identify_self_in_graph(struct node_t *graph);
 uint8_t get_mesh_id_by_ble_addr(struct node_t *graph, char *ble_addr, uint8_t *mesh_id);

@@ -252,7 +252,6 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         if(err) {
             printk("ERROR: could not create an advertising set: %d \n", err);
         }
-        printk("THE SIZE OF ADV DATA IS %ld \n", ARRAY_SIZE(add_arr));
         err = bt_le_ext_adv_set_data(adv_set, 
                 add_arr, ARRAY_SIZE(add_arr),
                 NULL, 0);
@@ -262,10 +261,10 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
 
         // Lock the BLE device 
         k_mutex_lock(&ble_send_mutex, K_FOREVER);
-        
+        printk("SENDING THE ROUTING TABLE DATA\n"); 
         err = bt_le_ext_adv_start(
                 adv_set, 
-                BT_LE_EXT_ADV_START_PARAM(100, 1));
+                BT_LE_EXT_ADV_START_PARAM(0, 10));
         if(err) {
             printk("ERROR: could not start advertising routing table: %d.\n", err);
             return;
@@ -401,6 +400,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     
                 case MSG_TYPE_ROUTING_TAB:
                     load_routing_table(graph, ble_data, ROUTING_TABLE_LEN);
+                    print_graph(graph);
                     break;
             }
         }
