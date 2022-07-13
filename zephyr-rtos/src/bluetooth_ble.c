@@ -383,6 +383,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     
                 case MSG_TYPE_ROUTING_TAB:
                     // Send it further if time to live is not zero 
+                    printk("RECEIVED RTR\n");
+                    load_rtr(graph, ble_data, BLE_RTR_MSG_LEN);
                     if(ble_data[TTL_IDX] > 1) {
                         printk("Putting the other node rtr to send queue.\n");
                         err = k_msgq_put(&rtr_packets_to_send_q, ble_data, K_NO_WAIT);

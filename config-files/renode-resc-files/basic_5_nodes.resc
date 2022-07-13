@@ -153,7 +153,7 @@ macro reset
 i @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/renode-commands/move_radio.py
 
 runMacro $reset
-#start
-#watch "move" 10000 
+start
+watch "move" 10000 
 
 

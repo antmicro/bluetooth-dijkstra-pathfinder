@@ -46,7 +46,7 @@ uint8_t calc_td_from_missed_transmissions(uint64_t missed_transmissions);
 
 void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_size);
 size_t node_get_size_in_bytes(struct node_t *node);
-void load_routing_table(struct node_t graph[], uint8_t buff[], uint8_t size);
+void load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size);
 void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist);
 void print_graph(struct node_t graph[]);
 

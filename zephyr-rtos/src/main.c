@@ -83,7 +83,7 @@ void main(void)
             SEND_RT_THREAD_PRIO, 0, K_NO_WAIT);
     
     // Start counter that will add self to the routing table record propagation thread
-    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(10), K_MSEC(1000)); 
+    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(2000), K_MSEC(1000)); 
 
     
     /* Bluetooth scanning */
