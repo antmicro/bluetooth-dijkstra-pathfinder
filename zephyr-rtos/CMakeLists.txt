@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.20.0)
 # add variable to store build option 
 SET(MAX_MESH_SIZE "9" CACHE STRING "Define max mesh size")
 
+# add variable to store max allowed ttl
+SET(MAX_TTL "9" CACHE STRING "Define max time to live for a packet.")
+
 # add variable to store topology config file path passed during west build
 SET(TOPOLOGY_CONFIG_PATH "" CACHE STRING 
     "Pass path to topology .json file to c file generator")
@@ -27,6 +30,7 @@ target_include_directories(app PUBLIC ${include})
 
 # build with max mesh size specified as preprocessor #define
 target_compile_definitions(app PUBLIC MAX_MESH_SIZE=${MAX_MESH_SIZE})
+target_compile_definitions(app PUBLIC MAX_TTL=${MAX_TTL})
 
 # add dependency between app target and generator target 
 add_dependencies(app generator)

@@ -10,13 +10,15 @@
 #include <bluetooth/iso.h>
 #include "graph.h"
 
+// Header indexes definitions
 #define SENDER_ID_IDX 0
 #define MSG_TYPE_IDX 1
 #define DST_ADDR_IDX 2
 #define RCV_ADDR_IDX 3
 #define TIME_STAMP_MSB_IDX 4
 #define TIME_STAMP_LSB_IDX 5
-#define HEADER_SIZE 6
+#define TTL_IDX 6
+#define HEADER_SIZE 7
 
 #define MSG_TYPE_DATA 0x1
 #define MSG_TYPE_ROUTING_TAB 0x2
@@ -24,8 +26,9 @@
 
 #define BROADCAST_ADDR 0x7F // 127
 
-#define BLE_MSG_LEN 8
-#define ROUTING_TABLE_LEN 83
+#define BLE_DATA_MSG_LEN 8
+#define BLE_RTR_MSG_LEN 24
+#define BLE_ACK_MSG_LEN 8
 
 #define RECEIVEQ_PUT_TIMEOUT_MS 10
 
@@ -33,6 +36,9 @@
 
 // Global variable with sender thread id to wake it up
 extern k_tid_t send_data_packet_thread_id;
+
+// Global variable for starting the add_self_to_rtr_queue_timer
+extern struct k_timer add_self_to_rtr_queue_timer; 
 
 typedef struct {
     uint8_t node_id;
@@ -42,7 +48,7 @@ typedef struct {
 
 
 struct ble_packet_info {
-    uint8_t ble_data[BLE_MSG_LEN];
+    uint8_t ble_data[BLE_DATA_MSG_LEN];
     uint8_t resend_counter;
 };
 
@@ -78,6 +84,9 @@ void ble_sent(struct bt_le_ext_adv *adv,
 bool ble_is_receiver(uint8_t data[],uint8_t common_self_mesh_id);
 uint16_t ble_add_packet_timestamp(uint8_t data[]);
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
+
+// Timer callbacks
+void add_self_to_rtr_queue(struct k_timer *timer);
 
 // Circular buffer 
 // Static initialization

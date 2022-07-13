@@ -16,12 +16,17 @@ K_MSGQ_DEFINE(ack_receivers_q,
         sizeof(ble_sender_info), 10, 4);
 K_MSGQ_DEFINE(data_packets_to_send_q,
         sizeof(struct ble_packet_info), 10, 4);
+K_MSGQ_DEFINE(rtr_packets_to_send_q,
+        BLE_RTR_MSG_LEN, 10, 4);
 
 // Queue for messages to send
 K_MSGQ_DEFINE(ready_packets_to_send_q, 
-        BLE_MSG_LEN, 10, 4); 
+        BLE_DATA_MSG_LEN, 10, 4); 
 
 K_MUTEX_DEFINE(ble_send_mutex);
+
+K_TIMER_DEFINE(add_self_to_rtr_queue_timer, add_self_to_rtr_queue, NULL);
+K_TIMER_DEFINE(pop_from_cb_timer, add_self_to_rtr_queue, NULL);
 
 // Static initialization of circular buffer with recently received packets
 RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 20);
@@ -50,7 +55,7 @@ void ble_send_data_packet_thread_entry(
         // Reserved memory for data and array for sending by BLE
         static struct ble_packet_info pkt_info;
         static struct bt_data ad_arr[] = {
-            BT_DATA(0xAA, pkt_info.ble_data, BLE_MSG_LEN) 
+            BT_DATA(0xAA, pkt_info.ble_data, BLE_DATA_MSG_LEN) 
         };
 
         // Get the packet content from the queue
@@ -73,6 +78,7 @@ void ble_send_data_packet_thread_entry(
         // Header settings 
         pkt_info.ble_data[SENDER_ID_IDX] = common_self_mesh_id;
         pkt_info.ble_data[RCV_ADDR_IDX] = next_node_mesh_id;
+        pkt_info.ble_data[TTL_IDX] = 0x01; // one jump allowed
         uint16_t timestamp = ble_add_packet_timestamp(pkt_info.ble_data);
         
         // Awaiting ack for this packet
@@ -174,9 +180,10 @@ void ble_send_ack_thread_entry(
         ack_data[RCV_ADDR_IDX] = ack_info.node_id; // node to ack to
         ack_data[TIME_STAMP_MSB_IDX] = (0xFF00 & ack_info.time_stamp) >> 8;
         ack_data[TIME_STAMP_LSB_IDX] = 0x00FF & ack_info.time_stamp;
+        ack_data[TTL_IDX] = 0x01; // One jump only is allowed
         
         static struct bt_data ad_arr[] = {
-            BT_DATA(0xAA, ack_data, BLE_MSG_LEN) 
+            BT_DATA(0xAA, ack_data, BLE_ACK_MSG_LEN) 
         };
         
         static struct bt_le_adv_param adv_tx_params = BT_LE_ADV_PARAM_INIT(
@@ -215,28 +222,19 @@ void ble_send_ack_thread_entry(
 
 void ble_send_rt_thread_entry(struct node_t *graph) {
     while(true) {
-        static uint8_t ble_data[27];
+        static uint8_t ble_data[BLE_RTR_MSG_LEN];
         static struct bt_data add_arr[] = {
-            BT_DATA(0xAA, ble_data, 27)
+            BT_DATA(0xAA, ble_data, BLE_RTR_MSG_LEN)
         };
-        
-        // Prep header
-        ble_data[SENDER_ID_IDX] = common_self_mesh_id;
-        ble_data[MSG_TYPE_IDX] = MSG_TYPE_ROUTING_TAB;
-        ble_data[DST_ADDR_IDX] = 0xFF; //whatever, ignored
-        ble_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // node to ack to
-        ble_add_packet_timestamp(ble_data);
-        
-        // Propagate only self and self connections
-        struct node_t *node = &graph[common_self_mesh_id]; 
-        size_t size = node_get_size_in_bytes(node);
-        if(size > BT_GAP_ADV_MAX_ADV_DATA_LEN - HEADER_SIZE) {
-            printk("ERROR: Node data is to large for the given buffer.\n");
+        printk("Hi\n");
+        int err = k_msgq_get(&rtr_packets_to_send_q, &ble_data, K_FOREVER);
+        if(err) {
+            printk("ERROR: could not get packet from rtr_packets_to_send_q: %d\n", err);
+            return;
         }
 
-        // Write the node to the buffer after the header
-        node_to_byte_array(node, &ble_data[HEADER_SIZE], 
-                BT_GAP_ADV_MAX_ADV_DATA_LEN - HEADER_SIZE);
+        // Header should not be touched as the message should be treated as
+        // the same message among nodes
 
         static struct bt_le_adv_param adv_tx_params = BT_LE_ADV_PARAM_INIT(
                 BT_LE_ADV_OPT_USE_IDENTITY,
@@ -245,7 +243,8 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
                 NULL);
         
         k_mutex_lock(&ble_send_mutex, K_FOREVER);
-        int err = bt_le_adv_start(&adv_tx_params, 
+        printk("Sending rtr...\n");
+        err = bt_le_adv_start(&adv_tx_params, 
                 add_arr, ARRAY_SIZE(add_arr),
                 NULL, 0); 
         if(err) {
@@ -272,7 +271,6 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     char addr_str[BT_ADDR_LE_STR_LEN];
     char data[31];
     
-    //thread_analyzer_print();
     // Check if circular buffer should be popped 
     static int64_t prev_t = 0; 
     int64_t current_t = k_uptime_get();
@@ -290,8 +288,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     printk("Data: %s\n", data);
     
     // Strip the buffer into simple byte array
-    static uint8_t ble_data[BLE_MSG_LEN]; 
-    memcpy(ble_data, &(buf->data[2]), BLE_MSG_LEN);
+    static uint8_t ble_data[BLE_DATA_MSG_LEN]; 
+    memcpy(ble_data, &(buf->data[2]), BLE_DATA_MSG_LEN);
 
     // Check if is receiver, proceed if yes
     if(ble_is_receiver(ble_data, common_self_mesh_id)){
@@ -305,10 +303,13 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                 .time_stamp = ble_get_packet_timestamp(ble_data),
                 .msg_type = msg_type
         };
-        
+         
         // If packet was not received before, process it 
         if(!rcv_pkts_cb_is_in_cb(
                     &rcv_pkts_circular_buffer, &sender_info)) {
+            // Decrease a TTL counter for the packet for further processing
+            //ble_data[TTL_IDX]--;
+
             // Also add it to the recently received packets memory 
             rcv_pkts_cb_push(&rcv_pkts_circular_buffer, &sender_info);
             switch(msg_type){
@@ -340,7 +341,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         struct ble_packet_info pkt_info = {
                             .resend_counter = 0
                         };
-                        memcpy(pkt_info.ble_data, ble_data, BLE_MSG_LEN);
+                        memcpy(pkt_info.ble_data, ble_data, BLE_DATA_MSG_LEN);
 
                         err = k_msgq_put(
                                 &data_packets_to_send_q, 
@@ -358,9 +359,9 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         // Check if message's header content is correct 
                         // with awaited
                         ble_sender_info a_info;
-                        // This can happen when ack was received and flag was removed already, it's okay
                         err = k_msgq_peek(&awaiting_ack, &a_info);
                         if(err){
+                            // This can happen when ack was received and flag was removed already, it's okay.
                             printk("ERROR: No info about awaited ack!\n");
                             printk("Data: %s\n", data);
                             return;
@@ -381,7 +382,15 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     }
                     
                 case MSG_TYPE_ROUTING_TAB:
-                    load_routing_table(graph, ble_data, ROUTING_TABLE_LEN);
+                    // Send it further if time to live is not zero 
+                    if(ble_data[TTL_IDX] > 1) {
+                        printk("Putting the other node rtr to send queue.\n");
+                        err = k_msgq_put(&rtr_packets_to_send_q, ble_data, K_NO_WAIT);
+                        if(err) {
+                            printk("ERROR: Could not put to RTR to send queue %d \n", err);
+                        }
+                    }
+                    
                     print_graph(graph);
                     break;
             }
@@ -391,6 +400,27 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
 
 /* Utility functions */
+void add_self_to_rtr_queue(struct k_timer *timer) {
+    uint8_t buffer[BLE_RTR_MSG_LEN];
+    
+    // Initialize a header 
+    buffer[SENDER_ID_IDX] = common_self_mesh_id;
+    buffer[MSG_TYPE_IDX] = MSG_TYPE_ROUTING_TAB;
+    buffer[DST_ADDR_IDX] = 0xFF;
+    buffer[RCV_ADDR_IDX] = BROADCAST_ADDR;
+    ble_add_packet_timestamp(buffer);
+    buffer[TTL_IDX] = MAX_TTL;
+    
+    node_to_byte_array(&graph[common_self_mesh_id], &buffer[HEADER_SIZE], BLE_RTR_MSG_LEN - HEADER_SIZE);
+    
+    printk("Putting the self rtr to send queue.\n");
+    int err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
+    if(err) {
+        printk("ERROR: Could not put the self RTR to send queue %d\n", err);
+    }
+}
+
+
 void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item) {
     *(cb->head) = *item;
     cb->head++;
@@ -434,9 +464,7 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item) {
         if(
                 item->node_id == ptr->node_id && 
                 item->time_stamp == ptr->time_stamp &&
-                item->msg_type == ptr->msg_type) {
-            return true;        
-        }
+                item->msg_type == ptr->msg_type) return true;        
         ptr++;
         if(ptr == cb->buff_end) ptr = cb->buff_start;
     }

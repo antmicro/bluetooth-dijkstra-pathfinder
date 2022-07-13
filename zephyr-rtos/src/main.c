@@ -62,7 +62,6 @@ void main(void)
     struct bt_le_scan_param scan_params;
     ble_scan_setup(&scan_params);
     
-
     printk("BUILT FOR %d NUMBER OF NODES\n", MAX_MESH_SIZE);
 
     /* Create Bluetooth LE threads */
@@ -81,7 +80,11 @@ void main(void)
             K_THREAD_STACK_SIZEOF(send_rt_thread_stack),
             ble_send_rt_thread_entry,
             &graph, NULL, NULL,
-            SEND_RT_THREAD_PRIO, 0, K_MSEC(2000));
+            SEND_RT_THREAD_PRIO, 0, K_NO_WAIT);
+    
+    // Start counter that will add self to the routing table record propagation thread
+    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(10), K_MSEC(1000)); 
+
     
     /* Bluetooth scanning */
     err  = bt_le_scan_start(&scan_params, NULL); 
