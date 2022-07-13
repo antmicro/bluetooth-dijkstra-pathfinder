@@ -219,7 +219,6 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         static struct bt_data add_arr[] = {
             BT_DATA(0xAA, ble_data, BT_GAP_ADV_MAX_ADV_DATA_LEN)
         };
-        static uint8_t current_node_ptr = 0;
         
         // Prep header
         ble_data[SENDER_ID_IDX] = common_self_mesh_id;
@@ -228,8 +227,8 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         ble_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // node to ack to
         ble_add_packet_timestamp(ble_data);
         
-        // Get node and calc it's byte size 
-        struct node_t *node = graph + current_node_ptr;
+        // Propagate only self
+        struct node_t *node = &graph[common_self_mesh_id]; 
         size_t size = node_get_size_in_bytes(node);
         if(size > BT_GAP_ADV_MAX_ADV_DATA_LEN - HEADER_SIZE) {
             printk("ERROR: Node data is to large for the given buffer.\n");
@@ -259,9 +258,6 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
             printk("ERROR: could not stop advertising routing table record.\n");
         }
         k_mutex_unlock(&ble_send_mutex);
-
-        // Move ptr to another node
-        current_node_ptr = (current_node_ptr + 1) % MAX_MESH_SIZE;
 
         // Wait, don't send too often
         k_msleep(10000);
