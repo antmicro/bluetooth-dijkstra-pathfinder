@@ -77,44 +77,26 @@ size_t node_get_size_in_bytes(struct node_t *node) {
 }
 
 
-void load_routing_table(struct node_t graph[], uint8_t buff[], uint8_t size) {
+void load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size) {
     // Each node is encoded as: 
     // addr | number of peers | peer1 addr | peer1 dist | peer2 addr | peer2 addr
-    uint8_t pointer = 0;
-    // Iterate over all nodes that are contained in the mesh
-    for(uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
-        // First two bytes of each node description are self addr and n neighs
-        uint8_t node_addr = buff[pointer];
-        uint8_t neighs_n = buff[pointer + 1];
+    
+    // First two bytes of each rtr are self addr and n neighs
+    uint8_t node_addr = buff[0];
+    uint8_t neighs_n = buff[1];
 
-        // Then iterate over neighs of that node 
-        for(uint8_t j = 0; j < neighs_n; j++) {
-            // Pointer must be shifted by addr byte, number of neighs byte,
-            // then number of previously counted neigs * 2 (each is represented
-            // by 2 bytes) and first byte of that is addr of neigh and second 
-            // is distance from original node to that neigh
-            uint8_t idx = pointer + 1 + 1 + (2 * j);
-            if(idx > size) {
-                printk("ERROR: index out of bounds when loading routing table.\n");
-                return;
-            } 
-            uint8_t neigh_addr = buff[idx];
-            uint8_t neigh_dist = buff[idx + 1];
-
-            // Do not modify neighbors of self, assume that node has better 
-            // information about it's neighs than some other remote nodes
-            if(neigh_addr == common_self_mesh_id ||
-                    node_addr == common_self_mesh_id) continue;
-            load_node_info(&graph[node_addr], neigh_addr, neigh_dist); 
-        }
-        // Jump pointer to next node 
-        // addr byte + neighs number byte + number of peers 2 bytes for each
-        pointer += (1 + 1 + neighs_n * 2);
-        if(pointer > size) {
+    // Then iterate over node neighs 
+    for(uint8_t j = 0; j < neighs_n; j++) {
+        uint8_t idx = 1 + 1 + (2 * j);
+        if(idx > size) {
             printk("ERROR: index out of bounds when loading routing table.\n");
             return;
         }
-    } 
+
+        uint8_t neigh_addr = buff[idx];
+        uint8_t neigh_dist = buff[idx + 1];
+        load_node_info(&graph[node_addr], neigh_addr, neigh_dist); 
+    }
 }
 
 
