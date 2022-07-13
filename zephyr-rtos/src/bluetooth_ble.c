@@ -215,9 +215,9 @@ void ble_send_ack_thread_entry(
 
 void ble_send_rt_thread_entry(struct node_t *graph) {
     while(true) {
-        static uint8_t ble_data[BT_GAP_ADV_MAX_ADV_DATA_LEN];
+        static uint8_t ble_data[27];
         static struct bt_data add_arr[] = {
-            BT_DATA(0xAA, ble_data, BT_GAP_ADV_MAX_ADV_DATA_LEN)
+            BT_DATA(0xAA, ble_data, 27)
         };
         
         // Prep header
@@ -227,7 +227,7 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         ble_data[RCV_ADDR_IDX] = BROADCAST_ADDR; // node to ack to
         ble_add_packet_timestamp(ble_data);
         
-        // Propagate only self
+        // Propagate only self and self connections
         struct node_t *node = &graph[common_self_mesh_id]; 
         size_t size = node_get_size_in_bytes(node);
         if(size > BT_GAP_ADV_MAX_ADV_DATA_LEN - HEADER_SIZE) {
@@ -244,18 +244,19 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
                 BT_GAP_ADV_FAST_INT_MAX_1,
                 NULL);
         
+        k_mutex_lock(&ble_send_mutex, K_FOREVER);
         int err = bt_le_adv_start(&adv_tx_params, 
                 add_arr, ARRAY_SIZE(add_arr),
                 NULL, 0); 
         if(err) {
-            printk("ERROR: could not start advertising routing table record.\n");
+            printk("ERROR: could not start advertising routing table record %d.\n", err);
         }
         
         k_msleep(200);
 
         err = bt_le_adv_stop();
         if(err) {
-            printk("ERROR: could not stop advertising routing table record.\n");
+            printk("ERROR: could not stop advertising routing table record %d.\n", err);
         }
         k_mutex_unlock(&ble_send_mutex);
 
