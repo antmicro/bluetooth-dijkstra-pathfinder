@@ -226,7 +226,6 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         static struct bt_data add_arr[] = {
             BT_DATA(0xAA, ble_data, BLE_RTR_MSG_LEN)
         };
-        printk("Hi\n");
         int err = k_msgq_get(&rtr_packets_to_send_q, &ble_data, K_FOREVER);
         if(err) {
             printk("ERROR: could not get packet from rtr_packets_to_send_q: %d\n", err);
@@ -243,7 +242,7 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
                 NULL);
         
         k_mutex_lock(&ble_send_mutex, K_FOREVER);
-        printk("Sending rtr...\n");
+        printk("Sending rtr, source of it is: %d\n", ble_data[SENDER_ID_IDX]);
         err = bt_le_adv_start(&adv_tx_params, 
                 add_arr, ARRAY_SIZE(add_arr),
                 NULL, 0); 
@@ -258,9 +257,6 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
             printk("ERROR: could not stop advertising routing table record %d.\n", err);
         }
         k_mutex_unlock(&ble_send_mutex);
-
-        // Wait, don't send too often
-        k_msleep(10000);
     }
 }
 
@@ -383,10 +379,12 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     
                 case MSG_TYPE_ROUTING_TAB:
                     // Send it further if time to live is not zero 
-                    printk("RECEIVED RTR\n");
+                    printk("RECEIVED RTR from %d\n", ble_data[SENDER_ID_IDX]);
                     load_rtr(graph, ble_data + HEADER_SIZE, BLE_RTR_MSG_LEN - HEADER_SIZE);
                     if(ble_data[TTL_IDX] > 1) {
+                        printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                         printk("Putting the other node rtr to send queue.\n");
+                        printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                         err = k_msgq_put(&rtr_packets_to_send_q, ble_data, K_NO_WAIT);
                         if(err) {
                             printk("ERROR: Could not put to RTR to send queue %d \n", err);
