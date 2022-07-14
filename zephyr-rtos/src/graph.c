@@ -92,7 +92,6 @@ void load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size) {
             printk("ERROR: index out of bounds when loading routing table.\n");
             return;
         }
-
         uint8_t neigh_addr = buff[idx];
         uint8_t neigh_dist = buff[idx + 1];
         load_node_info(&graph[node_addr], neigh_addr, neigh_dist); 
