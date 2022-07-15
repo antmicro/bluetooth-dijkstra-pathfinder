@@ -28,7 +28,7 @@ project(my_zephyr_app)
 
 target_include_directories(app PUBLIC ${include})
 
-# build with max mesh size specified as preprocessor #define
+# build with max mesh size and max ttl specified as preprocessor #define
 target_compile_definitions(app PUBLIC MAX_MESH_SIZE=${MAX_MESH_SIZE})
 target_compile_definitions(app PUBLIC MAX_TTL=${MAX_TTL})
 
