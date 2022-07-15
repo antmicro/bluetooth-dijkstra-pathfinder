@@ -6,10 +6,10 @@ def mc_move():
     global counter
     
     mobile_broadcaster_positions = [
-            (-1.5, 1.5, 0.0),
-            (-1.5, 4.5, 0.0),
             (1.5, 4.5, 0.0),
-            (1.5, 1.5, 0.0)
+            (1.5, 1.5, 0.0),
+            (-1.5, 1.5, 0.0),
+            (-1.5, 4.5, 0.0)
             ]
 
     machine = monitor.Machine
