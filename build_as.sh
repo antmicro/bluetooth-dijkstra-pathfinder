@@ -36,8 +36,6 @@ build_randomized () {
         -d $BUILD_DIR \
         -- -DMAX_MESH_SIZE=$1 \
         -DTOPOLOGY_CONFIG_PATH:STRING=$CONFIG_FILES_DIR/randomized_topology.json
-        -DCONFIG_STACK_USAGE=y
-
 }
 
 
