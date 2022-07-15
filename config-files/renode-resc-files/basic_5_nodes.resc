@@ -14,7 +14,7 @@ emulation SetSeed 42
 #emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
 # emulation LogToWireshark "wireless"
 #emulation LogWirelessTraffic
-emulation LogBLETraffic
+#emulation LogBLETraffic
 logLevel -1 wireless
 
 
@@ -121,7 +121,7 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
 # Wireless 
 connector Connect sysbus.radio wireless
-wireless SetPosition sysbus.radio 0 0 0
+wireless SetPosition sysbus.radio 0 6 0
 wireless SetRangeWirelessFunction 5 
 
 # analyzers 
