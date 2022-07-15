@@ -74,6 +74,7 @@ void ble_send_data_packet_thread_entry(
             printk("ERROR: Dijkstra algorithm failed.\n");
             return;
         }
+        printk("Next hop: %d\n", next_node_mesh_id);
         
         // Header settings 
         pkt_info.ble_data[SENDER_ID_IDX] = common_self_mesh_id;
@@ -87,9 +88,6 @@ void ble_send_data_packet_thread_entry(
             .time_stamp = timestamp,
             .msg_type = 0x0 // Unused here
         };
-
-        // Lock the ble device
-        k_mutex_lock(&ble_send_mutex, K_FOREVER);
 
         printk("Awaiting for ack from node %d and with timestamp: %d\n",
                 next_node_mesh_id, timestamp);
@@ -106,8 +104,10 @@ void ble_send_data_packet_thread_entry(
                 BT_GAP_ADV_FAST_INT_MAX_1,
                 NULL);
         
+        // Lock the ble device
+        k_mutex_lock(&ble_send_mutex, K_FOREVER);
+        
         /* Sending a data message */
-        printk("Started advertising.\n");
         err = bt_le_adv_start(&adv_tx_params, 
         ad_arr, ARRAY_SIZE(ad_arr), 
         NULL, 0);
@@ -115,6 +115,8 @@ void ble_send_data_packet_thread_entry(
             printk("ERROR: could not start advertising : %d\n", err);
             return;
         }       
+        printk("Started advertising a data packet.\n");
+
         // Wait for ack
         bool got_ack = ble_wait_for_ack(500);
 
@@ -123,11 +125,11 @@ void ble_send_data_packet_thread_entry(
             printk("ERROR: Failed to stop advertising %d.\n", err);
             return;
         }
+        printk("Finished advertising a data packet.\n");
         
         // Release the device for ack thread to use 
         k_mutex_unlock(&ble_send_mutex);
 
-        printk("Finished advertising.\n");
         pkt_info.resend_counter++;
         printk("Resend counter: %d\n", pkt_info.resend_counter);
         
@@ -280,8 +282,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
         
-    printk("Received data from node with address: %s\n", addr_str);
-    printk("Data: %s\n", data);
+    //printk("Received data from node with address: %s\n", addr_str);
+    //printk("Data: %s\n", data);
     
     // Strip the buffer into simple byte array
     uint8_t ble_data[BLE_RTR_MSG_LEN] = {0}; 
@@ -379,7 +381,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     
                 case MSG_TYPE_ROUTING_TAB:
                     // Send it further if time to live is not zero 
-                    printk("RECEIVED RTR from %d\n", ble_data[SENDER_ID_IDX]);
+                    printk("RECEIVED RTR FROM %d\n", ble_data[SENDER_ID_IDX]);
                     load_rtr(graph, ble_data + HEADER_SIZE, BLE_RTR_MSG_LEN - HEADER_SIZE);
                     if(ble_data[TTL_IDX] > 1) {
                         printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
