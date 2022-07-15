@@ -64,7 +64,7 @@ void ble_send_data_packet_thread_entry(
         // Get the packet content from the queue
         int err = k_msgq_get(&data_packets_to_send_q, &pkt_info, K_FOREVER);
         if(err){
-            LOG_INF("ERROR: reading from queue: %d \n!\n", err);
+            printk("ERROR: reading from queue: %d \n!\n", err);
             return;
         }
         
@@ -74,10 +74,10 @@ void ble_send_data_packet_thread_entry(
         uint8_t next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE,
                 common_self_mesh_id, dst_mesh_id);
         if(next_node_mesh_id < 0) {
-            LOG_INF("ERROR: Dijkstra algorithm failed.\n");
+            printk("ERROR: Dijkstra algorithm failed.\n");
             return;
         }
-        LOG_INF("Next hop: %d\n", next_node_mesh_id);
+        printk("Next hop: %d\n", next_node_mesh_id);
         
         // Header settings 
         pkt_info.ble_data[SENDER_ID_IDX] = common_self_mesh_id;
@@ -92,13 +92,13 @@ void ble_send_data_packet_thread_entry(
             .msg_type = 0x0 // Unused here
         };
 
-        LOG_INF("Awaiting for ack from node %d and with timestamp: %d\n",
+        printk("Awaiting for ack from node %d and with timestamp: %d\n",
                 next_node_mesh_id, timestamp);
         err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
         print_msgq_num_used(&awaiting_ack, MSG_Q_NAME(awaiting_ack));
 
         if(err){
-            LOG_INF("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
+            printk("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
             return;
         }
 
@@ -117,26 +117,26 @@ void ble_send_data_packet_thread_entry(
         ad_arr, ARRAY_SIZE(ad_arr), 
         NULL, 0);
         if(err) {
-            LOG_INF("ERROR: could not start advertising : %d\n", err);
+            printk("ERROR: could not start advertising : %d\n", err);
             return;
         }       
-        LOG_INF("Started advertising a data packet.\n");
+        printk("Started advertising a data packet.\n");
 
         // Wait for ack
         bool got_ack = ble_wait_for_ack(500);
 
         err = bt_le_adv_stop();
         if(err) {
-            LOG_INF("ERROR: Failed to stop advertising %d.\n", err);
+            printk("ERROR: Failed to stop advertising %d.\n", err);
             return;
         }
-        LOG_INF("Finished advertising a data packet.\n");
+        printk("Finished advertising a data packet.\n");
         
         // Release the device for ack thread to use 
         k_mutex_unlock(&ble_send_mutex);
 
         pkt_info.resend_counter++;
-        LOG_INF("Resend counter: %d\n", pkt_info.resend_counter);
+        printk("Resend counter: %d\n", pkt_info.resend_counter);
         
         // Remove flag indicating awaited ack
         err = k_msgq_get(&awaiting_ack, NULL, K_MSEC(50));
@@ -146,15 +146,15 @@ void ble_send_data_packet_thread_entry(
                         &graph[pkt_info.ble_data[RCV_ADDR_IDX]], got_ack);
         uint8_t new_td = calc_td_from_missed_transmissions(
                     graph[pkt_info.ble_data[RCV_ADDR_IDX]].missed_transmissions);
-        LOG_INF("New calculated TD: %d\n", new_td);
+        printk("New calculated TD: %d\n", new_td);
         graph_set_distance(graph,
                     common_self_mesh_id, pkt_info.ble_data[RCV_ADDR_IDX], new_td);
 
         // Put the message again into the queue and try to send it again
         if(!got_ack) {
-            LOG_INF("##############################\n");
-            LOG_INF("Did not receive ACK from node %d.\n", pkt_info.ble_data[RCV_ADDR_IDX]);
-            LOG_INF("##############################\n");
+            printk("##############################\n");
+            printk("Did not receive ACK from node %d.\n", pkt_info.ble_data[RCV_ADDR_IDX]);
+            printk("##############################\n");
             
             // Do not resend infinitely
             if(pkt_info.resend_counter < 3)k_msgq_put(
@@ -173,7 +173,7 @@ void ble_send_ack_thread_entry(
         static ble_sender_info ack_info;
         int err = k_msgq_get(&ack_receivers_q, &ack_info, K_FOREVER);
         if(err){
-            LOG_INF("ERROR: Reading from ack msg queue failed.\n");
+            printk("ERROR: Reading from ack msg queue failed.\n");
             return;
         }
         
@@ -208,19 +208,19 @@ void ble_send_ack_thread_entry(
         ad_arr, ARRAY_SIZE(ad_arr), 
         NULL, 0);
         if(err) {
-            LOG_INF("ERROR: could not start advertising : %d\n", err);
+            printk("ERROR: could not start advertising : %d\n", err);
             return;
         }
-        LOG_INF("Sending ACK to %d\n", ack_info.node_id);
+        printk("Sending ACK to %d\n", ack_info.node_id);
         
         k_msleep(200);
         
         err = bt_le_adv_stop();
         if(err) {
-            LOG_INF("ERROR: Failed to stop advertising %d.\n", err);
+            printk("ERROR: Failed to stop advertising %d.\n", err);
             return;
         }
-        LOG_INF("Finished advertising ACK\n");
+        printk("Finished advertising ACK\n");
         
         // Unlock to allow data sending thread to use BLE
         k_mutex_unlock(&ble_send_mutex);
@@ -236,7 +236,7 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         };
         int err = k_msgq_get(&rtr_packets_to_send_q, &ble_data, K_FOREVER);
         if(err) {
-            LOG_INF("ERROR: could not get packet from rtr_packets_to_send_q: %d\n", err);
+            printk("ERROR: could not get packet from rtr_packets_to_send_q: %d\n", err);
             return;
         }
         
@@ -250,20 +250,23 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
                 NULL);
         
         k_mutex_lock(&ble_send_mutex, K_FOREVER);
-        LOG_INF("Sending rtr, source of it is: %d\n", ble_data[SENDER_ID_IDX]);
         err = bt_le_adv_start(&adv_tx_params, 
                 add_arr, ARRAY_SIZE(add_arr),
                 NULL, 0); 
         if(err) {
-            LOG_INF("ERROR: could not start advertising routing table record %d.\n", err);
+            printk("ERROR: could not start advertising routing table record %d.\n", err);
+            return;
         }
+        printk("Sending rtr, source of it is: %d\n", ble_data[SENDER_ID_IDX]);
         
         k_msleep(200);
 
         err = bt_le_adv_stop();
         if(err) {
-            LOG_INF("ERROR: could not stop advertising routing table record %d.\n", err);
+            printk("ERROR: could not stop advertising routing table record %d.\n", err);
+            return;
         }
+        printk("Finished advertising rtr\n");
         k_mutex_unlock(&ble_send_mutex);
     }
 }
@@ -288,8 +291,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
         
-    //LOG_INF("Received data from node with address: %s\n", addr_str);
-    //LOG_INF("Data: %s\n", data);
+    //printk("Received data from node with address: %s\n", addr_str);
+    //printk("Data: %s\n", data);
     
     // Strip the buffer into simple byte array
     uint8_t ble_data[BLE_RTR_MSG_LEN] = {0}; 
@@ -319,7 +322,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
             switch(msg_type){
                 case MSG_TYPE_DATA:
                     {
-                        LOG_INF("RECEIVED NEW DATA MSG from %d.\n", 
+                        printk("RECEIVED NEW DATA MSG from %d.\n", 
                                 ble_data[SENDER_ID_IDX]);
                         
                         // Do not send ack if msg is on broadcast addr
@@ -329,7 +332,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                                     &sender_info, K_NO_WAIT);
                             print_msgq_num_used(&ack_receivers_q, MSG_Q_NAME(ack_receivers_q));
                             if(err){
-                                LOG_INF("ERROR: Failed to put to ack \
+                                printk("ERROR: Failed to put to ack \
                                         send queue\n");
                                 return;
                             }
@@ -337,7 +340,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         
                         uint8_t dst_mesh_id = ble_data[DST_ADDR_IDX];
                         if(dst_mesh_id == common_self_mesh_id) {
-                            LOG_INF("FINAL DESTINATION REACHED\n");
+                            printk("FINAL DESTINATION REACHED\n");
                             // Do something with the data
                             return;
                         }
@@ -353,7 +356,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                                 &pkt_info, K_NO_WAIT);
                         print_msgq_num_used(&data_packets_to_send_q, MSG_Q_NAME(data_packets_to_send_q));
                         if(err){ 
-                            LOG_INF("Error queue put: %d, queue purged\n", err);
+                            printk("Error queue put: %d, queue purged\n", err);
                             k_msgq_purge(&data_packets_to_send_q);
                             return;
                         }
@@ -368,8 +371,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         err = k_msgq_peek(&awaiting_ack, &a_info);
                         if(err){
                             // This can happen when ack was received and flag was removed already, it's okay.
-                            LOG_INF("ERROR: No info about awaited ack!\n");
-                            LOG_INF("Data: %s\n", data);
+                            printk("ERROR: No info about awaited ack!\n");
+                            printk("Data: %s\n", data);
                             return;
                         }
 
@@ -377,7 +380,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         uint16_t timestamp16 = sender_info.time_stamp;
                         bool correct_timestamp = timestamp16 == a_info.time_stamp;
                         if(correct_id && correct_timestamp){
-                            LOG_INF("RECEIVED ACK MSG FROM: %d\n", 
+                            printk("RECEIVED ACK MSG FROM: %d\n", 
                                 ble_data[SENDER_ID_IDX]);
                             
                             // Wake up sending thread so it can stop transmission
@@ -389,14 +392,14 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     
                 case MSG_TYPE_ROUTING_TAB:
                     // Send it further if time to live is not zero 
-                    LOG_INF("RECEIVED RTR FROM %d\n", ble_data[SENDER_ID_IDX]);
+                    printk("RECEIVED RTR FROM %d\n", ble_data[SENDER_ID_IDX]);
                     load_rtr(graph, ble_data + HEADER_SIZE, BLE_RTR_MSG_LEN - HEADER_SIZE);
                     if(ble_data[TTL_IDX] > 1) {
-                        LOG_INF("Putting the other node rtr to send queue.\n");
+                        printk("Putting the other node rtr to send queue.\n");
                         err = k_msgq_put(&rtr_packets_to_send_q, ble_data, K_NO_WAIT);
                         print_msgq_num_used(&rtr_packets_to_send_q, MSG_Q_NAME(rtr_packets_to_send_q));
                         if(err) {
-                            LOG_INF("ERROR: Could not put to RTR to send queue %d \n", err);
+                            printk("ERROR: Could not put to RTR to send queue %d \n", err);
                         }
                     }
                     
@@ -422,11 +425,11 @@ void add_self_to_rtr_queue(struct k_timer *timer) {
     
     node_to_byte_array(graph + common_self_mesh_id, buffer + HEADER_SIZE, BLE_RTR_MSG_LEN - HEADER_SIZE);
     
-    LOG_INF("Putting the self rtr to send queue.\n");
+    printk("Putting the self rtr to send queue.\n");
     int err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
     print_msgq_num_used(&rtr_packets_to_send_q, MSG_Q_NAME(rtr_packets_to_send_q));
     if(err) {
-        LOG_INF("ERROR: Could not put the self RTR to send queue %d\n", err);
+        printk("ERROR: Could not put the self RTR to send queue %d\n", err);
     }
 }
 
@@ -449,7 +452,7 @@ void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item) {
     // If head catches tail, shift tail and put it at the start if relapse
     // also decrease count, as one element was added with the cost of another 
     if(cb->head == cb->tail) {
-        LOG_INF("Hi\n");
+        printk("Hi\n");
         cb->tail++;
         cb->count--;
         if(cb->tail == cb->buff_end) cb->tail = cb->buff_start;
@@ -511,7 +514,7 @@ uint16_t ble_get_packet_timestamp(uint8_t data[]){
 
 bool ble_wait_for_ack(int32_t timeout_ms) {
     int32_t time_remaining = k_msleep(timeout_ms);
-    LOG_INF("Time remaining %d\n", time_remaining);
+    printk("Time remaining %d\n", time_remaining);
     return time_remaining > 0;
 }
 
@@ -521,5 +524,5 @@ void print_msgq_num_used(struct k_msgq *mq, char name[]) {
     uint32_t free = k_msgq_num_free_get(mq);
     uint32_t total_size = used + free;
 
-    LOG_INF("Message q %s is filled %d / %d \n", name, used, total_size);
+    printk("Message q %s is filled %d / %d \n", name, used, total_size);
 }
