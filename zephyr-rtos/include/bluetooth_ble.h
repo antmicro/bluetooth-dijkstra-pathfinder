@@ -107,6 +107,10 @@ void rcv_pkts_cb_pop(rcv_pkts_cb *cb);
 bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item);
 
 bool ble_wait_for_ack(int32_t timeout_ms);
+
+void print_msgq_num_used(struct k_msgq *mq, char name[]);
+
+#define MSG_Q_NAME(mq) (#mq)
 #endif
 
 

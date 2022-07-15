@@ -6,6 +6,9 @@
 #include <timing/timing.h>
 #include <assert.h>
 
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(bluetooth_ble);
+
 /* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message
 K_MSGQ_DEFINE(awaiting_ack,
@@ -92,6 +95,8 @@ void ble_send_data_packet_thread_entry(
         printk("Awaiting for ack from node %d and with timestamp: %d\n",
                 next_node_mesh_id, timestamp);
         err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
+        print_msgq_num_used(&awaiting_ack, MSG_Q_NAME(awaiting_ack));
+
         if(err){
             printk("ERROR: Failed to put into awaiting_ack q : %d.\n", err);
             return;
@@ -154,6 +159,7 @@ void ble_send_data_packet_thread_entry(
             // Do not resend infinitely
             if(pkt_info.resend_counter < 3)k_msgq_put(
                     &data_packets_to_send_q, pkt_info.ble_data, K_NO_WAIT);
+            print_msgq_num_used(&data_packets_to_send_q, MSG_Q_NAME(data_packets_to_send_q));
         }
     }
 }
@@ -282,8 +288,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
         
-    //printk("Received data from node with address: %s\n", addr_str);
-    //printk("Data: %s\n", data);
+    printk("Received data from node with address: %s\n", addr_str);
+    printk("Data: %s\n", data);
     
     // Strip the buffer into simple byte array
     uint8_t ble_data[BLE_RTR_MSG_LEN] = {0}; 
@@ -321,6 +327,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                             // Queue ack for the msg sender
                             err = k_msgq_put(&ack_receivers_q, 
                                     &sender_info, K_NO_WAIT);
+                            print_msgq_num_used(&ack_receivers_q, MSG_Q_NAME(ack_receivers_q));
                             if(err){
                                 printk("ERROR: Failed to put to ack \
                                         send queue\n");
@@ -344,6 +351,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                         err = k_msgq_put(
                                 &data_packets_to_send_q, 
                                 &pkt_info, K_NO_WAIT);
+                        print_msgq_num_used(&data_packets_to_send_q, MSG_Q_NAME(data_packets_to_send_q));
                         if(err){ 
                             printk("Error queue put: %d, queue purged\n", err);
                             k_msgq_purge(&data_packets_to_send_q);
@@ -386,6 +394,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     if(ble_data[TTL_IDX] > 1) {
                         printk("Putting the other node rtr to send queue.\n");
                         err = k_msgq_put(&rtr_packets_to_send_q, ble_data, K_NO_WAIT);
+                        print_msgq_num_used(&rtr_packets_to_send_q, MSG_Q_NAME(rtr_packets_to_send_q));
                         if(err) {
                             printk("ERROR: Could not put to RTR to send queue %d \n", err);
                         }
@@ -415,6 +424,7 @@ void add_self_to_rtr_queue(struct k_timer *timer) {
     
     printk("Putting the self rtr to send queue.\n");
     int err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
+    print_msgq_num_used(&rtr_packets_to_send_q, MSG_Q_NAME(rtr_packets_to_send_q));
     if(err) {
         printk("ERROR: Could not put the self RTR to send queue %d\n", err);
     }
@@ -498,8 +508,18 @@ uint16_t ble_get_packet_timestamp(uint8_t data[]){
     return timestamp;
 }
 
+
 bool ble_wait_for_ack(int32_t timeout_ms) {
     int32_t time_remaining = k_msleep(timeout_ms);
     printk("Time remaining %d\n", time_remaining);
     return time_remaining > 0;
+}
+
+
+void print_msgq_num_used(struct k_msgq *mq, char name[]) {
+    uint32_t used = k_msgq_num_used_get(mq);
+    uint32_t free = k_msgq_num_free_get(mq);
+    uint32_t total_size = used + free;
+
+    printk("Message q %s is filled %d / %d \n", name, used, total_size);
 }
