@@ -205,6 +205,7 @@ void ble_send_ack_thread_entry(
             printk("ERROR: could not start advertising : %d\n", err);
             return;
         }
+        printk("Sending ACK to %d\n", ack_info.node_id);
         
         k_msleep(200);
         
@@ -213,11 +214,10 @@ void ble_send_ack_thread_entry(
             printk("ERROR: Failed to stop advertising %d.\n", err);
             return;
         }
+        printk("Finished advertising ACK\n");
         
         // Unlock to allow data sending thread to use BLE
         k_mutex_unlock(&ble_send_mutex);
-
-        printk("Finished advertising.\n");
     }
 }
 
@@ -384,9 +384,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                     printk("RECEIVED RTR FROM %d\n", ble_data[SENDER_ID_IDX]);
                     load_rtr(graph, ble_data + HEADER_SIZE, BLE_RTR_MSG_LEN - HEADER_SIZE);
                     if(ble_data[TTL_IDX] > 1) {
-                        printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                         printk("Putting the other node rtr to send queue.\n");
-                        printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                         err = k_msgq_put(&rtr_packets_to_send_q, ble_data, K_NO_WAIT);
                         if(err) {
                             printk("ERROR: Could not put to RTR to send queue %d \n", err);
