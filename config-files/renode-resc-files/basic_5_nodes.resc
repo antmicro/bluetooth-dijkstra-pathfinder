@@ -150,8 +150,7 @@ macro reset
     sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
 """
 
-i @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/renode-commands/move_radio.py
-
+i $ORIGIN/../../renode-commands/move_radio.py
 runMacro $reset
 start
 watch "move" 10000 
