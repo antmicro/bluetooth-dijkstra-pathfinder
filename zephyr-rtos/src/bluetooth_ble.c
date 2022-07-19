@@ -137,7 +137,8 @@ void ble_send_data_packet_thread_entry(
         printk("Resend counter: %d\n", pkt_info.resend_counter);
         
         // Remove flag indicating awaited ack
-        err = k_msgq_get(&awaiting_ack, NULL, K_MSEC(50));
+        ble_sender_info unused;
+        err = k_msgq_get(&awaiting_ack, &unused, K_MSEC(50));
         
         // Distance recalculation and update 
         node_update_missed_transmissions(
@@ -301,8 +302,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     // Debug
     //static uint64_t messges_received_n = 0;
     //messges_received_n++;
-    //printk("Received data from node with address: %s\n", addr_str);
-    //printk("Data: %s\n", data);
+    printk("Received data from node with address: %s\n", addr_str);
+    printk("Data: %s\n", data);
     //printk("Number of messages received: %lld\n", messges_received_n);
     
     // Strip the buffer into simple byte array
