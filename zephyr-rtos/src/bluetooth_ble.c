@@ -6,9 +6,6 @@
 #include <timing/timing.h>
 #include <assert.h>
 
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(bluetooth_ble);
-
 /* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message
 K_MSGQ_DEFINE(awaiting_ack,
