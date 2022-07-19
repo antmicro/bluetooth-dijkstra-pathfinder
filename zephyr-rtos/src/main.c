@@ -97,8 +97,7 @@ void main(void)
         const struct device *dev;
         dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
         
-        //printk("Graph initialization status code: %d\n", graph_init_error_code);
-        //printk("Graph mutex lock count: %d \n", graph_mutex.lock_count);
+        //thread_analyzer_print();
 	    	
         k_msleep(SLEEP_TIME_MS);
 	}

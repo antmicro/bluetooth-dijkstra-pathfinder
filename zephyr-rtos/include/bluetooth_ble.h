@@ -35,6 +35,9 @@
 
 #define CB_POP_TIME_MS 900
 
+#define ACK_ADV_TIME_MS 200
+#define DATA_ADV_TIME_MS 500
+
 // Global variable with sender thread id to wake it up
 extern k_tid_t send_data_packet_thread_id;
 

@@ -120,7 +120,8 @@ void ble_send_data_packet_thread_entry(
         printk("Started advertising a data packet.\n");
 
         // Wait for ack
-        bool got_ack = ble_wait_for_ack(500);
+        uint32_t time_left = k_msleep(DATA_ADV_TIME_MS);
+        bool got_ack = time_left > 0;
 
         err = bt_le_adv_stop();
         if(err) {
@@ -157,6 +158,15 @@ void ble_send_data_packet_thread_entry(
             if(pkt_info.resend_counter < 3)k_msgq_put(
                     &data_packets_to_send_q, pkt_info.ble_data, K_NO_WAIT);
             print_msgq_num_used(&data_packets_to_send_q, MSG_Q_NAME(data_packets_to_send_q));
+        }
+        // Wait for the other node acknowledging to finish to so that not to 
+        // flood it with new messages
+        uint32_t data_adv_time = DATA_ADV_TIME_MS - time_left;
+        if(data_adv_time < ACK_ADV_TIME_MS) {
+            uint32_t wait_till_ack_time = ACK_ADV_TIME_MS - data_adv_time;
+            printk("Waiting with sending another data packet for node %d to finish ACKing for %dms\n",
+                    next_node_mesh_id, wait_till_ack_time);
+            k_msleep(wait_till_ack_time);
         }
     }
 }
@@ -210,7 +220,7 @@ void ble_send_ack_thread_entry(
         }
         printk("Sending ACK to %d\n", ack_info.node_id);
         
-        k_msleep(200);
+        k_msleep(ACK_ADV_TIME_MS);
         
         err = bt_le_adv_stop();
         if(err) {
@@ -287,9 +297,13 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     // formatting 
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
-        
+    
+    // Debug
+    //static uint64_t messges_received_n = 0;
+    //messges_received_n++;
     //printk("Received data from node with address: %s\n", addr_str);
     //printk("Data: %s\n", data);
+    //printk("Number of messages received: %lld\n", messges_received_n);
     
     // Strip the buffer into simple byte array
     uint8_t ble_data[BLE_RTR_MSG_LEN] = {0}; 
