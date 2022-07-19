@@ -1,5 +1,3 @@
-import math
-
 counter = 0
 
 def mc_move():
