@@ -29,7 +29,7 @@ K_TIMER_DEFINE(add_self_to_rtr_queue_timer, add_self_to_rtr_queue, NULL);
 K_TIMER_DEFINE(pop_from_cb_timer, add_self_to_rtr_queue, NULL);
 
 // Static initialization of circular buffer with recently received packets
-RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 20);
+RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 10);
 
 /* Setup functions */
 void ble_scan_setup(struct bt_le_scan_param *scan_params){
