@@ -95,15 +95,16 @@ void add_self_to_rtr_queue(struct k_timer *timer);
 // Circular buffer 
 // Static initialization
 #define RCV_PKTS_DEFINE(cb_name, cb_capacity) \
-    static ble_sender_info arr[cb_capacity]; \
-    static rcv_pkts_cb cb_name = {  \
+    ble_sender_info arr[cb_capacity]; \
+    rcv_pkts_cb cb_name = {  \
         .buff_start = arr, \
-        .buff_end = arr + cb_capacity * sizeof(ble_sender_info), \
+        .buff_end = arr + cb_capacity,  \
         .capacity = cb_capacity, \
         .count = 0, \
         .head = arr, \
-        .tail = arr \
+        .tail = arr\
     }
+// head and tail set to arr_ptr are overkill but its done for the buff
 
 void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item);
 void rcv_pkts_cb_pop(rcv_pkts_cb *cb);
