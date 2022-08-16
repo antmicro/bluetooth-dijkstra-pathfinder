@@ -3,10 +3,16 @@ import sys
 import json
 import os
 from jinja2 import Template, PackageLoader, Environment, FileSystemLoader
+from pyvis.network import Network
+import math
+import argparse
 
 # constants 
 MAX_CONN_NUM = 3
 MAX_DIST = 10
+
+AREA_X_DIM = 500
+AREA_Y_DIM = 500
 
 # validate input
 if len(sys.argv) > 1:
@@ -28,94 +34,64 @@ print("Input correct. Generating " + str(nodes) + " nodes...")
 # specified root directory of the project 
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
 
-
 index = 0
 mesh = {}
 
-while index < nodes:
-    # randomize number of connections
-    paths = [] 
+# Visualize network 
+net = Network('500px', '500px')
 
-    # pick paths_size not greater than number 
-    # of nodes in case MAX_CONN_NUM > nodes
-    paths_size = int(rnd.random() * 100) % min(MAX_CONN_NUM, nodes - 1) + 1 
-     
-    # randomize addrs and distances for this connections
-    paths_index = 0
-    while paths_index < paths_size:
-        connection_addr = int(rnd.random() * 100 % nodes)
-        connection_dist = int(rnd.random() * 100 % MAX_DIST) 
-        paths.append(dict(addr=connection_addr, distance=connection_dist))
-        paths_index += 1
-    
-    # create dict
+for index in range(nodes):
+    # create dict record
     node_name = "node" + str(index)
-
-    # create ble addr 
     if index > 9:
         ble_addr = "C0:00:00:00:00:" + str(index)
     else:
         ble_addr = "C0:00:00:00:00:0" + str(index)
+    
+    x_pos = rnd.randint(0, AREA_X_DIM)
+    y_pos = rnd.randint(0, AREA_Y_DIM)
 
     mesh[node_name] = {
             "addr":index,
+            "x":x_pos,
+            "y":y_pos,
             "addr_bt_le":ble_addr,
             "reserved":True,
             "paths_size":0,
             "paths":[]
             }
-    index += 1
+    
+    # Add to visualization
+    net.add_node(index, "node" + str(index), x=x_pos, y=y_pos)
 
 
-def randomize_index(nodes):
-    return int(rnd.random() * 100) % nodes
+# add edges 
+RADIO_RANGE = 200 # TODO: adjust that on the basis of the nodes provided
+for node in mesh.values():
+    for neigh in mesh.values():
+        # Do not connect to self
+        if node["addr"] == neigh["addr"]:
+            continue
 
-# add connections
-cnt = 0
-MAX_CONN_NUM = (nodes * (nodes - 1))/5
-existing_connections = []
-while cnt < MAX_CONN_NUM:
-    # pick random index
-    first_node_index = randomize_index(nodes)
-    second_node_index = randomize_index(nodes)
-
-    # make sure they are different
-    while second_node_index == first_node_index:
-        second_node_index = randomize_index(nodes)
-
-    # check if such connection already exists
-    for conn in existing_connections:
-        config1 = [first_node_index, second_node_index]
-        config2 = [second_node_index, first_node_index]
-        if conn == config1 or conn == config2:
-            break
-    else:
-        # make connection bidirectional connection 
-        mesh["node" + str(first_node_index)]["paths_size"] += 1
-        mesh["node" + str(first_node_index)]["paths"].append(
-                dict(
-                    addr=mesh["node" + str(second_node_index)]["addr"],
-                    distance=int(rnd.random() * 100 % MAX_DIST) + 1
-                    )
-                )
-        
-        mesh["node" + str(second_node_index)]["paths_size"] += 1
-        mesh["node" + str(second_node_index)]["paths"].append(
-                dict(
-                    addr=mesh["node" + str(first_node_index)]["addr"],
-                    distance=int(rnd.random() * 100 % MAX_DIST) + 1
-                    )
-                )
-        existing_connections.append([first_node_index, second_node_index])
-        # print([first_node_index, second_node_index])
-        cnt += 1
-
+        d = math.sqrt(math.pow(node["x"] - neigh["x"], 2) + math.pow(node["y"] - neigh["y"], 2))
+        print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
+        print("distance between: {},{} and {},{} is {}".format(
+            node["x"], node["y"], 
+            neigh["x"], neigh["y"], d))
+        if d < RADIO_RANGE:
+            node["paths_size"] += 1
+            node["paths"].append(dict(addr=neigh["addr"], distance=int(d)))
+            
+            net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d))
+            print("adding edge between: {} and {}".format(node["addr"], neigh["addr"]))
 
 # dict(addr=connection_addr, distance=connection_dist))
 #print(json.dumps(mesh))
 
 topology_config_file_path = os.path.join(project_dir,
         "config-files/mesh-topology-desc/randomized_topology.json")
+net.show('asd.html')
+
 with open(topology_config_file_path, "w") as f:
     f.write(json.dumps(mesh))
 
