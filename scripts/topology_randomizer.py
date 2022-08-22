@@ -15,21 +15,24 @@ AREA_X_DIM = 500
 AREA_Y_DIM = 500
 
 # validate input
-if len(sys.argv) > 1:
-    try:
-        nodes = int(sys.argv[1]) # is integer 
-        
-        if not 3 <= nodes <=64: # is in range 
-            sys.exit("Value not in range [1, 64]")
-        
+parser = argparse.ArgumentParser(usage="""python3 topology_randomizer.py [NUMBER OF NODES]
+Utility to randomly create specified amount of nodes and connect them depending on the distance between the nodes. It outputs .resc file for Renode simulation and .json file for further code generation. When --visualize option is specified, then also a network.html file is generated indicating nodes placement in the space and their connections.
+""")
+parser.add_argument("nodes_n", 
+        help="number of nodes to generate, integer in range [1, 64]", 
+        type=int)
+parser.add_argument("--visualize",
+        help="generate a .html file visualizing network topology",
+        action="store_true")
+parser.add_argument("--verbose",
+        help="explain what is being done",
+        action="store_true")
+args = parser.parse_args()
+if args.nodes_n and args.nodes_n < 1 or args.nodes_n > 64:
+    parser.error("ERROR: Value out of range. Specify amount in range [1, 64]")
 
-    except ValueError:
-        sys.exit("Value should be integer in range [1, 64]")
-
-else:
-    sys.exit("Did not provide number of nodes!")
-
-print("Input correct. Generating " + str(nodes) + " nodes...") 
+if args.verbose:
+    print("Input correct. Generating {} nodes...".format(args.nodes_n)) 
 
 # specified root directory of the project 
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
@@ -38,9 +41,10 @@ index = 0
 mesh = {}
 
 # Visualize network 
-net = Network('500px', '500px')
+if args.visualize:
+    net = Network('500px', '500px')
 
-for index in range(nodes):
+for index in range(args.nodes_n):
     # create dict record
     node_name = "node" + str(index)
     if index > 9:
@@ -60,13 +64,13 @@ for index in range(nodes):
             "paths_size":0,
             "paths":[]
             }
-    
-    # Add to visualization
-    net.add_node(index, "node" + str(index), x=x_pos, y=y_pos)
+    if args.visualize: 
+        # Add to visualization
+        net.add_node(index, "node" + str(index), x=x_pos, y=y_pos) # type: ignore
 
 
 # add edges 
-RADIO_RANGE = 200 # TODO: adjust that on the basis of the nodes provided
+RADIO_RANGE = 200 
 for node in mesh.values():
     for neigh in mesh.values():
         # Do not connect to self
@@ -74,26 +78,31 @@ for node in mesh.values():
             continue
 
         d = math.sqrt(math.pow(node["x"] - neigh["x"], 2) + math.pow(node["y"] - neigh["y"], 2))
-        print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
-        print("distance between: {},{} and {},{} is {}".format(
-            node["x"], node["y"], 
-            neigh["x"], neigh["y"], d))
+        if args.verbose:
+            print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
+            print("distance between: {},{} and {},{} is {}".format(
+                node["x"], node["y"], 
+                neigh["x"], neigh["y"], d))
         if d < RADIO_RANGE:
             node["paths_size"] += 1
             node["paths"].append(dict(addr=neigh["addr"], distance=int(d)))
             
-            net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d))
-            print("adding edge between: {} and {}".format(node["addr"], neigh["addr"]))
+            if args.verbose:
+                print("adding edge between: {} and {}".format(node["addr"], neigh["addr"]))
+            if args.visualize:
+                net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
 
-# dict(addr=connection_addr, distance=connection_dist))
-#print(json.dumps(mesh))
+if args.visualize:
+    net.show('network_topology.html') # type: ignore
 
 topology_config_file_path = os.path.join(project_dir,
         "config-files/mesh-topology-desc/randomized_topology.json")
-net.show('asd.html')
-
 with open(topology_config_file_path, "w") as f:
     f.write(json.dumps(mesh))
+
+if args.verbose:
+    print("Topology .json file written to {}".format(topology_config_file_path))
+
 
 # .resc generation 
 # ble_addr
@@ -142,7 +151,7 @@ macro reset
 """
 constant_contents_append = """
     mach set "mobile_broadcaster"
-    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/mobile_broadcaster/build/zephyr/zephyr.elf
+    sysbus LoadELF $ORIGIN/mobile_broadcaster/build/zephyr/zephyr.elf
 
 \"\"\"
 runMacro $reset
@@ -186,11 +195,9 @@ connector Connect sysbus.radio wireless
 mach_load_desc_template = """
     {% for node in nodes_temp %}
     mach set "{{ node }}"
-    sysbus LoadELF @/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/zephyr-rtos/build/zephyr/zephyr.elf
+    sysbus LoadELF $ORIGIN/zephyr-rtos/build/zephyr/zephyr.elf 
     {% endfor %}
 """
-# later use this 
-# $ORIGIN/zephyr-rtos/build/zephyr/zephyr.elf 
 
 env = Environment()
 
@@ -209,12 +216,13 @@ contents = (
         + out_mach_load_desc 
         + constant_contents_append)
 
-#print(contents)
-
 resc_file_path = os.path.join(project_dir,
         "config-files/renode-resc-files/randomized_topology.resc")
 with open(resc_file_path, 'w') as rescfile:
     rescfile.write(contents)
+
+if args.verbose:
+    print("Renode's .resc file written to {}".format(resc_file_path))
 
 
 
