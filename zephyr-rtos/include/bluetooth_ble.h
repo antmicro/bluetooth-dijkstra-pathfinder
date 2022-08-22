@@ -35,7 +35,7 @@
 
 #define CB_POP_TIME_MS 900
 
-#define ACK_ADV_TIME_MS 200
+#define ACK_ADV_TIME_MS 100
 #define DATA_ADV_TIME_MS 500
 
 // Global variable with sender thread id to wake it up
