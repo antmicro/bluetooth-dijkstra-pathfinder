@@ -1,8 +1,7 @@
 import random as rnd
-import sys 
 import json
 import os
-from jinja2 import Template, PackageLoader, Environment, FileSystemLoader
+from jinja2 import Environment 
 from pyvis.network import Network
 import math
 import argparse
@@ -21,6 +20,10 @@ parser.add_argument("nodes_n",
 parser.add_argument("--mbmove", 
         help="if set, mobile broadcaster will be moving with a use of provided move script extension for Renode",
         action="store_true")
+parser.add_argument("--faulty_nodes", 
+        help="specify number of faulty_nodes, that will be included in .json topology file but will not be initialized in Renode simualtion, leading to unresponsive member of the network. Use for testing rerouting capabilities of the network. Node 0 cannot be faulty, as by default it is sink",
+        type=int,
+        default=0)
 parser.add_argument("--visualize",
         help="generate a .html file visualizing network topology",
         action="store_true")
@@ -30,9 +33,12 @@ parser.add_argument("--visualizemb",
 parser.add_argument("--verbose",
         help="explain what is being done",
         action="store_true")
+
 args = parser.parse_args()
 if args.nodes_n and args.nodes_n < 1 or args.nodes_n > 64:
-    parser.error("ERROR: Value out of range. Specify amount in range [1, 64]")
+    parser.error("ERROR: Value out of range. Specify amount in integer range [1, 64]")
+if args.faulty_nodes < 0 or args.faulty_nodes > args.nodes_n - 1:
+    parser.error("ERROR: Number of faulty nodes should be integer in range (0, NUMBER OF NODES)")
 
 
 # root directory of the project 
@@ -42,6 +48,13 @@ project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
 # Visualize network 
 if args.visualize:
     net = Network('500px', '500px')
+
+
+# Randmoly pick faulty nodes and keep track of their ids. We will remove them 
+# from the mesh before initializing .resc file to simulate faulty_nodes
+faulty_nodes_indexes = []
+if args.faulty_nodes != 0:
+    faulty_nodes_indexes = rnd.sample(range(1, args.nodes_n), args.faulty_nodes)
 
 
 # Create a dictionary that will be then converted to .json and used in jinja
@@ -68,8 +81,13 @@ for index in range(args.nodes_n):
             "paths":[]
             }
     last_node_index = index
-    if args.visualize: 
-        net.add_node(index, "node" + str(index), x=x_pos, y=y_pos) # type: ignore
+
+    if args.visualize:
+        if index in faulty_nodes_indexes: # type: ignore
+            net.add_node(index, "node" + str(index), x=x_pos, y=y_pos, color='#dd4b39') # type: ignore
+        else:
+            net.add_node(index, "node" + str(index), x=x_pos, y=y_pos) # type: ignore
+            
 
 # Helper function to calculate distance between two points on a plane
 def euclidean_distance(x1, y1, x2, y2):
@@ -93,7 +111,10 @@ for node in mesh.values():
             node["paths_size"] += 1
             node["paths"].append(dict(addr=neigh["addr"], distance=int(d)))
             if args.visualize:
-                net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
+                if node["addr"] in faulty_nodes_indexes or neigh["addr"] in faulty_nodes_indexes: # type: ignore
+                    net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d), color='#dd4b39') # type: ignore
+                else:
+                    net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
 
 
 # Visualize also positions of MB and to what nodes it will be connected
@@ -105,13 +126,34 @@ if args.visualize and args.visualizemb:
             (0, 500)
             )
     for i, position in enumerate(positions): 
-        node_id = last_node_index + i + 1
-        net.add_node(node_id, "MB_pos" + str(i), x=position[0], y=position[1], # type: ignore
-                physics=False, color='#dd4b39') 
+        mb_node_id = last_node_index + i + 1
+        net.add_node(mb_node_id, "MB_pos" + str(i), x=position[0], y=position[1], # type: ignore
+                physics=False, color='#00ff1e') 
         for node in mesh.values():
             d = euclidean_distance(node["x"], node["y"], position[0], position[1])
             if d < RADIO_RANGE:
-                net.add_edge(node_id, node["addr"]) # type: ignore
+                if node["addr"] in faulty_nodes_indexes: # type: ignore
+                    net.add_edge(mb_node_id, node["addr"], color='#dd4b39') # type: ignore
+                else:
+                    net.add_edge(mb_node_id, node["addr"]) # type: ignore
+
+
+# Save topology to .json file
+topology_config_file_path = os.path.join(project_dir,
+        "config-files/mesh-topology-desc/randomized_topology.json")
+with open(topology_config_file_path, "w") as f:
+    f.write(json.dumps(mesh))
+if args.verbose:
+    print("Topology .json file written to {}".format(topology_config_file_path))
+
+
+# If some faulty nodes were specified, we will knock them out at random from 
+# mesh dictionary that will be later used to initialize a .resc file, but they 
+# are still present in topology .json file. This leads to unresponsive nodes.
+if args.faulty_nodes != 0:
+    for i in faulty_nodes_indexes: # type: ignore
+        node_name = "node" + str(i)
+        mesh.pop(node_name)
 
 
 # Save and display visualization 
@@ -120,14 +162,6 @@ if args.visualize:
     net.show(network_html_path) # type: ignore
     if args.verbose:
         print("Network topology .html file written to: {}".format(network_html_path))
-
-# Save topology to file
-topology_config_file_path = os.path.join(project_dir,
-        "config-files/mesh-topology-desc/randomized_topology.json")
-with open(topology_config_file_path, "w") as f:
-    f.write(json.dumps(mesh))
-if args.verbose:
-    print("Topology .json file written to {}".format(topology_config_file_path))
 
 
 resc_file_template = """
