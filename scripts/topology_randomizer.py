@@ -70,7 +70,8 @@ for index in range(args.nodes_n):
 
 
 # add edges 
-RADIO_RANGE = 200 
+RADIO_RANGE = int(1.0 / float(args.nodes_n) * 500 * 4)
+print("RADIO_RANGE: {}".format(RADIO_RANGE))
 for node in mesh.values():
     for neigh in mesh.values():
         # Do not connect to self
@@ -93,7 +94,10 @@ for node in mesh.values():
                 net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
 
 if args.visualize:
-    net.show('network_topology.html') # type: ignore
+    network_html_path = "network_topology.html"
+    net.show(network_html_path) # type: ignore
+    if args.verbose:
+        print("Network topology .html file written to: {}".format(network_html_path))
 
 topology_config_file_path = os.path.join(project_dir,
         "config-files/mesh-topology-desc/randomized_topology.json")
@@ -114,12 +118,11 @@ constant_contents_prepend = """
 
 logLevel 0
 
-emulation CreateWirelessMedium "wireless"
-# emulation CreateWiresharkForWireless "wireless" #"bluetoothle"
-# emulation LogToWireshark "wireless"
-#emulation LogWirelessTraffic
+emulation CreateBLEMedium "wireless"
+emulation SetGlobalQuantum "0.00001"
+emulation SetGlobalSerialExecution true
+emulation SetSeed 42
 logLevel -1 wireless
-
 
 # mesh begin  
 #############################################################
@@ -134,13 +137,10 @@ mach set "mobile_broadcaster"
 
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
 
-emulation SetGlobalQuantum "0.00001"
-emulation SetQuantum "0.00001"
-
-# analyzers 
 showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
-
+wireless SetPosition sysbus.radio 0 0 0
+wireless SetRangeWirelessFunction 5
 
 macro reset
 \"\"\"
@@ -151,7 +151,7 @@ macro reset
 """
 constant_contents_append = """
     mach set "mobile_broadcaster"
-    sysbus LoadELF $ORIGIN/mobile_broadcaster/build/zephyr/zephyr.elf
+    sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
 
 \"\"\"
 runMacro $reset
@@ -182,12 +182,10 @@ sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" {{
 ["0x", ((nodes_temp[node]['addr_bt_le'])|replace(":", "") | replace("C0",""))]|join("") 
 }} false
 
-# time quantum setup 
-emulation SetGlobalQuantum "0.00001"
-emulation SetQuantum "0.00001"
-
 # connect to medium 
 connector Connect sysbus.radio wireless
+wireless SetPosition sysbus.radio {{ nodes_temp[node]['x'] }} {{ nodes_temp[node]['y'] }} 0
+wireless SetRangeWirelessFunction {{radio_range}}
 {% endfor %}
 
 """
@@ -195,7 +193,7 @@ connector Connect sysbus.radio wireless
 mach_load_desc_template = """
     {% for node in nodes_temp %}
     mach set "{{ node }}"
-    sysbus LoadELF $ORIGIN/zephyr-rtos/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
     {% endfor %}
 """
 
@@ -203,7 +201,7 @@ env = Environment()
 
 # mach create 
 template = env.from_string(mach_create_template)
-out_mach_create = template.render(nodes_temp = mesh)
+out_mach_create = template.render(nodes_temp = mesh, radio_range = RADIO_RANGE)
 
 # desc load
 template = env.from_string(mach_load_desc_template)
