@@ -18,7 +18,7 @@
 
 /* Threads data */
 #define SEND_DATA_PACKET_THREAD_S_SIZE 1024
-#define SEND_DATA_PACKET_THREAD_PRIO 3
+#define SEND_DATA_PACKET_THREAD_PRIO 2
 K_THREAD_STACK_DEFINE(send_data_packet_thread_stack, 
         SEND_DATA_PACKET_THREAD_S_SIZE);
 
@@ -28,7 +28,7 @@ K_THREAD_STACK_DEFINE(send_ack_thread_stack,
         SEND_ACK_THREAD_S_SIZE);
 
 #define SEND_RT_THREAD_S_SIZE 1024
-#define SEND_RT_THREAD_PRIO 2
+#define SEND_RT_THREAD_PRIO 6
 K_THREAD_STACK_DEFINE(send_rt_thread_stack,
         SEND_RT_THREAD_S_SIZE);
 
@@ -83,7 +83,7 @@ void main(void)
             SEND_RT_THREAD_PRIO, 0, K_NO_WAIT);
     
     // Start counter that will add self to the routing table record propagation thread
-    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(2000), K_MSEC(20000)); 
+    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(2000), K_MSEC(60000)); 
 
     
     /* Bluetooth scanning */

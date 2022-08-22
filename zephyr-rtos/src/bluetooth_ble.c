@@ -26,7 +26,7 @@ K_MSGQ_DEFINE(ready_packets_to_send_q,
 K_MUTEX_DEFINE(ble_send_mutex);
 
 K_TIMER_DEFINE(add_self_to_rtr_queue_timer, add_self_to_rtr_queue, NULL);
-K_TIMER_DEFINE(pop_from_cb_timer, add_self_to_rtr_queue, NULL);
+//K_TIMER_DEFINE(pop_from_cb_timer, , NULL);
 
 // Static initialization of circular buffer with recently received packets
 RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 10);
@@ -267,7 +267,7 @@ void ble_send_rt_thread_entry(struct node_t *graph) {
         }
         printk("Sending rtr, source of it is: %d\n", ble_data[SENDER_ID_IDX]);
         
-        k_msleep(200);
+        k_msleep(50);
 
         err = bt_le_adv_stop();
         if(err) {
@@ -302,8 +302,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     // Debug
     //static uint64_t messges_received_n = 0;
     //messges_received_n++;
-    printk("Received data from node with address: %s\n", addr_str);
-    printk("Data: %s\n", data);
+    // printk("Received data from node with address: %s\n", addr_str);
+    // printk("Data: %s\n", data);
     //printk("Number of messages received: %lld\n", messges_received_n);
     
     // Strip the buffer into simple byte array
