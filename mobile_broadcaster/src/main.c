@@ -66,7 +66,7 @@ void main(void)
         }
         printk("Advertised\n");
         
-        k_msleep(100);
+        k_msleep(500);
         //mfg_data[5]++;
     }while(true);
 
