@@ -18,8 +18,14 @@ Utility to randomly create specified amount of nodes and connect them depending 
 parser.add_argument("nodes_n", 
         help="number of nodes to generate, integer in range [1, 64]", 
         type=int)
+parser.add_argument("--mbmove", 
+        help="if set, mobile broadcaster will be moving with a use of provided move script extension for Renode",
+        action="store_true")
 parser.add_argument("--visualize",
         help="generate a .html file visualizing network topology",
+        action="store_true")
+parser.add_argument("--visualizemb", 
+        help="include mobile_broadcaster positions in the visualization",
         action="store_true")
 parser.add_argument("--verbose",
         help="explain what is being done",
@@ -28,19 +34,19 @@ args = parser.parse_args()
 if args.nodes_n and args.nodes_n < 1 or args.nodes_n > 64:
     parser.error("ERROR: Value out of range. Specify amount in range [1, 64]")
 
-if args.verbose:
-    print("Input correct. Generating {} nodes...".format(args.nodes_n)) 
 
-# specified root directory of the project 
+# root directory of the project 
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
 
-index = 0
-mesh = {}
 
 # Visualize network 
 if args.visualize:
     net = Network('500px', '500px')
 
+
+# Create a dictionary that will be then converted to .json and used in jinja
+mesh = {}
+last_node_index = 0
 for index in range(args.nodes_n):
     # create dict record
     node_name = "node" + str(index)
@@ -61,17 +67,37 @@ for index in range(args.nodes_n):
             "paths_size":0,
             "paths":[]
             }
+    last_node_index = index
     if args.visualize: 
-        # Add to visualization
         net.add_node(index, "node" + str(index), x=x_pos, y=y_pos) # type: ignore
 
+# Helper function to calculate distance between two points on a plane
 def euclidean_distance(x1, y1, x2, y2):
     return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
 
-RADIO_RANGE = int(1.0 / float(args.nodes_n) * 500 * 4)
 
-if args.visualize:
-    # Visualize also positions of MB and to what nodes it will be connected
+# add edges between nodes within RADIO_RANGE 
+RADIO_RANGE = int(1.0 / float(args.nodes_n) * 500 * 4)
+print("RADIO_RANGE: {}".format(RADIO_RANGE)) # TODO: change to verbose
+for node in mesh.values():
+    for neigh in mesh.values():
+        # Do not connect to self
+        if node["addr"] == neigh["addr"]:
+            continue
+        
+        d = euclidean_distance(node['x'], node['y'], neigh['x'], neigh['y'])
+        if args.verbose:
+            print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
+        
+        if d < RADIO_RANGE:
+            node["paths_size"] += 1
+            node["paths"].append(dict(addr=neigh["addr"], distance=int(d)))
+            if args.visualize:
+                net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
+
+
+# Visualize also positions of MB and to what nodes it will be connected
+if args.visualize and args.visualizemb:
     positions = (
             (0, 0),
             (500, 0),
@@ -79,7 +105,7 @@ if args.visualize:
             (0, 500)
             )
     for i, position in enumerate(positions): 
-        node_id = index + i + 1
+        node_id = last_node_index + i + 1
         net.add_node(node_id, "MB_pos" + str(i), x=position[0], y=position[1], # type: ignore
                 physics=False, color='#dd4b39') 
         for node in mesh.values():
@@ -87,49 +113,26 @@ if args.visualize:
             if d < RADIO_RANGE:
                 net.add_edge(node_id, node["addr"]) # type: ignore
 
-# add edges 
-print("RADIO_RANGE: {}".format(RADIO_RANGE))
-for node in mesh.values():
-    for neigh in mesh.values():
-        # Do not connect to self
-        if node["addr"] == neigh["addr"]:
-            continue
-        d = euclidean_distance(node['x'], node['y'], neigh['x'], neigh['y'])
-        if args.verbose:
-            print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
-            print("distance between: {},{} and {},{} is {}".format(
-                node["x"], node["y"], 
-                neigh["x"], neigh["y"], d))
-        if d < RADIO_RANGE:
-            node["paths_size"] += 1
-            node["paths"].append(dict(addr=neigh["addr"], distance=int(d)))
-            
-            if args.verbose:
-                print("adding edge between: {} and {}".format(node["addr"], neigh["addr"]))
-            if args.visualize:
-                net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
 
+# Save and display visualization 
 if args.visualize:
     network_html_path = "network_topology.html"
     net.show(network_html_path) # type: ignore
     if args.verbose:
         print("Network topology .html file written to: {}".format(network_html_path))
 
+# Save topology to file
 topology_config_file_path = os.path.join(project_dir,
         "config-files/mesh-topology-desc/randomized_topology.json")
 with open(topology_config_file_path, "w") as f:
     f.write(json.dumps(mesh))
-
 if args.verbose:
     print("Topology .json file written to {}".format(topology_config_file_path))
 
 
-# .resc generation 
-# ble_addr
-
-constant_contents_prepend = """
+resc_file_template = """
 ############################################################
-#THIS FILE IS AUTO GENERATED - DO NOT CHANGE DIRECTLY
+#THIS FILE IS AUTO GENERATED - DO NOT CHANGE DIRECTLY      #
 ############################################################
 
 logLevel 0
@@ -143,52 +146,6 @@ logLevel -1 wireless
 
 # mesh begin  
 #############################################################
-"""
-
-contents_mid = """
-###########################################################
-# mesh end 
-
-mach add "mobile_broadcaster"
-mach set "mobile_broadcaster"
-
-machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
-
-showAnalyzer sysbus.uart0
-connector Connect sysbus.radio wireless
-wireless SetPosition sysbus.radio 0 0 0
-wireless SetRangeWirelessFunction {{ radio_range }}
-
-macro reset
-\"\"\"
-    pause
-    
-    # mesh begin 
-
-"""
-constant_contents_append = """
-    mach set "mobile_broadcaster"
-    sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
-
-\"\"\"
-runMacro $reset
-
-# observe uarts for default start and dst nodes  
-mach set "node0"
-#showAnalyzer sysbus.uart0
-mach set "node2"
-#showAnalyzer sysbus.uart0
-
-start
-
-machine StartGdbServer 3333 true
-
-"""
-
-
-# templates
-mach_create_template = """
-
 {% for node in nodes_temp %} 
 mach add "{{ node }}"
 mach set "{{ node }}"
@@ -207,40 +164,62 @@ wireless SetRangeWirelessFunction {{ radio_range }}
 showAnalyzer sysbus.uart0
 {% endfor %}
 
-"""
+###########################################################
+# mesh end 
 
-mach_load_desc_template = """
+mach add "mobile_broadcaster"
+mach set "mobile_broadcaster"
+
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+
+showAnalyzer sysbus.uart0
+connector Connect sysbus.radio wireless
+wireless SetPosition sysbus.radio 0 0 0
+wireless SetRangeWirelessFunction {{ radio_range }}
+
+macro reset
+\"\"\"
+    pause
+    
+    # mesh begin 
+    ###########################################################
     {% for node in nodes_temp %}
     mach set "{{ node }}"
     sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
     {% endfor %}
+
+    ###########################################################
+    # mesh end
+
+    mach set "mobile_broadcaster"
+    sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
+
+\"\"\"
+runMacro $reset
+
+{{ "i $ORIGIN/../../renode-commands/move_radio.py" if include_mbmove}}
+
+start
+
+{{ 'watch "move" 20000' if include_mbmove }}  
+
+machine StartGdbServer 3333 true
+
 """
 
 env = Environment()
 
 # mach create 
-template = env.from_string(mach_create_template)
-out_mach_create = template.render(nodes_temp=mesh, radio_range=RADIO_RANGE)
-
-# desc load
-template = env.from_string(mach_load_desc_template)
-out_mach_load_desc = template.render(nodes_temp = mesh)
-
-# set range for MB
-template = env.from_string(contents_mid)
-out_contents_mid = template.render(radio_range=RADIO_RANGE)
-
-contents = (
-        constant_contents_prepend 
-        + out_mach_create 
-        + out_contents_mid 
-        + out_mach_load_desc 
-        + constant_contents_append)
+template = env.from_string(resc_file_template)
+output_resc = template.render(
+        nodes_temp=mesh,
+        radio_range=RADIO_RANGE, 
+        include_mbmove=args.mbmove)
 
 resc_file_path = os.path.join(project_dir,
         "config-files/renode-resc-files/randomized_topology.resc")
 with open(resc_file_path, 'w') as rescfile:
-    rescfile.write(contents)
+    rescfile.write(output_resc)
 
 if args.verbose:
     print("Renode's .resc file written to {}".format(resc_file_path))

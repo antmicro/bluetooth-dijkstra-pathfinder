@@ -28,7 +28,7 @@ build_mobile_broadcaster () {
 
 build_randomized () {
     # randomize
-    python3 scripts/topology_randomizer.py $1 
+    # python3 scripts/topology_randomizer.py $1 
 
     # build 
     west build -b nrf52840dk_nrf52840 \
