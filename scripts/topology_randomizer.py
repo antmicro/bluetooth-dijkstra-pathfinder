@@ -5,6 +5,7 @@ from jinja2 import Environment
 from pyvis.network import Network
 import math
 import argparse
+import warnings
 
 # constants 
 AREA_X_DIM = 500
@@ -15,35 +16,48 @@ parser = argparse.ArgumentParser(usage="""python3 topology_randomizer.py [NUMBER
 Utility to randomly create specified amount of nodes and connect them depending on the distance between the nodes. It outputs .resc file for Renode simulation and .json file for further code generation. When --visualize option is specified, then also a network.html file is generated indicating nodes placement in the space and their connections.
 """)
 parser.add_argument("nodes_n", 
-        help="number of nodes to generate, integer in range [1, 64]", 
+        help="Number of nodes to generate, integer in range [1, 64]", 
         type=int)
 parser.add_argument("--mbmove", 
-        help="if set, mobile broadcaster will be moving with a use of provided move script extension for Renode",
+        help="If set, mobile broadcaster will be moving with a use of provided move script extension for Renode",
         action="store_true")
 parser.add_argument("--faulty_nodes", 
-        help="specify number of faulty_nodes, that will be included in .json topology file but will not be initialized in Renode simualtion, leading to unresponsive member of the network. Use for testing rerouting capabilities of the network. Node 0 cannot be faulty, as by default it is sink",
+        help="Specify number of faulty_nodes, that will be included in .json topology file but will not be initialized in Renode simualtion, leading to unresponsive member of the network. Use for testing rerouting capabilities of the network. Node 0 cannot be faulty, as by default it is sink",
         type=int,
         default=0)
 parser.add_argument("--visualize",
-        help="generate a .html file visualizing network topology",
+        help="Generate a .html file visualizing network topology",
         action="store_true")
 parser.add_argument("--visualizemb", 
-        help="include mobile_broadcaster positions in the visualization",
+        help="Include mobile_broadcaster positions in the visualization",
         action="store_true")
 parser.add_argument("--verbose",
-        help="explain what is being done",
+        help="Explain what is being done",
         action="store_true")
+parser.add_argument("--mbpathfile",
+        help="Provide name of the file containing a path for the mobile_broadcaster. Should be valid .json file contained in the directory config-files/mb-paths. Examplary default file in this dir is square_corners_path.json file and it should not be modified.",
+        type=str,
+        default="square_corners_path.json")
 
 args = parser.parse_args()
 if args.nodes_n and args.nodes_n < 1 or args.nodes_n > 64:
     parser.error("ERROR: Value out of range. Specify amount in integer range [1, 64]")
 if args.faulty_nodes < 0 or args.faulty_nodes > args.nodes_n - 1:
     parser.error("ERROR: Number of faulty nodes should be integer in range (0, NUMBER OF NODES)")
-
+if not args.mbmove:
+    warnings.warn("WARNING: switch --mbmove was not provided so the MB WILL NOT MOVE from it's default position, but depending on provided --mbpathfile and --visualizemb options multiple path points may appear in visualization. If this is intended, ignore this warning.")
 
 # root directory of the project 
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
 
+# mobile broadcaster path config file
+mb_path_file = os.path.join(project_dir, "config-files/mb-paths", args.mbpathfile)
+if not os.path.exists(mb_path_file):
+    parser.error("ERROR: provided config file does not exist: {}".format(mb_path_file))
+
+# Load positions used in both visualization and generation of .resc file
+with open(mb_path_file) as f:
+    mb_positions = json.load(f) 
 
 # Visualize network 
 if args.visualize:
@@ -119,13 +133,7 @@ for node in mesh.values():
 
 # Visualize also positions of MB and to what nodes it will be connected
 if args.visualize and args.visualizemb:
-    positions = (
-            (0, 0),
-            (500, 0),
-            (500, 500),
-            (0, 500)
-            )
-    for i, position in enumerate(positions): 
+    for i, position in enumerate(mb_positions): 
         mb_node_id = last_node_index + i + 1
         net.add_node(mb_node_id, "MB_pos" + str(i), x=position[0], y=position[1], # type: ignore
                 physics=False, color='#00ff1e') 
@@ -234,12 +242,9 @@ runMacro $reset
 {{ "i $ORIGIN/../../renode-commands/move_radio.py" if include_mbmove}}
 
 start
-
-{{ 'watch "move" 20000' if include_mbmove }}  
-
-machine StartGdbServer 3333 true
-
+{{ 'watch "move ' ~  mb_positions_path ~ ' 20000"' if include_mbmove }}  
 """
+# {{ mb_positions_path }} '" 20000'
 
 env = Environment()
 
@@ -248,7 +253,8 @@ template = env.from_string(resc_file_template)
 output_resc = template.render(
         nodes_temp=mesh,
         radio_range=RADIO_RANGE, 
-        include_mbmove=args.mbmove)
+        include_mbmove=args.mbmove,
+        mb_positions_path=mb_path_file)
 
 resc_file_path = os.path.join(project_dir,
         "config-files/renode-resc-files/randomized_topology.resc")

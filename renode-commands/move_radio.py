@@ -1,15 +1,11 @@
+import json
 counter = 0
 
-def mc_move():
+def mc_move(path):
     global counter
-    
-    mobile_broadcaster_positions = [
-            (1.5, 4.5, 0.0),
-            (1.5, 1.5, 0.0),
-            (-1.5, 1.5, 0.0),
-            (-1.5, 4.5, 0.0)
-            ]
-
+    with open(path) as f:
+        mobile_broadcaster_positions = json.load(f)
+     
     machine = monitor.Machine
     succ, wireless = emulationManager.Instance.CurrentEmulation.TryGetEmulationElementByName('wireless', machine)
 
