@@ -8,9 +8,6 @@ import math
 import argparse
 
 # constants 
-MAX_CONN_NUM = 3
-MAX_DIST = 10
-
 AREA_X_DIM = 500
 AREA_Y_DIM = 500
 
@@ -68,17 +65,36 @@ for index in range(args.nodes_n):
         # Add to visualization
         net.add_node(index, "node" + str(index), x=x_pos, y=y_pos) # type: ignore
 
+def euclidean_distance(x1, y1, x2, y2):
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+
+RADIO_RANGE = int(1.0 / float(args.nodes_n) * 500 * 4)
+
+if args.visualize:
+    # Visualize also positions of MB and to what nodes it will be connected
+    positions = (
+            (0, 0),
+            (500, 0),
+            (500, 500),
+            (0, 500)
+            )
+    for i, position in enumerate(positions): 
+        node_id = index + i + 1
+        net.add_node(node_id, "MB_pos" + str(i), x=position[0], y=position[1], # type: ignore
+                physics=False, color='#dd4b39') 
+        for node in mesh.values():
+            d = euclidean_distance(node["x"], node["y"], position[0], position[1])
+            if d < RADIO_RANGE:
+                net.add_edge(node_id, node["addr"]) # type: ignore
 
 # add edges 
-RADIO_RANGE = int(1.0 / float(args.nodes_n) * 500 * 4)
 print("RADIO_RANGE: {}".format(RADIO_RANGE))
 for node in mesh.values():
     for neigh in mesh.values():
         # Do not connect to self
         if node["addr"] == neigh["addr"]:
             continue
-
-        d = math.sqrt(math.pow(node["x"] - neigh["x"], 2) + math.pow(node["y"] - neigh["y"], 2))
+        d = euclidean_distance(node['x'], node['y'], neigh['x'], neigh['y'])
         if args.verbose:
             print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
             print("distance between: {},{} and {},{} is {}".format(
@@ -122,13 +138,14 @@ emulation CreateBLEMedium "wireless"
 emulation SetGlobalQuantum "0.00001"
 emulation SetGlobalSerialExecution true
 emulation SetSeed 42
+emulation LogBLETraffic
 logLevel -1 wireless
 
 # mesh begin  
 #############################################################
 """
 
-constant_contents_mid = """
+contents_mid = """
 ###########################################################
 # mesh end 
 
@@ -140,7 +157,7 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 0 0 0
-wireless SetRangeWirelessFunction 5
+wireless SetRangeWirelessFunction {{ radio_range }}
 
 macro reset
 \"\"\"
@@ -158,9 +175,9 @@ runMacro $reset
 
 # observe uarts for default start and dst nodes  
 mach set "node0"
-showAnalyzer sysbus.uart0
+#showAnalyzer sysbus.uart0
 mach set "node2"
-showAnalyzer sysbus.uart0
+#showAnalyzer sysbus.uart0
 
 start
 
@@ -185,7 +202,9 @@ sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" {{
 # connect to medium 
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio {{ nodes_temp[node]['x'] }} {{ nodes_temp[node]['y'] }} 0
-wireless SetRangeWirelessFunction {{radio_range}}
+wireless SetRangeWirelessFunction {{ radio_range }}
+
+showAnalyzer sysbus.uart0
 {% endfor %}
 
 """
@@ -201,16 +220,20 @@ env = Environment()
 
 # mach create 
 template = env.from_string(mach_create_template)
-out_mach_create = template.render(nodes_temp = mesh, radio_range = RADIO_RANGE)
+out_mach_create = template.render(nodes_temp=mesh, radio_range=RADIO_RANGE)
 
 # desc load
 template = env.from_string(mach_load_desc_template)
 out_mach_load_desc = template.render(nodes_temp = mesh)
 
+# set range for MB
+template = env.from_string(contents_mid)
+out_contents_mid = template.render(radio_range=RADIO_RANGE)
+
 contents = (
         constant_contents_prepend 
         + out_mach_create 
-        + constant_contents_mid 
+        + out_contents_mid 
         + out_mach_load_desc 
         + constant_contents_append)
 
