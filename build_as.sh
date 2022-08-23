@@ -27,13 +27,15 @@ build_mobile_broadcaster () {
 
 
 build_randomized () {
-    # randomize
-    python3 scripts/topology_randomizer.py $1 \
-        --mbmove \
-        --verbose \
-        --visualize \
-        --visualizemb \
-        --faulty_nodes 1
+    if [ "$2" = "--randomize" ]; then
+        # randomize
+        python3 scripts/topology_randomizer.py $1 \
+            --mbmove \
+            --verbose \
+            --visualize \
+            --visualizemb \
+            --faulty_nodes 1
+    fi
 
     # build 
     west build -b nrf52840dk_nrf52840 \
@@ -57,7 +59,7 @@ build_basic5node () {
 
 # case statement for picking version to run
 case $VERSION in
-  --randomized)
+  --random)
     echo "Building randomized version..."
 
     # if randomized mesh specified, load also number of nodes to generate
@@ -69,8 +71,7 @@ case $VERSION in
 
     # input validation is made in topology_randomizer script
 
-    NODES_NUM=$2
-    build_randomized $NODES_NUM
+    build_randomized $2 $3
     build_mobile_broadcaster
     ;;
 
@@ -83,7 +84,7 @@ case $VERSION in
 
   *)
     echo "Specify correct application version to build:
-    --randomized   - generate random topology and build 
+    --random       - build random topology, to reshuffle / randomize nodes provide also option --randomize 
     --basic        - generate basic 5 nodes minimal topology and build 
     " 
     ;;
