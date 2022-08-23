@@ -239,12 +239,14 @@ macro reset
 \"\"\"
 runMacro $reset
 
-{{ "i $ORIGIN/../../renode-commands/move_radio.py" if include_mbmove}}
+{{ "i $ORIGIN/../../renode-commands/move_radio.py" if include_mbmove }}
+{{ "# Included here ^ Renode command written in Python" if include_mbmove }} 
+{{ "load_mb_path '" ~ mb_positions_path ~ "'" if include_mbmove }}
 
 start
-{{ 'watch "move ' ~  mb_positions_path ~ ' 20000"' if include_mbmove }}  
+
+{{ 'watch "move" 20000' if include_mbmove }}  
 """
-# {{ mb_positions_path }} '" 20000'
 
 env = Environment()
 
