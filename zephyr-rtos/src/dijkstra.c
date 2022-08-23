@@ -56,11 +56,15 @@ int dijkstra_shortest_path(
     
     // trace back and record a path
     uint8_t paths_size;
-    uint8_t * path;
+    uint16_t * path;
     path = trace_back(graph, start_addr, dst_addr, &paths_size);
-   
-    // TODO: if only the next node is returned, simplify trace back function
     
+    // Path was not found -> fail
+    if(!path) {
+        printk("Path was not found\n");
+        return -1;
+    }
+   
     printk("Path: \n");
     for(uint8_t i = 0; i < paths_size; i++){
         printk("%d\n", path[i]); 
@@ -83,7 +87,7 @@ uint8_t get_smallest_td_node(
     *container_buffer = NULL;
      
     // setup 
-    uint8_t smallest_td = INF;
+    uint16_t smallest_td = INF;
     struct node_container * iterator;
 
     // check if empty
@@ -116,7 +120,7 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
          
         // consider only unvisited neighbours
         if(!neighbour->visited){
-            uint8_t distance_to_neighbour = (current_node.paths + i)->distance;
+            uint16_t distance_to_neighbour = (current_node.paths + i)->distance;
 
             // check if distance through current node is smaller than neighbour's 
             // current tentative distance
@@ -131,13 +135,13 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
 }
 
 
-uint8_t * trace_back(
+uint16_t * trace_back(
         struct node_t *graph,
         uint8_t start_addr, 
         uint8_t dst_addr, 
         uint8_t * paths_len){
     // array to store longest path possible TODO: make it better than that
-    uint8_t * path = k_malloc(sizeof(uint8_t) * MAX_MESH_SIZE);
+    uint16_t * path = k_malloc(sizeof(uint16_t) * MAX_MESH_SIZE);
     if(!path) return NULL;
  
     // tracing back
@@ -149,7 +153,7 @@ uint8_t * trace_back(
     path[index] = current_node->addr;
     while(current_node->addr != start_addr){ 
         // check which of neighbours has smallest td 
-        uint8_t smallest_td = INF;
+        uint16_t smallest_td = INF;
         uint8_t number_of_paths = current_node->paths_size; 
         struct node_t *temp_node = current_node;
         for(uint8_t i = 0; i < number_of_paths; i++){
@@ -164,6 +168,14 @@ uint8_t * trace_back(
         current_node = temp_node;
         index++;
         path[index] = current_node->addr;
+        
+        // If path was not found...
+        if(index > MAX_MESH_SIZE) {
+            k_free(path); 
+
+            *paths_len = 0; 
+            return NULL;
+        }
     }
 
     *paths_len = index + 1;
