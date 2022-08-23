@@ -55,6 +55,22 @@ mb_path_file = os.path.join(project_dir, "config-files/mb-paths", args.mbpathfil
 if not os.path.exists(mb_path_file):
     parser.error("ERROR: provided config file does not exist: {}".format(mb_path_file))
 
+# Output topology file path 
+topology_config_file_path = os.path.join(project_dir,
+        "config-files/mesh-topology-desc/randomized_topology.json")
+if not os.path.exists(topology_config_file_path):
+    topology_dir = os.path.dirname(topology_config_file_path)
+    os.makedirs(topology_dir, exist_ok=True)
+    with open(topology_config_file_path, 'a') as f: pass
+    
+# Output Renode's resc file 
+resc_file_path = os.path.join(project_dir,
+        "config-files/renode-resc-files/randomized_topology.resc")
+if not os.path.exists(resc_file_path):
+    resc_dir = os.path.dirname(resc_file_path)
+    os.makedirs(resc_dir, exist_ok=True)
+    with open(resc_file_path, 'a') as f: pass
+
 # Load positions used in both visualization and generation of .resc file
 with open(mb_path_file) as f:
     mb_positions = json.load(f) 
@@ -147,8 +163,6 @@ if args.visualize and args.visualizemb:
 
 
 # Save topology to .json file
-topology_config_file_path = os.path.join(project_dir,
-        "config-files/mesh-topology-desc/randomized_topology.json")
 with open(topology_config_file_path, "w") as f:
     f.write(json.dumps(mesh))
 if args.verbose:
@@ -258,8 +272,6 @@ output_resc = template.render(
         include_mbmove=args.mbmove,
         mb_positions_path=mb_path_file)
 
-resc_file_path = os.path.join(project_dir,
-        "config-files/renode-resc-files/randomized_topology.resc")
 with open(resc_file_path, 'w') as rescfile:
     rescfile.write(output_resc)
 
