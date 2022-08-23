@@ -197,7 +197,6 @@ emulation CreateBLEMedium "wireless"
 emulation SetGlobalQuantum "0.00001"
 emulation SetGlobalSerialExecution true
 emulation SetSeed 42
-emulation LogBLETraffic
 logLevel -1 wireless
 
 # mesh begin  

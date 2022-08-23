@@ -1,45 +1,42 @@
 import json
 import os 
 import sys
-from jinja2 import Template, PackageLoader, Environment, FileSystemLoader
+from jinja2 import Environment
 
-constant_contents_prepend = """
-/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY */
+
+template_to_load = """
+/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY 
+ * Check Your build options (arguments passed to build_as.sh script) and change
+ * proper config-files/mesh-topology-desc/*.json file. 
+ */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <bluetooth/addr.h>
 
 #include "../../include/graph.h"
 
-//uint8_t graph_init(struct node_t *graph, struct k_mutex *graph_mutex){ 
 uint8_t graph_init(struct node_t *graph){ 
-   // graph mutex initialization 
-    //k_mutex_init(graph_mutex); 
-
-    """
-
-constant_contents_append = """
-return 0;
-}"""
-        
-
-template_to_load = """// node 0x{{ addr_t }} 
-    graph[{{ addr_t }}].addr = 0x{{ addr_t }};
-    strncpy(graph[{{ addr_t }}].addr_bt_le, "{{ addr_bt_le_t }}", 18);
-    graph[{{ addr_t }}].reserved = {{ reserved_t }};
-    graph[{{ addr_t }}].visited = false;
-    graph[{{ addr_t }}].tentative_distance = INF;
-    graph[{{ addr_t }}].missed_transmissions = 0;
-    graph[{{ addr_t }}].paths_size = {{ paths_size_t }};
-    {% if paths_size_t is greaterthan 0 %}
-    graph[{{ addr_t }}].paths = k_malloc(sizeof(struct path_t) * graph[{{addr_t}}].paths_size);
-    if(graph[{{ addr_t }}].paths == NULL) return 1;
-    {% for path in paths %}
-    (graph[{{ addr_t }}].paths + {{loop.index0}})->addr = 0x{{ path.addr }};
-    (graph[{{ addr_t }}].paths + {{loop.index0}})->distance = {{ path.distance }};
+    {% for node in nodes.values() %}
+    // node 0x{{ node.addr }} 
+    graph[{{ node.addr }}].addr = 0x{{ node.addr }};
+    strncpy(graph[{{ node.addr }}].addr_bt_le, "{{ node.addr_bt_le }}", 18);
+    graph[{{ node.addr }}].reserved = {% if node.reserved %}true{% else %}false{% endif %};
+    graph[{{ node.addr }}].visited = false;
+    graph[{{ node.addr }}].tentative_distance = INF;
+    graph[{{ node.addr }}].missed_transmissions = 0;
+    graph[{{ node.addr }}].paths_size = {{ node.paths_size }};
+    {% if node.paths_size is greaterthan 0 %}
+    graph[{{ node.addr }}].paths = k_malloc(sizeof(struct path_t) * graph[{{node.addr}}].paths_size);
+    if(graph[{{ node.addr }}].paths == NULL) return 1;
+    {% for path in node.paths %}
+    (graph[{{ node.addr }}].paths + {{loop.index0}})->addr = 0x{{ path.addr }};
+    (graph[{{ node.addr }}].paths + {{loop.index0}})->distance = {{ path.distance }};
     {% endfor %}
     {% endif %}
-    """
+    {% endfor %}
+    return 0;
+}"""
 
 # check if filepath was provided 
 if len(sys.argv) < 2:
@@ -55,32 +52,18 @@ if not os.path.isfile(config_file_path):
 env = Environment()
 template = env.from_string(template_to_load)
 
-# fill the template with data from json config file
-project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-# config_file_path = os.path.join(project_dir, sys.argv[1])
-
-
-print("cnf file path")
+print("Topology config file path:")
 print(config_file_path)
 with open(config_file_path, 'r') as config:
-    function_contents = "" 
     nodes_config = json.loads(config.read())
-    for node in nodes_config.values():
-        out = template.render(
-                addr_t=node['addr'],
-                addr_bt_le_t=node['addr_bt_le'],
-                reserved_t=str(node['reserved']).lower(),
-                paths_size_t=node['paths_size'],
-                paths=node['paths']
-                )
-        function_contents += out
-
-output = constant_contents_prepend + function_contents + constant_contents_append 
-
+    print(nodes_config)
+    out = template.render(nodes=nodes_config)
+    
+project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 target_file_path = os.path.join(project_dir, "zephyr-rtos/src/generated-src/graph_init.c")
 print("Target file path: ")
 print(target_file_path)
 with open(target_file_path, 'w') as filehandle:
-    for line in output:
+    for line in out:
         filehandle.write(line)
 
