@@ -11,7 +11,7 @@ struct node_container{
 };
 
 // global variable updated with path after dijkstra algorithm  
-extern uint8_t * path; // TODO: make init function
+extern uint16_t * path; // TODO: make init function
 
 /**
  * @brief Perform shortest path algorithm on graph, between start and dst adrresses.
