@@ -259,7 +259,7 @@ runMacro $reset
 
 start
 
-{{ 'watch "move" 20000' if include_mbmove }}  
+{{ 'watch "move" 30000' if include_mbmove }}  
 """
 
 env = Environment()
