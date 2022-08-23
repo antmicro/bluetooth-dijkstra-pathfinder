@@ -57,7 +57,7 @@ void main(void)
             return;
         }
 
-        k_msleep(100);
+        k_msleep(50);
 
         err = bt_le_adv_stop();
         if (err) {
@@ -66,7 +66,7 @@ void main(void)
         }
         printk("Advertised\n");
         
-        k_msleep(500);
+        k_msleep(100);
         //mfg_data[5]++;
     }while(true);
 
