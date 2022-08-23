@@ -68,11 +68,11 @@ void ble_send_data_packet_thread_entry(
         /* Message preparation */
         // Calculate shortest path with Dijkstra algorithm
         uint8_t dst_mesh_id = pkt_info.ble_data[DST_ADDR_IDX];
-        uint8_t next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE,
+        int next_node_mesh_id = dijkstra_shortest_path(graph, MAX_MESH_SIZE,
                 common_self_mesh_id, dst_mesh_id);
         if(next_node_mesh_id < 0) {
             printk("ERROR: Dijkstra algorithm failed.\n");
-            return;
+            continue;
         }
         printk("Next hop: %d\n", next_node_mesh_id);
         

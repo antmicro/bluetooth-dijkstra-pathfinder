@@ -59,7 +59,7 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** contain
 void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph); 
 
 // need initialized memory heap
-uint8_t * trace_back(
+uint16_t * trace_back(
         struct node_t *graph,
         uint8_t start_addr, 
         uint8_t dst_addr, 

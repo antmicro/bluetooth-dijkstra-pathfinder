@@ -6,12 +6,12 @@
 #include <kernel.h> // for k_k_malloc
 #include <bluetooth/addr.h>
 
-#define INF 255
+#define INF 65535
 
 
 struct path_t{
     uint8_t addr;
-    uint8_t distance;
+    uint16_t distance;
 };
 
 
