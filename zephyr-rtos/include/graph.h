@@ -11,7 +11,7 @@
 
 struct path_t{
     uint8_t addr;
-    uint16_t distance;
+    uint16_t cost;
 };
 
 
@@ -38,7 +38,7 @@ extern struct node_t graph[MAX_MESH_SIZE];
 uint8_t graph_init(struct node_t *graph);
 void reset_td_visited(struct node_t *graph);
 
-void graph_set_distance(struct node_t *graph,
+void graph_set_cost(struct node_t *graph,
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist);
 void node_update_missed_transmissions(struct node_t *node, 
         bool transmission_success);

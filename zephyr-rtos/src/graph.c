@@ -14,19 +14,19 @@ void reset_td_visited(struct node_t graph[]){
 }
 
 
-void graph_set_distance(struct node_t graph[],
+void graph_set_cost(struct node_t graph[],
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist){
     struct node_t *node1 = &graph[mesh_id_1];
     struct node_t *node2 = &graph[mesh_id_2];
     // Do it both ways 
     for(uint8_t i = 0; i < node1->paths_size; i++){
         if(node1->paths[i].addr == mesh_id_2){
-            node1->paths[i].distance = new_dist;
+            node1->paths[i].cost = new_dist;
         }
     }
     for(uint8_t i = 0; i < node2->paths_size; i++){
         if(node2->paths[i].addr == mesh_id_1){
-            node2->paths[i].distance = new_dist;
+            node2->paths[i].cost = new_dist;
         }
     }
 }
@@ -61,7 +61,7 @@ void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_si
         uint8_t neighbor_addr_idx = 2 * i + 2 + 0;
         uint8_t neighbor_dist_idx = 2 * i + 2 + 1;
         buffer[neighbor_addr_idx] = (node->paths + i)->addr;
-        buffer[neighbor_dist_idx] = (node->paths + i)->distance;
+        buffer[neighbor_dist_idx] = (node->paths + i)->cost;
     }
 }
 
@@ -72,7 +72,7 @@ size_t node_get_size_in_bytes(struct node_t *node) {
     
     // Include only those fields that will be sent in routing table 
     size_t byte_size = sizeof(node->addr) + sizeof(node->paths_size) 
-        * (sizeof(node->paths->addr) + sizeof(node->paths->distance));
+        * (sizeof(node->paths->addr) + sizeof(node->paths->cost));
     return byte_size;
 }
 
@@ -106,7 +106,7 @@ void print_graph(struct node_t graph[]) {
         printk("Connected to: \n");
         for(uint8_t j = 0; j < graph[i].paths_size; j++) {
             printk("    Node %d with distance: %d \n",
-                    graph[i].paths[j].addr, graph[i].paths[j].distance);
+                    graph[i].paths[j].addr, graph[i].paths[j].cost);
         }
     }
 }
@@ -115,7 +115,7 @@ void print_graph(struct node_t graph[]) {
 void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist) {
     for(uint8_t i = 0; i < node->paths_size; i++) {
         if(node->paths[i].addr == neigh_addr) {
-            node->paths[i].distance = dist;
+            node->paths[i].cost = dist;
         }
     }
 }

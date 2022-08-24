@@ -146,7 +146,7 @@ void ble_send_data_packet_thread_entry(
         uint16_t new_td = calc_distance_from_missed_transmissions(
                     graph[pkt_info.ble_data[RCV_ADDR_IDX]].missed_transmissions);
         printk("New calculated TD: %d\n", new_td);
-        graph_set_distance(graph,
+        graph_set_cost(graph,
                     common_self_mesh_id, pkt_info.ble_data[RCV_ADDR_IDX], new_td);
 
         // Put the message again into the queue and try to send it again
