@@ -18,7 +18,8 @@ add_custom_command(
   TARGET generator
   COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generator.py ${TOPOLOGY_CONFIG_PATH} 
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../${TOPOLOGY_CONFIG_PATH}
-  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/generated-src/graph_init.c
+  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/generated-src/graph_api_generated.c
+  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/include/graph_api_generated.h
   VERBATIM)
 
 set(BOARD nrf52840dk_nrf52840)
@@ -38,7 +39,7 @@ add_dependencies(app generator)
 target_sources(app PRIVATE 
     src/main.c
     src/graph.c 
-    src/generated-src/graph_init.c
+    src/generated-src/graph_api_generated.c
     src/dijkstra.c
     src/bluetooth_ble.c)
 
