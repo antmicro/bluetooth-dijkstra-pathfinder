@@ -110,6 +110,7 @@ dkms.conf
 
 # auto generated files
 /zephyr-rtos/src/generated-src
+/zephyr-rtos/include/graph_api_generated.h
 /config-files/mesh-topology-desc/randomized_topology.json
 /config-files/renode-resc-files/randomized_topology.resc
 
