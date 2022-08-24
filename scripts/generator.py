@@ -94,7 +94,15 @@ int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val) {
     if(err) return err;
     return 0;
 }
-int path_t_{{ factor.name }}_get(struct path_t *path);
+int path_t_{{ factor.name }}_get(struct path_t *path) {
+    int err;
+    err = k_mutex_lock(&path->path_mutex, K_FOREVER);
+    if(err) return err;
+    uint16_t data = path->{{ factor.name }};
+    k_mutex_unlock(&path->path_mutex);
+    if(err) return err;
+    return data;
+}
 {% endfor %}
 
 """
