@@ -67,7 +67,11 @@ uint8_t graph_init(struct node_t *graph){
     if(graph[{{ node.addr }}].paths == NULL) return 1;
     {% for path in node.paths %}
     (graph[{{ node.addr }}].paths + {{loop.index0}})->addr = 0x{{ path.addr }};
-    (graph[{{ node.addr }}].paths + {{loop.index0}})->cost = {{ path.cost}};
+    (graph[{{ node.addr }}].paths + {{loop.index0}})->cost = {{ path.cost }};
+    {%- set outer_loop = loop -%}
+    {%- for factor in path.factors %}
+    (graph[{{ node.addr }}].paths + {{outer_loop.index0}})->{{ factor.name }} = {{ factor.value }};
+    {%- endfor %}
     {% endfor %}
     {% endif %}
     {% endfor %}
