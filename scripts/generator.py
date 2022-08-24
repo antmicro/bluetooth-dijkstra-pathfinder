@@ -34,7 +34,7 @@ uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endi
 // Setters and getters respecting mutex access 
 {% for factor in factors %}
 int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val);
-int path_t_{{ factor.name }}_get(struct path_t *path);
+int path_t_{{ factor.name }}_get(struct path_t *path, uint16_t *ret_val);
 {% endfor %}
 
 #endif
@@ -94,14 +94,14 @@ int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val) {
     if(err) return err;
     return 0;
 }
-int path_t_{{ factor.name }}_get(struct path_t *path) {
+int path_t_{{ factor.name }}_get(struct path_t *path, uint16_t *ret_val) {
     int err;
     err = k_mutex_lock(&path->path_mutex, K_FOREVER);
     if(err) return err;
-    uint16_t data = path->{{ factor.name }};
+    *ret_val = path->{{ factor.name }};
     k_mutex_unlock(&path->path_mutex);
     if(err) return err;
-    return data;
+    return 0;
 }
 {% endfor %}
 
