@@ -15,7 +15,18 @@ template_graph_api_h = """
 
 {% for factor in factors -%}
 #define {{ factor.name.upper() }} {{ factor.factor }}
-{% endfor %}
+{% endfor -%}
+
+// addr and cost fields are always present, rest is defined in topology.json 
+// file and loaded automatically
+struct path_t {
+    uint8_t addr;
+    uint16_t cost;
+    {% for factor in factors -%}
+    uint16_t {{factor.name}};
+    {% endfor -%}
+};
+
 uint8_t graph_init(struct node_t *graph);
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %});
 void node_update_missed_transmissions(struct node_t *node, 

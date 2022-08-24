@@ -1,10 +1,10 @@
-#include "../include/bluetooth_ble.h"
 #include <zephyr.h>
 #include <kernel/thread_stack.h>
-#include "../include/dijkstra.h"
 #include "kernel.h"
 #include <timing/timing.h>
 #include <assert.h>
+#include "../include/dijkstra.h"
+#include "../include/bluetooth_ble.h"
 
 /* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message

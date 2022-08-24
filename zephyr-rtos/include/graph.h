@@ -9,12 +9,6 @@
 #define INF 65535
 
 
-struct path_t{
-    uint8_t addr;
-    uint16_t cost;
-};
-
-
 struct node_t{
     uint8_t addr;
     char addr_bt_le[18];

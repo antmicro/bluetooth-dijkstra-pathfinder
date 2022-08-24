@@ -1,4 +1,5 @@
 #include "../include/dijkstra.h"
+#include "../include/graph_api_generated.h"
 #include <string.h>
 
 

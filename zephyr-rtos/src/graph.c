@@ -1,4 +1,5 @@
 #include "../include/graph.h"
+#include "../include/graph_api_generated.h"
 #include <bluetooth/bluetooth.h>
 #include <math.h>
 
