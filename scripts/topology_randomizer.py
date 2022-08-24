@@ -146,15 +146,14 @@ for node in mesh.values():
                 addr=neigh["addr"],
                 cost=0, # used for dijkstra calc, evaluated in graph_init function in .c file
                 factors=[
-                    {"name":"signal_str", "value":5, "factor":1}, # 1 - highest str, 10 - lowest str - higher cost
+                    {"name":"signal_str", "value":5, "factor":1}, 
                     {"name":"phy_distance", "value":int(d), "factor":1},
                     {"name":"missed_transmissions", "value":0, "factor":1}
                     ]
-                , 
                 ))
             if args.visualize:
                 if node["addr"] in faulty_nodes_indexes or neigh["addr"] in faulty_nodes_indexes: # type: ignore
-                    net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d), color='#dd4b39') # type: ignore
+                    net.add_edge(node["addr"], neigh["addr"], weight=int(d * 1 + 5 * 1 + 0 * 1), title=int(d), color='#dd4b39') # type: ignore
                 else:
                     net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d)) # type: ignore
 
