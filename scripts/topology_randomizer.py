@@ -108,7 +108,7 @@ for index in range(args.nodes_n):
             "addr_bt_le":ble_addr,
             "reserved":True,
             "paths_size":0,
-            "paths":[]
+            "paths":[],
             }
     last_node_index = index
 
@@ -137,9 +137,21 @@ for node in mesh.values():
         if args.verbose:
             print("distance between: {} and {} is {}".format(node["addr"], neigh["addr"], d))
         
+        # Nodes are connected based on physical distance between them, but cost 
+        # used in Dijkstra calculation is different than pure physical distance, 
+        # it also may include other factors like signal strength etc.
         if d < RADIO_RANGE:
             node["paths_size"] += 1
-            node["paths"].append(dict(addr=neigh["addr"], distance=int(d)))
+            node["paths"].append(dict( 
+                addr=neigh["addr"],
+                cost=0, # used for dijkstra calc, evaluated in graph_init function in .c file
+                factors=[
+                    {"name":"signal_str", "value":5, "factor":1}, # 1 - highest str, 10 - lowest str - higher cost
+                    {"name":"phy_distance", "value":int(d), "factor":1},
+                    {"name":"missed_transmissions", "value":0, "factor":1}
+                    ]
+                , 
+                ))
             if args.visualize:
                 if node["addr"] in faulty_nodes_indexes or neigh["addr"] in faulty_nodes_indexes: # type: ignore
                     net.add_edge(node["addr"], neigh["addr"], weight=int(d), title=int(d), color='#dd4b39') # type: ignore
