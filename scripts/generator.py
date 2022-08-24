@@ -72,7 +72,7 @@ uint8_t graph_init(struct node_t *graph){
     {%- for factor in path.factors %}
     (graph[{{ node.addr }}].paths + {{outer_loop.index0}})->{{ factor.name }} = {{ factor.value }};
     {%- endfor %}
-    {% endfor %}
+    {%- endfor %}
     {% endif %}
     {% endfor %}
     return 0;
