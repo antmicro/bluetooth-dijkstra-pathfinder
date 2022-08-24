@@ -18,7 +18,7 @@ void graph_set_distance(struct node_t graph[],
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist){
     struct node_t *node1 = &graph[mesh_id_1];
     struct node_t *node2 = &graph[mesh_id_2];
-    // Do it both ways TODO: change it so the code is not copied
+    // Do it both ways 
     for(uint8_t i = 0; i < node1->paths_size; i++){
         if(node1->paths[i].addr == mesh_id_2){
             node1->paths[i].distance = new_dist;
@@ -42,10 +42,10 @@ void node_update_missed_transmissions(struct node_t *node,
 }
 
 
-uint8_t calc_td_from_missed_transmissions(uint64_t missed_transmissions){
+uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions){
     float a = 0.5; 
     float y = a * missed_transmissions * missed_transmissions + 1.0;
-    return (uint8_t)y;
+    return (uint16_t)y;
 }
 
 

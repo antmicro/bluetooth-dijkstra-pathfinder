@@ -143,7 +143,7 @@ void ble_send_data_packet_thread_entry(
         // Distance recalculation and update 
         node_update_missed_transmissions(
                         &graph[pkt_info.ble_data[RCV_ADDR_IDX]], got_ack);
-        uint8_t new_td = calc_td_from_missed_transmissions(
+        uint16_t new_td = calc_distance_from_missed_transmissions(
                     graph[pkt_info.ble_data[RCV_ADDR_IDX]].missed_transmissions);
         printk("New calculated TD: %d\n", new_td);
         graph_set_distance(graph,

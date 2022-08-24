@@ -42,7 +42,7 @@ void graph_set_distance(struct node_t *graph,
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist);
 void node_update_missed_transmissions(struct node_t *node, 
         bool transmission_success);
-uint8_t calc_td_from_missed_transmissions(uint64_t missed_transmissions);
+uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions);
 
 void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_size);
 size_t node_get_size_in_bytes(struct node_t *node);
