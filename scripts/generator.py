@@ -22,6 +22,7 @@ template_graph_api_h = """
 struct path_t {
     uint8_t addr;
     uint16_t cost;
+    struct k_mutex path_mutex;
     {% for factor in factors -%}
     uint16_t {{factor.name}};
     {% endfor -%}
@@ -29,8 +30,12 @@ struct path_t {
 
 uint8_t graph_init(struct node_t *graph);
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %});
-void node_update_missed_transmissions(struct node_t *node, 
-        bool transmission_success);
+
+// Setters and getters respecting mutex access 
+{% for factor in factors %}
+int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val);
+int path_t_{{ factor.name }}_get(struct path_t *path);
+{% endfor %}
 
 #endif
 """
@@ -62,6 +67,7 @@ uint8_t graph_init(struct node_t *graph){
     graph[{{ node.addr }}].tentative_distance = INF;
     graph[{{ node.addr }}].missed_transmissions = 0;
     graph[{{ node.addr }}].paths_size = {{ node.paths_size }};
+    k_mutex_init(&graph[{{ node.addr }}].node_mutex);
     {% if node.paths_size is greaterthan 0 %}
     graph[{{ node.addr }}].paths = k_malloc(sizeof(struct path_t) * graph[{{node.addr}}].paths_size);
     if(graph[{{ node.addr }}].paths == NULL) return 1;
@@ -76,7 +82,22 @@ uint8_t graph_init(struct node_t *graph){
     {% endif %}
     {% endfor %}
     return 0;
-}"""
+}
+
+{% for factor in factors %}
+int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val) {
+    int err;
+    err = k_mutex_lock(&path->path_mutex, K_FOREVER);
+    if(err) return err;
+    path->{{ factor.name }} = new_val;
+    k_mutex_unlock(&path->path_mutex);
+    if(err) return err;
+    return 0;
+}
+int path_t_{{ factor.name }}_get(struct path_t *path);
+{% endfor %}
+
+"""
 
 # check if filepath was provided 
 if len(sys.argv) < 2:
