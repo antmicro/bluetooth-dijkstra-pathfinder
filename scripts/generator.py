@@ -59,8 +59,8 @@ uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endi
 
 uint8_t graph_init(struct node_t *graph){ 
     {% for node in nodes.values() %}
-    // node 0x{{ node.addr }} 
-    graph[{{ node.addr }}].addr = 0x{{ node.addr }};
+    // node {{ node.addr }} 
+    graph[{{ node.addr }}].addr = {{ node.addr }};
     strncpy(graph[{{ node.addr }}].addr_bt_le, "{{ node.addr_bt_le }}", 18);
     graph[{{ node.addr }}].reserved = {% if node.reserved %}true{% else %}false{% endif %};
     graph[{{ node.addr }}].visited = false;
