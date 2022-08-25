@@ -10,6 +10,7 @@
 
 
 struct node_t{
+    struct k_mutex node_mutex;
     uint8_t addr;
     char addr_bt_le[18];
     bool reserved; 
@@ -18,19 +19,24 @@ struct node_t{
 
     uint16_t tentative_distance;
 
-    uint64_t missed_transmissions;
-
     uint8_t paths_size;
     struct path_t * paths;
 };
 
 
-// global variable with address of this node 
 extern uint8_t common_self_mesh_id; 
 extern struct node_t graph[MAX_MESH_SIZE];
 
 uint8_t graph_init(struct node_t *graph);
+
+// Dijkstra's utility 
 void reset_td_visited(struct node_t *graph);
+
+// Setters and getters respecting the mutex access
+int node_t_visited_set(struct node_t *node, bool new_val); 
+int node_t_visited_get(struct node_t *node, bool *ret_val); 
+int node_t_tentative_distance_set(struct node_t *node, uint16_t new_val);
+int node_t_tentative_distance_get(struct node_t *node, uint16_t *ret_val);
 
 void graph_set_cost(struct node_t *graph,
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist);

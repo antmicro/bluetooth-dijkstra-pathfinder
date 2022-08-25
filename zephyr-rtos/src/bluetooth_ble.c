@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
+#include "../include/graph_api_generated.h"
 
 /* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message
@@ -24,6 +25,7 @@ K_MSGQ_DEFINE(ready_packets_to_send_q,
         BLE_DATA_MSG_LEN, 10, 4); 
 
 K_MUTEX_DEFINE(ble_send_mutex);
+K_MUTEX_DEFINE(graph_mutex);
 
 K_TIMER_DEFINE(add_self_to_rtr_queue_timer, add_self_to_rtr_queue, NULL);
 //K_TIMER_DEFINE(pop_from_cb_timer, , NULL);
@@ -140,14 +142,22 @@ void ble_send_data_packet_thread_entry(
         ble_sender_info unused;
         err = k_msgq_get(&awaiting_ack, &unused, K_MSEC(50));
         
-        // Distance recalculation and update 
-        node_update_missed_transmissions(
-                        &graph[pkt_info.ble_data[RCV_ADDR_IDX]], got_ack);
-        uint16_t new_td = calc_distance_from_missed_transmissions(
-                    graph[pkt_info.ble_data[RCV_ADDR_IDX]].missed_transmissions);
-        printk("New calculated TD: %d\n", new_td);
-        graph_set_cost(graph,
-                    common_self_mesh_id, pkt_info.ble_data[RCV_ADDR_IDX], new_td);
+        // Cost recalculation and update
+        struct path_t *used_path;
+        for(uint8_t i = 0; i < graph[common_self_mesh_id].paths_size; i++){
+            if(graph[common_self_mesh_id].paths[i].addr == next_node_mesh_id) {
+                used_path = &graph[common_self_mesh_id].paths[i]; 
+            }
+        }
+
+        uint16_t new_cost = calc_cost(
+                used_path->signal_str,
+                used_path->phy_distance,
+                used_path->missed_transmissions);
+
+        //printk("New calculated TD: %d\n", new_td);
+        //graph_set_cost(graph,
+        //            common_self_mesh_id, pkt_info.ble_data[RCV_ADDR_IDX], new_td);
 
         // Put the message again into the queue and try to send it again
         if(!got_ack) {

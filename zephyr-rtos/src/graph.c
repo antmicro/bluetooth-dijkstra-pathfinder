@@ -14,6 +14,46 @@ void reset_td_visited(struct node_t graph[]){
     }
 }
 
+// Setters and getters respecting the mutex access
+int node_t_visited_set(struct node_t *node, bool new_val) {
+    int err;
+    err = k_mutex_lock(&node->node_mutex, K_FOREVER);
+    if(err) return err;
+    node->visited = new_val;
+    k_mutex_unlock(&node->node_mutex);
+    if(err) return err;
+    return 0;
+}
+
+int node_t_visited_get(struct node_t *node, bool *ret_val) {
+    int err;
+    err = k_mutex_lock(&node->node_mutex, K_FOREVER);
+    if(err) return err;
+    *ret_val = node->visited;
+    k_mutex_unlock(&node->node_mutex);
+    if(err) return err;
+    return 0;
+}
+
+int node_t_tentative_distance_set(struct node_t *node, uint16_t new_val) {
+    int err;
+    err = k_mutex_lock(&node->node_mutex, K_FOREVER);
+    if(err) return err;
+    node->visited = new_val;
+    k_mutex_unlock(&node->node_mutex);
+    if(err) return err;
+    return 0;
+}
+
+int node_t_tentative_distance_get(struct node_t *node, uint16_t *ret_val) {
+    int err;
+    err = k_mutex_lock(&node->node_mutex, K_FOREVER);
+    if(err) return err;
+    *ret_val = node->visited;
+    k_mutex_unlock(&node->node_mutex);
+    if(err) return err;
+    return 0;
+}
 
 void graph_set_cost(struct node_t graph[],
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist){
@@ -34,6 +74,7 @@ void graph_set_cost(struct node_t graph[],
 
 
 // TODO: Should have some decay time, so the communication is retried
+/*
 void node_update_missed_transmissions(struct node_t *node, 
         bool transmission_success){
     if(transmission_success && node->missed_transmissions > 0){
@@ -41,6 +82,7 @@ void node_update_missed_transmissions(struct node_t *node,
     }
     else node->missed_transmissions++;
 }
+*/
 
 
 uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions){

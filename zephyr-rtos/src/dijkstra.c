@@ -120,7 +120,9 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
         struct node_t * neighbour = graph + ((current_node.paths + i)->addr);
          
         // consider only unvisited neighbours
-        if(!neighbour->visited){
+        bool *visited = false;
+        node_t_visited_get(neighbour, visited);
+        if(!visited){
             uint16_t cost_to_neighbour = (current_node.paths + i)->cost;
 
             // check if distance through current node is smaller than neighbour's 
@@ -132,6 +134,7 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
             }
         }
     }
+    node_t_visited_set(graph + node_addr, true);
     (graph + node_addr)->visited = true;
 }
 
