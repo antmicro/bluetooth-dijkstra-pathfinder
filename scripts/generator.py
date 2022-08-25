@@ -65,7 +65,6 @@ uint8_t graph_init(struct node_t *graph){
     graph[{{ node.addr }}].reserved = {% if node.reserved %}true{% else %}false{% endif %};
     graph[{{ node.addr }}].visited = false;
     graph[{{ node.addr }}].tentative_distance = INF;
-    graph[{{ node.addr }}].missed_transmissions = 0;
     graph[{{ node.addr }}].paths_size = {{ node.paths_size }};
     k_mutex_init(&graph[{{ node.addr }}].node_mutex);
     {% if node.paths_size is greaterthan 0 %}
