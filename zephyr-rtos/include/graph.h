@@ -37,6 +37,8 @@ int node_t_visited_set(struct node_t *node, bool new_val);
 int node_t_visited_get(struct node_t *node, bool *ret_val); 
 int node_t_tentative_distance_set(struct node_t *node, uint16_t new_val);
 int node_t_tentative_distance_get(struct node_t *node, uint16_t *ret_val);
+int path_t_cost_set(struct path_t *path, uint16_t new_val);
+int path_t_cost_get(struct path_t *path, uint16_t *ret_val);
 
 void graph_set_cost(struct node_t *graph,
         uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist);

@@ -1,5 +1,6 @@
 #include "../include/graph.h"
 #include "../include/graph_api_generated.h"
+#include "kernel.h"
 #include <bluetooth/bluetooth.h>
 #include <math.h>
 
@@ -8,8 +9,8 @@ uint8_t common_self_mesh_id = 255;
 void reset_td_visited(struct node_t graph[]){
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++){
         if((graph + i)->reserved){
-            (graph + i)->tentative_distance = INF;
-            (graph + i)->visited = false;
+            node_t_tentative_distance_set(graph + i, INF);
+            node_t_visited_set(graph + i, false);
         }
     }
 }
@@ -39,7 +40,7 @@ int node_t_tentative_distance_set(struct node_t *node, uint16_t new_val) {
     int err;
     err = k_mutex_lock(&node->node_mutex, K_FOREVER);
     if(err) return err;
-    node->visited = new_val;
+    node->tentative_distance = new_val;
     k_mutex_unlock(&node->node_mutex);
     if(err) return err;
     return 0;
@@ -49,8 +50,28 @@ int node_t_tentative_distance_get(struct node_t *node, uint16_t *ret_val) {
     int err;
     err = k_mutex_lock(&node->node_mutex, K_FOREVER);
     if(err) return err;
-    *ret_val = node->visited;
+    *ret_val = node->tentative_distance;
     k_mutex_unlock(&node->node_mutex);
+    if(err) return err;
+    return 0;
+}
+
+int path_t_cost_set(struct path_t *path, uint16_t new_val){
+    int err;
+    err = k_mutex_lock(&path->path_mutex, K_FOREVER);
+    if(err) return err;
+    path->cost = new_val;
+    err = k_mutex_unlock(&path->path_mutex);
+    if(err) return err;
+    return 0;
+}
+
+int path_t_cost_get(struct path_t *path, uint16_t *ret_val) {
+    int err;
+    err = k_mutex_lock(&path->path_mutex, K_FOREVER);
+    if(err) return err;
+    *ret_val = path->cost;
+    err = k_mutex_unlock(&path->path_mutex);
     if(err) return err;
     return 0;
 }
