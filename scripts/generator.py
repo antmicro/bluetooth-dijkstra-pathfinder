@@ -54,7 +54,7 @@ template_graph_api_c = """
 #include "../../include/graph_api_generated.h"
 
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %}) {
-    return {% for factor in factors %}{% if loop.index0 != 0 %} * {% endif %}{{ factor.factor }} * {{ factor.name }}{% endfor %};
+    return {% for factor in factors %}{% if loop.index0 != 0 %} + {% endif %}{{ factor.factor }} * {{ factor.name }}{% endfor %};
 }
 
 uint8_t graph_init(struct node_t *graph){ 
