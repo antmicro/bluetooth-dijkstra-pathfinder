@@ -8,9 +8,11 @@ int dijkstra_shortest_path(
         uint8_t graph_size,
         uint8_t start_addr, 
         uint8_t dst_addr){ 
+    int err;
     // check if right node was picked 
     if(!graph[dst_addr].reserved || !graph[start_addr].reserved){
-        printk("Node address not used!\n");
+        printk("ERROR: Node address not used!\n");
+        printk("ADDRS %d and %d\n", start_addr, dst_addr);
         return -1;
     }
 
@@ -22,7 +24,11 @@ int dijkstra_shortest_path(
 
     /* algorithm */
     // set tentative_distance to 0 at start node  
-    node_t_tentative_distance_set(graph + start_addr, 0);
+    err = node_t_tentative_distance_set(graph + start_addr, 0);
+    if(err) {
+        printk("ERROR: Could not set tentative distance\n");
+        return -1;
+    }
     
     // create unvisited list 
     sys_slist_t lst;
@@ -116,6 +122,7 @@ uint8_t get_smallest_td_node(
 
 void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
     struct node_t *current_node = graph + node_addr; 
+    int err;
     for(uint8_t i = 0; i < current_node->paths_size; i++){ 
         struct node_t *neighbour = graph + ((current_node->paths + i)->addr);
          
@@ -133,12 +140,18 @@ void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
             node_t_tentative_distance_get(current_node, &curr_node_td); 
             node_t_tentative_distance_get(neighbour, &neigh_td);
             if(curr_node_td + cost_to_neighbour < neigh_td){
-                node_t_tentative_distance_set(neighbour, 
+                err = node_t_tentative_distance_set(neighbour, 
                         curr_node_td + cost_to_neighbour);
+                if(err) {
+                    printk("ERROR: Could not set tentative_distance\n");
+                }
             }
         }
     }
-    node_t_visited_set(current_node, true);
+    err = node_t_visited_set(current_node, true);
+    if(err) {
+        printk("ERROR: Could not set visited\n");
+    }
 }
 
 
