@@ -41,7 +41,7 @@ int path_t_cost_set(struct path_t *path, uint16_t new_val);
 int path_t_cost_get(struct path_t *path, uint16_t *ret_val);
 
 void graph_set_cost(struct node_t *graph,
-        uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist);
+        uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_cost);
 void node_update_missed_transmissions(struct node_t *node, 
         bool transmission_success);
 uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions);
@@ -49,7 +49,7 @@ uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions);
 void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_size);
 size_t node_get_size_in_bytes(struct node_t *node);
 void load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size);
-void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist);
+void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t cost);
 void print_graph(struct node_t graph[]);
 
 uint8_t identify_self_in_graph(struct node_t *graph);

@@ -77,18 +77,18 @@ int path_t_cost_get(struct path_t *path, uint16_t *ret_val) {
 }
 
 void graph_set_cost(struct node_t graph[],
-        uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_dist){
-    struct node_t *node1 = &graph[mesh_id_1];
-    struct node_t *node2 = &graph[mesh_id_2];
+        uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_cost){
+    struct node_t *node1 = graph + mesh_id_1;
+    struct node_t *node2 = graph + mesh_id_2;
     // Do it both ways 
     for(uint8_t i = 0; i < node1->paths_size; i++){
-        if(node1->paths[i].addr == mesh_id_2){
-            node1->paths[i].cost = new_dist;
+        if(node1->paths->addr == mesh_id_2){
+            path_t_cost_set(node1->paths + i, new_cost);
         }
     }
     for(uint8_t i = 0; i < node2->paths_size; i++){
-        if(node2->paths[i].addr == mesh_id_1){
-            node2->paths[i].cost = new_dist;
+        if(node2->paths->addr == mesh_id_1){
+            path_t_cost_set(node2->paths + i, new_cost);
         }
     }
 }
@@ -124,8 +124,10 @@ void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_si
     for(uint8_t i = 0; i < node->paths_size; i++) {
         uint8_t neighbor_addr_idx = 2 * i + 2 + 0;
         uint8_t neighbor_dist_idx = 2 * i + 2 + 1;
+        uint16_t cost;
+        path_t_cost_get(node->paths + i, &cost);
         buffer[neighbor_addr_idx] = (node->paths + i)->addr;
-        buffer[neighbor_dist_idx] = (node->paths + i)->cost;
+        buffer[neighbor_dist_idx] = cost;
     }
 }
 
@@ -165,21 +167,23 @@ void load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size) {
 
 void print_graph(struct node_t graph[]) {
     printk("Mesh topology:\n");
+    uint16_t cost;
     for(uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
         printk("Node %d\n", graph[i].addr);
         printk("Connected to: \n");
         for(uint8_t j = 0; j < graph[i].paths_size; j++) {
+            path_t_cost_get(graph[i].paths + j, &cost);
             printk("    Node %d with distance: %d \n",
-                    graph[i].paths[j].addr, graph[i].paths[j].cost);
+                    graph[i].paths[j].addr, cost);
         }
     }
 }
 
 
-void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t dist) {
+void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t cost) {
     for(uint8_t i = 0; i < node->paths_size; i++) {
         if(node->paths[i].addr == neigh_addr) {
-            node->paths[i].cost = dist;
+            path_t_cost_set(node->paths + i, cost);
         }
     }
 }

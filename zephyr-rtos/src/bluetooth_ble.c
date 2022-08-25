@@ -149,11 +149,11 @@ void ble_send_data_packet_thread_entry(
                 used_path = &graph[common_self_mesh_id].paths[i]; 
             }
         }
-
-        uint16_t new_cost = calc_cost(
-                used_path->signal_str,
-                used_path->phy_distance,
-                used_path->missed_transmissions);
+        uint16_t signal_str, phy_distance, missed_transmissions;
+        path_t_signal_str_get(used_path, &signal_str);
+        path_t_phy_distance_get(used_path, &phy_distance);
+        path_t_missed_transmissions_get(used_path, &missed_transmissions);
+        uint16_t new_cost = calc_cost(signal_str, phy_distance, missed_transmissions);
 
         //printk("New calculated TD: %d\n", new_td);
         //graph_set_cost(graph,

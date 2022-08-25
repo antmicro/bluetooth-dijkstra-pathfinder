@@ -22,7 +22,7 @@ int dijkstra_shortest_path(
 
     /* algorithm */
     // set tentative_distance to 0 at start node  
-    graph[start_addr].tentative_distance = 0;
+    node_t_tentative_distance_set(graph + start_addr, 0);
     
     // create unvisited list 
     sys_slist_t lst;
@@ -99,8 +99,10 @@ uint8_t get_smallest_td_node(
     
     // find lowest_td_node
     SYS_SLIST_FOR_EACH_CONTAINER(lst, iterator, next_container_node_ptr){
-        if(iterator->node->tentative_distance <= smallest_td){
-            smallest_td = iterator->node->tentative_distance;
+        uint16_t td = 0;
+        node_t_tentative_distance_get(iterator->node, &td);
+        if(td <= smallest_td){
+            smallest_td = td;
             *container_buffer = iterator;
         }
     }
@@ -113,29 +115,30 @@ uint8_t get_smallest_td_node(
 
 
 void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph){
-    struct node_t current_node = graph[node_addr]; 
-    // for each neighbour check distances
-    for(uint8_t i = 0; i < current_node.paths_size; i++){
-        // get neighbour
-        struct node_t * neighbour = graph + ((current_node.paths + i)->addr);
+    struct node_t *current_node = graph + node_addr; 
+    for(uint8_t i = 0; i < current_node->paths_size; i++){ 
+        struct node_t *neighbour = graph + ((current_node->paths + i)->addr);
          
         // consider only unvisited neighbours
-        bool *visited = false;
-        node_t_visited_get(neighbour, visited);
+        bool visited;
+        node_t_visited_get(neighbour, &visited);
         if(!visited){
-            uint16_t cost_to_neighbour = (current_node.paths + i)->cost;
+            struct path_t *path = current_node->paths + i;
+            uint16_t cost_to_neighbour;
+            path_t_cost_get(path, &cost_to_neighbour);
 
             // check if distance through current node is smaller than neighbour's 
             // current tentative distance
-            if(current_node.tentative_distance + cost_to_neighbour <
-                    neighbour->tentative_distance){
-                neighbour->tentative_distance = 
-                    current_node.tentative_distance + cost_to_neighbour;
+            uint16_t curr_node_td, neigh_td;
+            node_t_tentative_distance_get(current_node, &curr_node_td); 
+            node_t_tentative_distance_get(neighbour, &neigh_td);
+            if(curr_node_td + cost_to_neighbour < neigh_td){
+                node_t_tentative_distance_set(neighbour, 
+                        curr_node_td + cost_to_neighbour);
             }
         }
     }
-    node_t_visited_set(graph + node_addr, true);
-    (graph + node_addr)->visited = true;
+    node_t_visited_set(current_node, true);
 }
 
 
@@ -162,8 +165,10 @@ uint16_t * trace_back(
         struct node_t *temp_node = current_node;
         for(uint8_t i = 0; i < number_of_paths; i++){
             struct node_t * checked_node = graph + ((current_node->paths) + i)->addr;
-            if(checked_node->tentative_distance <= smallest_td){
-                smallest_td = checked_node->tentative_distance;
+            uint16_t checked_node_td;
+            node_t_tentative_distance_get(checked_node, &checked_node_td);
+            if(checked_node_td <= smallest_td){
+                smallest_td = checked_node_td;
                 temp_node = checked_node; // here some temp node 
             }
         }
