@@ -1,17 +1,53 @@
 {
-   "sink":{
+   "node0":{
       "addr":0,
+      "x":250,
+      "y":0,
       "addr_bt_le":"C0:00:00:00:00:00",
       "reserved":true,
       "paths_size":2,
       "paths":[
          {
             "addr":1,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          },
          {
             "addr":4,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          }
       ]
    },
@@ -23,11 +59,45 @@
       "paths":[
          {
             "addr":0,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          },
          {
             "addr":2,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          }
       ]
    },
@@ -39,11 +109,45 @@
       "paths":[
          {
             "addr":1,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          },
          {
             "addr":4,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          }
       ]
    },
@@ -64,11 +168,45 @@
       "paths":[
          {
             "addr":2,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          },
          {
             "addr":0,
-            "distance":1
+            "cost":0,
+            "factors":[
+               {
+                  "name":"signal_str",
+                  "value":5,
+                  "factor":1
+               },
+               {
+                  "name":"phy_distance",
+                  "value":354,
+                  "factor":1
+               },
+               {
+                  "name":"missed_transmissions",
+                  "value":0,
+                  "factor":1
+               }
+            ]
          }
       ]
    }
