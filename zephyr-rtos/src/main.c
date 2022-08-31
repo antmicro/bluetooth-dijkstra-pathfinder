@@ -1,4 +1,5 @@
 #include <zephyr.h>
+// PZIE: remove commented lines
 //#include <device.h>
 //#include <devicetree.h>
 //#include <drivers/gpio.h>
@@ -13,7 +14,7 @@
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
 
-/* 1000 msec = 1 sec */
+/* 1000 msec = 1 sec */ // PZIE: Really? :P
 #define SLEEP_TIME_MS   1000
 
 /* Threads data */
@@ -45,13 +46,13 @@ void main(void)
     uint8_t graph_init_error_code = graph_init(graph);
     if(graph_init_error_code){
         printk("Graph initialization failed! \n");
-        return;
+        return; // PZIE: what happens on return? Shouldn't there be some assert?
     }
     
     /* Bluetooth setup */ 
     int err = bt_enable(NULL);
     if(err){
-        printk("BLE Initialization failed!\n");
+        printk("BLE Initialization failed!\n"); //PZIE: And move forward?
     }
 
     err = identify_self_in_graph(graph);
@@ -62,11 +63,11 @@ void main(void)
     struct bt_le_scan_param scan_params;
     ble_scan_setup(&scan_params);
     
-    printk("BUILT FOR %d NUMBER OF NODES\n", MAX_MESH_SIZE);
+    printk("BUILT FOR %d NUMBER OF NODES\n", MAX_MESH_SIZE); //PZIE: Why caps? What was build for N nodes?
 
     /* Create Bluetooth LE threads */
     struct k_thread send_data_packet_thread;
-    send_data_packet_thread_id = k_thread_create(&send_data_packet_thread, 
+    send_data_packet_thread_id = k_thread_create(&send_data_packet_thread,
             send_data_packet_thread_stack,
             K_THREAD_STACK_SIZEOF(send_data_packet_thread_stack),
             ble_send_data_packet_thread_entry,
@@ -83,7 +84,7 @@ void main(void)
             SEND_RT_THREAD_PRIO, 0, K_NO_WAIT);
     
     // Start counter that will add self to the routing table record propagation thread
-    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(2000), K_MSEC(60000)); 
+    k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(2000), K_MSEC(60000)); // PZIE: use defines, especially to name these params
 
     
     /* Bluetooth scanning */

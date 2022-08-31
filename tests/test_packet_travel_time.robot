@@ -6,8 +6,10 @@ Resource        ${RENODEKEYWORDS}
 Library         DateTime
 
 *** Variables ***
+PZIE: These are...
 # This are default values, they can be overwritten by a user by passing their
 # values as arguments when calling the test
+PZIE: I would add an example in the comment
 ${PROJECT_ROOT_DIR}=     ${CURDIR}/..
 ${SCRIPT_PATH}=       ${PROJECT_ROOT_DIR}/config-files/renode-resc-files/randomized_topology.resc
 ${LOG_PATH}=           ${PROJECT_ROOT_DIR}/tests/out/${NODES_NUM}nodes.log
@@ -24,6 +26,9 @@ Get Packet Travel Time
     # testing 
     Wait For Line On Uart     MOBILE BROADCASTER ADV START     timeout=1     testerId=0
     ${packet_sent}=     Get Current Date
+# PZIE I would recommend the following format (and consistent formatting in general)
+    #                   Wait For Line On Uart     MOBILE BROADCASTER ADV START     timeout=1     testerId=0
+    # ${packet_sent}=   Get Current Date
     Wait For Line On Uart     FINAL DESTINATION REACHED     timeout=1     testerId=1    
     ${packet_arrive}=     Get Current Date
 

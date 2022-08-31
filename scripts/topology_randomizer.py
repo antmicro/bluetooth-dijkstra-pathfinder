@@ -80,6 +80,7 @@ if args.visualize:
     net = Network('500px', '500px')
 
 
+# PZIE: Randmoly
 # Randmoly pick faulty nodes and keep track of their ids. We will remove them 
 # from the mesh before initializing .resc file to simulate faulty_nodes
 faulty_nodes_indexes = []
@@ -298,3 +299,4 @@ if args.verbose:
 
 
 
+# PZIE: whitespaces

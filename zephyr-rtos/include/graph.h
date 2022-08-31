@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kernel.h> // for k_k_malloc
+#include <kernel.h> // for k_k_malloc // PZIE: k_malloc?
 #include <bluetooth/addr.h>
 
-#define INF 65535
+#define INF 65535 // PZIE: If you're aiming for a "max number" then at least go with hex
 
 
 struct node_t{
@@ -23,7 +23,7 @@ struct node_t{
     struct path_t * paths;
 };
 
-
+// PZIE: I'd say this is a nice place to put comments in
 extern uint8_t common_self_mesh_id; 
 extern struct node_t graph[MAX_MESH_SIZE];
 

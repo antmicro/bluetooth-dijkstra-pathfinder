@@ -57,7 +57,7 @@ void main(void)
             return;
         }
 
-        k_msleep(50);
+        k_msleep(50); //PZIE where are these values from?
 
         err = bt_le_adv_stop();
         if (err) {
@@ -67,8 +67,8 @@ void main(void)
         printk("Advertised\n");
         
         k_msleep(100);
-        //mfg_data[5]++;
-    }while(true);
+        //mfg_data[5]++; // PZIE: what about this?
+    }while(true); // PZIE: formatting
 
     printk("MOBILE BROADCASTER ADV START\n");
 }

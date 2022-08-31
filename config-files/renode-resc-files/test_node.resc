@@ -15,6 +15,7 @@ connector Connect sysbus.radio wireless
 
 macro reset
 """
+#PZIE: did you mention it's a bug in Renode?
     mach set "test_node"
     sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
 """

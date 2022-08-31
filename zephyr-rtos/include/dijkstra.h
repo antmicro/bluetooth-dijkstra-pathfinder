@@ -13,6 +13,8 @@ struct node_container{
 // global variable updated with path after dijkstra algorithm  
 extern uint16_t * path; // TODO: make init function
 
+// PZIE: These could, actually, use a language check. But it's nice we have comments!
+// PZIE: what about these todos?
 /**
  * @brief Perform shortest path algorithm on graph, between start and dst adrresses.
  * Function locks graph mutex, reads and modifies graph members. 

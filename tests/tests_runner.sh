@@ -1,8 +1,12 @@
 #!/bin/bash
+#PZIE env
+
+#PZIE I honestly don't really know what is this about
 
 # fail script if one of the commands fails
 set -e
 
+# PZIE: This needs to be proofread
 USAGE="Script is automatic test runner for packet travel time measuring robot
 test. It runs a test and logs result to a file, until desired number of lines is
 reached. 
@@ -30,6 +34,7 @@ fi
 NODES_NUM=$1
 RENODE_ROOT_DIR=$2 #~/Repos/renode
 
+#PZIE: I honestly don't understand this
 # validate number of nodes
 # any numeric value evaluation operations using non-numbers will result in 
 # an error which will be implicitly considered as false in shell
@@ -103,7 +108,7 @@ do
         -- -DMAX_MESH_SIZE=$NODES_NUM \
         -DTOPOLOGY_CONFIG_PATH:STRING=$TOPOLOGY_CONFIG
     
-    # disable breaking the script when test fails, bcs some tests fail 
+    # disable breaking the script when test fails, bcs some tests fail  # PZIE : because
     # due to lack of connection between start and dst nodes (randomization is 
     # not perfect)
     set +e

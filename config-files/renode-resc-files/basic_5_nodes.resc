@@ -1,3 +1,6 @@
+# PZIE: this file is not in a releasable state
+#
+#
 ############################################################
 # This file is used for demonstration purposes and should 
 # not be modified or building process might break. If You 
@@ -10,7 +13,7 @@ logLevel 3
 emulation CreateBLEMedium "wireless"
 emulation SetGlobalQuantum "0.00001"
 emulation SetGlobalSerialExecution true
-emulation SetSeed 42
+emulation SetSeed 42 # PZIE: remove or comment
 emulation LogBLETraffic
 logLevel -1 wireless
 
@@ -125,6 +128,7 @@ wireless SetRangeWirelessFunction 550
 showAnalyzer sysbus.uart0
 
 
+# PZIE: this is wrong. Reset macro is machine specific. This would lead to reloading elf files for each machine when one is reset.
 macro reset
 """
     # mesh begin 
@@ -148,7 +152,7 @@ macro reset
 """
 
 i $ORIGIN/../../renode-commands/move_radio.py
-load_mb_path '/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/scripts/../config-files/mb-paths/square_corners_path.json'
+load_mb_path '/home/js/Projects/antmicro/bluetooth-dijkstra-pathfinder/scripts/../config-files/mb-paths/square_corners_path.json' # PZIE: your local path
 runMacro $reset
 start
 watch "move" 10000 

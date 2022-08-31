@@ -1,3 +1,5 @@
+#PZIE: accross the whole project - formatting
+# PZIE: a separate folder for a single command?
 import json
 import sys
 counter = 0
@@ -16,7 +18,7 @@ def mc_move():
      
     machine = monitor.Machine
     succ, wireless = emulationManager.Instance.CurrentEmulation.TryGetEmulationElementByName('wireless', machine)
-    succ, radio= emulationManager.Instance.CurrentEmulation.TryGetEmulationElementByName('sysbus.radio', machine)
+    succ, radio = emulationManager.Instance.CurrentEmulation.TryGetEmulationElementByName('sysbus.radio', machine)
     
     print(mobile_broadcaster_positions)
     x, y, z = mobile_broadcaster_positions[counter]

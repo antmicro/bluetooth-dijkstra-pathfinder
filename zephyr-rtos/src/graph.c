@@ -94,7 +94,7 @@ void graph_set_cost(struct node_t graph[],
 }
 
 
-// TODO: Should have some decay time, so the communication is retried
+// TODO: Should have some decay time, so the communication is retried //PZIE ?
 /*
 void node_update_missed_transmissions(struct node_t *node, 
         bool transmission_success){
@@ -106,17 +106,19 @@ void node_update_missed_transmissions(struct node_t *node,
 */
 
 
+//PZIE: Remove?
 uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions){
     float a = 0.5; 
-    float y = a * missed_transmissions * missed_transmissions + 1.0;
+    float y = a * missed_transmissions * missed_transmissions + 1.0; //PZIE: seems to be quite arbitrary?
     return (uint16_t)y;
 }
 
 
 /* Routing table propagation */
 void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_size) {
-    // First two fields in buffer are always the same and identify the node
+    // First two fields in buffer are always the same and identify the node 
     // with relation to which the rest of connections is made
+    // PZIE: in general, you lack at least trivial checking, e.g. if buffer is not null. I'd say it's low prio
     buffer[0] = node->addr;
     buffer[1] = node->paths_size;
 
@@ -134,7 +136,8 @@ void node_to_byte_array(struct node_t *node, uint8_t buffer[], uint8_t buffer_si
 
 size_t node_get_size_in_bytes(struct node_t *node) {
     // Check if the node is reserved
-    if(!node->reserved) return 0;
+    if(!node->reserved) return 0; //PZIE does it affect the _size_? Maybe this check should be elsewhere?
+                                  //PZIE: Hey, is this function even used?
     
     // Include only those fields that will be sent in routing table 
     size_t byte_size = sizeof(node->addr) + sizeof(node->paths_size) 
@@ -194,10 +197,10 @@ uint8_t identify_self_in_graph(struct node_t *graph){
     // get all configured identities 
     bt_addr_le_t identities[CONFIG_BT_ID_MAX];
     size_t *count = NULL;
-    bt_id_get(NULL, count); // when addrs=null count will be loaded with num of ids 
+    bt_id_get(NULL, count); // when addrs=null count will be loaded with num of ids //PZIE: I don't understand
     bt_id_get(identities, count);
     
-    char addr_str[129]; // TODO: extract printks 
+    char addr_str[129]; // TODO: extract printks  // PZIE: ??
 	bt_addr_le_to_str(&identities[0], addr_str, sizeof(addr_str));
     printk("Default identity: %s\n", addr_str);
     //printk("Value of DEVICEADDR[0] register: %u,\n", (NRF_FICR->DEVICEADDR[0]));

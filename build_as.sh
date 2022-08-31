@@ -1,7 +1,9 @@
 #!/bin/bash
+# PZIE: use env instead
 
 # fail the entire script if any of commands fails
 set -e 
+# PZIE: set -u is also a good idea
 
 VERSION=$1
 
@@ -62,7 +64,7 @@ case $VERSION in
   --random)
     echo "Building randomized version..."
 
-    # if randomized mesh specified, load also number of nodes to generate
+    # if randomized mesh specified, load also number of nodes to generate   # PZIE: do not refrain from using verbs in comments. It's not really readable
     if [ $# -lt 2 ] 
     then
         echo "Specify number of nodes!"
@@ -84,9 +86,10 @@ case $VERSION in
 
   *)
     echo "Specify correct application version to build:
-    --random       - build random topology, to reshuffle / randomize nodes provide also option --randomize 
+    --random       - build random topology, to reshuffle / randomize nodes provide also option --randomize   # PZIE: what does the end mean?
     --basic        - generate basic 5 nodes minimal topology and build 
     " 
     ;;
 esac
+
 

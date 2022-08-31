@@ -90,7 +90,7 @@ int dijkstra_shortest_path(
 
 uint8_t get_smallest_td_node(
         sys_slist_t * lst, struct node_container ** container_buffer){
-    // cleaer buffer
+    // cleaer buffer // PZIE: typo
     *container_buffer = NULL;
      
     // setup 
@@ -160,9 +160,9 @@ uint16_t * trace_back(
         uint8_t start_addr, 
         uint8_t dst_addr, 
         uint8_t * paths_len){
-    // array to store longest path possible TODO: make it better than that
+    // array to store longest path possible TODO: make it better than that // PZIE: either make or remove todo
     uint16_t * path = k_malloc(sizeof(uint16_t) * MAX_MESH_SIZE);
-    if(!path) return NULL;
+    if(!path) return NULL; //PZIE: hard fail instead
  
     // tracing back
     // setup
@@ -275,4 +275,4 @@ void print_slist(sys_slist_t * lst){
 
 
 
-
+// PZIE: Is something hidden here?

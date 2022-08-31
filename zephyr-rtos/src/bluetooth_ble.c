@@ -229,7 +229,7 @@ void ble_send_ack_thread_entry(
         }
         printk("Sending ACK to %d\n", ack_info.node_id);
         
-        k_msleep(ACK_ADV_TIME_MS);
+        k_msleep(ACK_ADV_TIME_MS); //PZIE: controversial
         
         err = bt_le_adv_stop();
         if(err) {
@@ -307,6 +307,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
     bin2hex(buf->data, buf->len, data, sizeof(data));
     bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
     
+    // PZIE #if 0 would be easier to unblock
     // Debug
     //static uint64_t messges_received_n = 0;
     //messges_received_n++;
@@ -334,7 +335,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
         // If packet was not received before, process it 
         if(!rcv_pkts_cb_is_in_cb(
                     &rcv_pkts_circular_buffer, &sender_info)) {
-            // Decrease a TTL counter for the packet for further processing
+            // Decrease a TTL counter for the packet for further processing //PZIE: why commented out? the comment suggests it's important!
             //ble_data[TTL_IDX]--;
 
             // Also add it to the recently received packets memory 
@@ -386,11 +387,11 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
                 case MSG_TYPE_ACK:
                     {
                         // Check if message's header content is correct 
-                        // with awaited
+                        // with awaited //PZIE: don't understand
                         ble_sender_info a_info;
                         err = k_msgq_peek(&awaiting_ack, &a_info);
                         if(err){
-                            // This can happen when ack was received and flag was removed already, it's okay.
+                            // This can happen when ack was received and flag was removed already, it's okay. //PZIE: so.... ERROR?
                             printk("ERROR: No info about awaited ack!\n");
                             printk("Data: %s\n", data);
                             return;
@@ -472,7 +473,7 @@ void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item) {
     // If head catches tail, shift tail and put it at the start if relapse
     // also decrease count, as one element was added with the cost of another 
     if(cb->head == cb->tail) {
-        printk("Hi\n");
+        printk("Hi\n");//PZIE G'day
         cb->tail++;
         cb->count--;
         if(cb->tail == cb->buff_end) cb->tail = cb->buff_start;
@@ -497,7 +498,7 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item) {
         if(
                 item->node_id == ptr->node_id && 
                 item->time_stamp == ptr->time_stamp &&
-                item->msg_type == ptr->msg_type) return true;        
+                item->msg_type == ptr->msg_type) return true;        //PZIE: :%s/\s\+$//e
         ptr++;
         if(ptr == cb->buff_end) ptr = cb->buff_start;
     }
@@ -534,7 +535,7 @@ uint16_t ble_get_packet_timestamp(uint8_t data[]){
 
 bool ble_wait_for_ack(int32_t timeout_ms) {
     int32_t time_remaining = k_msleep(timeout_ms);
-    printk("Time remaining %d\n", time_remaining);
+    printk("Time remaining %d\n", time_remaining); //PZIE: stretch goal - use Zephyr's logging infra
     return time_remaining > 0;
 }
 

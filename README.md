@@ -1,3 +1,5 @@
+### PZIE: didn't read, sorry. But I think we can have our graphics team redraw the images
+### PZIE: also please look into our repositories that have the antmicro open source badge - prepare your readme in a similar way
 # Bluetooth Dijkstra Pathfinder 
 This repository contains project files of custom Bluetooth ad - hoc mesh 
 implementation, with Dijkstra's as routing algorithm.

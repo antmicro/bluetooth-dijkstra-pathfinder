@@ -11,6 +11,7 @@ ${SCRIPT_PATH}=       ${PROJECT_ROOT_DIR}/config-files/renode-resc-files/basic_5
 
 *** Test Cases ***
 Test Data Packet Transmission 
+#PZIE: formatting
     Execute Script    ${SCRIPT_PATH}
     Create Terminal Tester    sysbus.uart0    machine=node2 
     Create Network Interface Tester    sysbus.radio    machine=node2
