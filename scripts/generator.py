@@ -11,7 +11,8 @@ template_graph_api_h = """
 #include <stdbool.h>
 #include <kernel.h> 
 #include <bluetooth/addr.h>
-#include "graph.h"
+
+#define MAX_MESH_SIZE {{ nodes_n }}
 
 {% for factor in factors -%}
 #define {{ factor.name.upper() }} {{ factor.factor }}
@@ -28,7 +29,6 @@ struct path_t {
     {% endfor -%}
 };
 
-uint8_t graph_init(struct node_t *graph);
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %});
 
 // Setters and getters respecting mutex access 
@@ -52,6 +52,7 @@ template_graph_api_c = """
 #include <bluetooth/addr.h>
 
 #include "../../include/graph_api_generated.h"
+#include "../../include/graph.h"
 
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %}) {
     return {% for factor in factors %}{% if loop.index0 != 0 %} + {% endif %}{{ factor.factor }} * {{ factor.name }}{% endfor %};
@@ -121,27 +122,33 @@ env = Environment()
 template_c = env.from_string(template_graph_api_c)
 template_h = env.from_string(template_graph_api_h)
 
+print("Running generator script...")
 print("Topology config file path:")
 print(config_file_path)
 with open(config_file_path, 'r') as config:
     nodes_config = json.loads(config.read())
+    nodes_n = len(nodes_config)
     
     # Get first element of paths of the first node, just as template for function
     cost_factors = list(nodes_config.values())[0]['paths'][0]['factors']
 
     out_c = template_c.render(nodes=nodes_config, factors=cost_factors)
-    out_h = template_h.render(factors=cost_factors)
+    out_h = template_h.render(factors=cost_factors, nodes_n=nodes_n)
 
 
 project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-target_file_c_path = os.path.join(project_dir, "zephyr-rtos/src/generated-src/graph_api_generated.c")
+target_file_c_path = os.path.join(project_dir, "node/src/generated-src/graph_api_generated.c")
 with open(target_file_c_path, 'w') as filehandle:
     for line in out_c:
         filehandle.write(line)
 
-target_file_h_path = os.path.join(project_dir, "zephyr-rtos/include/graph_api_generated.h")
+target_file_h_path = os.path.join(project_dir, "node/include/graph_api_generated.h")
 with open(target_file_h_path, 'w') as filehandle:
     for line in out_h:
         filehandle.write(line)
+
+print("Successfully generated:")
+print("    node/src/generated-src/graph_api_generated.c")
+print("    node/include/graph_api_generated.h")
 
 

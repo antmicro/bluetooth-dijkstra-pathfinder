@@ -14,7 +14,6 @@
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
 
-/* 1000 msec = 1 sec */ // PZIE: Really? :P
 #define SLEEP_TIME_MS   1000
 
 /* Threads data */

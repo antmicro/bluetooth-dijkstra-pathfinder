@@ -252,7 +252,7 @@ macro reset
     ###########################################################
     {% for node in nodes_temp %}
     mach set "{{ node }}"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
     {% endfor %}
 
     ###########################################################

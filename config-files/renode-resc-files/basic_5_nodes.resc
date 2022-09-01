@@ -134,16 +134,16 @@ macro reset
     # mesh begin 
 
     mach set "node0"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
     
     mach set "node1"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
 
     mach set "node2"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
 
     mach set "node4"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
     
     # mesh end
 

@@ -1,95 +1,110 @@
-#!/bin/bash
-# PZIE: use env instead
+#!/usr/bin/env bash
 
-# fail the entire script if any of commands fails
-set -e 
-# PZIE: set -u is also a good idea
+# fail the entire script if any of commands fails or if unset variable will be expanded
+set -eu
 
-VERSION=$1
+usage () {
+    echo "Usage: ./build_as.sh [BUILD CONFIGURATION] [OPTIONS]
+Build the application in one of supported configurations. Build process involves:
+* Generating a graph data structure in node/src/generated-src/graph_api_generated.c
+* API for handling this data structure
+* Compiling resultant code into an application
+Generation of graph data structure and in general mesh topology is based on the configuration files in config-files/mesh-topology-desc/*.json.
+    Build configurations:
+    --basic        - build basic 5 nodes configuration - config-files/mesh-topology-desc/basic_5_nodes.json
+    --random       - build random topology - config-files/mesh-topology-desc/randomized_topology.json
+    --input        - build from .json file with given name and located at config-files/mesh-topology-desc
 
-# project root directory
-PROJECT_ROOT_DIR=$PWD
+    Options:
+    --randomize    - reshuffles network for given number of nodes, only available with --random
 
-# mesh app dirs
-SRC_DIR=zephyr-rtos
-BUILD_DIR=zephyr-rtos/build
-
-# mobile broadcaster dirs
-MB_SRC_DIR=mobile_broadcaster
-MB_BUILD_DIR=mobile_broadcaster/build
-
-# config files dir
-CONFIG_FILES_DIR=$PROJECT_ROOT_DIR/config-files/mesh-topology-desc
-
-build_mobile_broadcaster () {
-    west build -b nrf52840dk_nrf52840 \
-        $MB_SRC_DIR\
-        -d $MB_BUILD_DIR
+    Example usage:
+    $ ./build_as.sh --basic                   # Build basic 5 nodes static configuration
+    $ ./build_as.sh --random                  # Build random configuration
+    $ ./build_as.sh --random --randomize 10   # Generate new configuration of the network for 10 nodes and build
+    $ ./build_as.sh --input example.json      # Build from user provided config file"
 }
 
+# At least configuration argument must be provided
+if [ $# -lt 1 ]; then
+    usage
+    exit 0
+fi
 
-build_randomized () {
-    if [ "$2" = "--randomize" ]; then
-        # randomize
-        python3 scripts/topology_randomizer.py $1 \
-            --mbmove \
-            --verbose \
-            --visualize \
-            --visualizemb \
-            --faulty_nodes 1
-    fi
+CONFIGURATION=$1
 
-    # build 
-    west build -b nrf52840dk_nrf52840 \
-        $SRC_DIR \
-        -d $BUILD_DIR \
-        -- -DMAX_MESH_SIZE=$1 \
-        -DMAX_TTL=3 \
-        -DTOPOLOGY_CONFIG_PATH:STRING=$CONFIG_FILES_DIR/randomized_topology.json
-}
-
-
-build_basic5node () {
-    west build -b nrf52840dk_nrf52840 \
-        $SRC_DIR \
-        -d $BUILD_DIR \
-        -- -DMAX_MESH_SIZE=5 \
-        -DMAX_TTL=3 \
-        -DTOPOLOGY_CONFIG_PATH:STRING=$CONFIG_FILES_DIR/basic_5_nodes.json 
-}
-
-
-# case statement for picking version to run
-case $VERSION in
+# case statement for picking configuration to run
+case $CONFIGURATION in
   --random)
-    echo "Building randomized version..."
-
-    # if randomized mesh specified, load also number of nodes to generate   # PZIE: do not refrain from using verbs in comments. It's not really readable
-    if [ $# -lt 2 ] 
-    then
-        echo "Specify number of nodes!"
+    TOPOLOGY_PATH="${PWD}/config-files/mesh-topology-desc/randomized_topology.json"
+    if [ $# -eq 3 ]; then
+        if [ "$2" == "--randomize" ]; then
+            RANDOMIZE=1
+            NODES_NUMBER=$3
+        else
+            usage
+            echo $"ERROR: Unrecognized argument: $2. Did You mean --randomize?"
+            exit 1
+        fi
+    else
+        RANDOMIZE=0
+    fi
+    if [ $# -eq 2 ]; then
+        usage
+        echo "ERROR: Invalid syntax for --random build."
         exit 1
     fi
-
-    # input validation is made in topology_randomizer script
-
-    build_randomized $2 $3
-    build_mobile_broadcaster
     ;;
 
   --basic)
-    echo "Building basic 5 nodes version..." 
+    TOPOLOGY_PATH="${PWD}/config-files/mesh-topology-desc/basic_5_nodes.json"
+    RANDOMIZE=0
+    ;;
 
-    build_basic5node
-    build_mobile_broadcaster
+  --input)
+    if [ $# -eq 2 ]; then
+        TOPOLOGY_PATH=${PWD}/config-files/mesh-topology-desc/${2}
+        if [ ! -f "$TOPOLOGY_PATH" ]; then
+            usage
+            echo $"ERROR: provided topology file: ${TOPOLOGY_PATH} does not exist."
+            exit 1
+        fi
+        RANDOMIZE=0
+    else
+        usage
+        echo $"ERROR: Provide name of the topology file."
+        exit 1
+    fi
     ;;
 
   *)
-    echo "Specify correct application version to build:
-    --random       - build random topology, to reshuffle / randomize nodes provide also option --randomize   # PZIE: what does the end mean?
-    --basic        - generate basic 5 nodes minimal topology and build 
-    " 
+    usage
+    echo "ERROR: Provide correct arguments."
+    exit 1
     ;;
 esac
+
+# Randomize / reshuffle number of nodes specified by user
+if [ $RANDOMIZE -eq 1 ]; then
+    python3 scripts/topology_randomizer.py $NODES_NUMBER \
+    --mbmove \
+    --verbose \
+    --visualize \
+    --visualizemb \
+    --faulty_nodes 1
+fi
+
+# Build network
+west build -b nrf52840dk_nrf52840 \
+        node/ \
+        -d node/build \
+        -- -DMAX_TTL=3 \
+        -DTOPOLOGY_CONFIG_PATH:STRING=$TOPOLOGY_PATH
+
+# Build mobile_broadcaster
+west build -b nrf52840dk_nrf52840 \
+        mobile_broadcaster \
+        -d mobile_broadcaster/build
+
 
 

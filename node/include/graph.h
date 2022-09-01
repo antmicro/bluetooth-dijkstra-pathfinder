@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kernel.h> // for k_k_malloc // PZIE: k_malloc?
+#include <kernel.h> 
 #include <bluetooth/addr.h>
+#include "graph_api_generated.h"
 
 #define INF 65535 // PZIE: If you're aiming for a "max number" then at least go with hex
 

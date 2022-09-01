@@ -152,7 +152,7 @@ Short description of arguments passed to build command (args after "--" are
 pased to CMake):
 * -b nrf52840dk_nrf52840 app was designed for nRF52840 chip.
 * SRC_DIR and BUILD_DIR are optional if command is not run from this 
-applications zephyr project root dir (/zephyr-rtos).
+applications zephyr project root dir (/node).
 * -DMAX_MESH_SIZE - defines a size of the mesh, it has to be declared here 
 as this is then included in build process as preprocessor #define and used in 
 the application extensively.
