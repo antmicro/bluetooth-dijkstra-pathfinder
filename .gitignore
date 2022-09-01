@@ -104,19 +104,19 @@ dkms.conf
 
 # ignore build dirs
 /dijkstra_shortest_path/build/
-/zephyr-rtos/build
+/node/build
 /mobile_broadcaster/build
 /build
 
 # auto generated files
-/zephyr-rtos/src/generated-src
-/zephyr-rtos/include/graph_api_generated.h
+/node/src/generated-src
+/node/include/graph_api_generated.h
 /config-files/mesh-topology-desc/randomized_topology.json
 /config-files/renode-resc-files/randomized_topology.resc
 /network_topology.html
 
 # caches
-/zephyr-rtos/.cache
+/node/.cache
 /mobile_broadcaster/.cache
 
 # swap files
