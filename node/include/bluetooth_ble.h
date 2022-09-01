@@ -24,7 +24,7 @@
 #define MSG_TYPE_ROUTING_TAB 0x2
 #define MSG_TYPE_ACK 0x3
 
-#define BROADCAST_ADDR 0x7F // 127
+#define BROADCAST_ADDR 0x7F	// 127
 
 #define BLE_DATA_MSG_LEN 8
 #define BLE_RTR_MSG_LEN 24
@@ -42,28 +42,26 @@
 extern k_tid_t send_data_packet_thread_id;
 
 // Global variable for starting the add_self_to_rtr_queue_timer
-extern struct k_timer add_self_to_rtr_queue_timer; 
+extern struct k_timer add_self_to_rtr_queue_timer;
 
 typedef struct {
-    uint8_t node_id;
-    uint16_t time_stamp;
-    uint8_t msg_type;
-}__attribute__((aligned(4))) ble_sender_info;
-
+	uint8_t node_id;
+	uint16_t time_stamp;
+	uint8_t msg_type;
+} __attribute__((aligned(4))) ble_sender_info;
 
 struct ble_packet_info {
-    uint8_t ble_data[BLE_DATA_MSG_LEN];
-    uint8_t resend_counter;
+	uint8_t ble_data[BLE_DATA_MSG_LEN];
+	uint8_t resend_counter;
 };
 
-
 typedef struct {
-    ble_sender_info *buff_start;
-    ble_sender_info *buff_end;
-    size_t capacity;
-    size_t count;
-    ble_sender_info *head;
-    ble_sender_info *tail;
+	ble_sender_info *buff_start;
+	ble_sender_info *buff_end;
+	size_t capacity;
+	size_t count;
+	ble_sender_info *head;
+	ble_sender_info *tail;
 } rcv_pkts_cb;
 
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
@@ -71,21 +69,17 @@ void ble_send_data_packet_thread_entry(struct node_t *graph);
 void ble_send_ack_thread_entry();
 void ble_send_rt_thread_entry(struct node_t *graph);
 
-
 // callbacks 
-void bt_msg_received_cb(
-        const struct bt_le_scan_recv_info *info,
-		      struct net_buf_simple *buf);
+void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
+			struct net_buf_simple *buf);
 
-void ble_scanned(
-        struct bt_le_ext_adv *adv,
-        struct bt_le_ext_adv_scanned_info *info);
+void ble_scanned(struct bt_le_ext_adv *adv,
+		 struct bt_le_ext_adv_scanned_info *info);
 
-void ble_sent(struct bt_le_ext_adv *adv, 
-        struct bt_le_ext_adv_sent_info *info);
+void ble_sent(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_sent_info *info);
 
 /* Utility functions */
-bool ble_is_receiver(uint8_t data[],uint8_t common_self_mesh_id);
+bool ble_is_receiver(uint8_t data[], uint8_t common_self_mesh_id);
 uint16_t ble_add_packet_timestamp(uint8_t data[]);
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
 
@@ -106,9 +100,9 @@ void add_self_to_rtr_queue(struct k_timer *timer);
     }
 // head and tail set to arr_ptr are overkill but its done for the buff
 
-void rcv_pkts_cb_push(rcv_pkts_cb *cb, ble_sender_info *item);
-void rcv_pkts_cb_pop(rcv_pkts_cb *cb);
-bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb *cb, ble_sender_info *item);
+void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item);
+void rcv_pkts_cb_pop(rcv_pkts_cb * cb);
+bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item);
 
 bool ble_wait_for_ack(int32_t timeout_ms);
 
@@ -116,12 +110,3 @@ void print_msgq_num_used(struct k_msgq *mq, char name[]);
 
 #define MSG_Q_NAME(mq) (#mq)
 #endif
-
-
-
-
-
-
-
-
-

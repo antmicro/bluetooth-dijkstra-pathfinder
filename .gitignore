@@ -114,6 +114,7 @@ dkms.conf
 /config-files/mesh-topology-desc/randomized_topology.json
 /config-files/renode-resc-files/randomized_topology.resc
 /network_topology.html
+./scripts/network_topology.html
 
 # caches
 /node/.cache

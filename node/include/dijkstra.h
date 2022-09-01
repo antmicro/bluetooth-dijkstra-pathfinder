@@ -3,15 +3,15 @@
 
 #include "../include/graph.h"
 
-#define DEBUG 
+#define DEBUG
 
-struct node_container{
-    sys_snode_t next_container_node_ptr;
-    struct node_t * node;
+struct node_container {
+	sys_snode_t next_container_node_ptr;
+	struct node_t *node;
 };
 
 // global variable updated with path after dijkstra algorithm  
-extern uint16_t * path; // TODO: make init function
+extern uint16_t *path;		// TODO: make init function
 
 // PZIE: These could, actually, use a language check. But it's nice we have comments!
 // PZIE: what about these todos?
@@ -28,11 +28,9 @@ extern uint16_t * path; // TODO: make init function
  *
  * @return 0 on succes -1 on failure.
  */
-int dijkstra_shortest_path(
-        struct node_t *graph,
-        uint8_t graph_size,
-        uint8_t start_addr,
-        uint8_t dst_addr);
+int dijkstra_shortest_path(struct node_t *graph,
+			   uint8_t graph_size,
+			   uint8_t start_addr, uint8_t dst_addr);
 
 /**
  * @brief Get the slist container with node that has the smallest tentative_distance 
@@ -45,12 +43,11 @@ int dijkstra_shortest_path(
  *
  * @return 0 if node was found and 1 if list is empty.
  */
-uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** container_buffer);
-
+uint8_t get_smallest_td_node(sys_slist_t * lst,
+			     struct node_container **container_buffer);
 
 // get to a node, iterate thorugh its neighbours, check if path thorugh current node is smaller
 // than current tentative_distance of a neighbour
-
 
 /**
  * @brief Checks a node's neighbours if their tentative_distance is smaller through
@@ -58,15 +55,11 @@ uint8_t get_smallest_td_node(sys_slist_t * lst, struct node_container ** contain
  *
  * @param node_addr
  */
-void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph); 
+void recalculate_td_for_neighbours(uint8_t node_addr, struct node_t *graph);
 
 // need initialized memory heap
-uint16_t * trace_back(
-        struct node_t *graph,
-        uint8_t start_addr, 
-        uint8_t dst_addr, 
-        uint8_t * paths_len);
-
+uint16_t *trace_back(struct node_t *graph,
+		     uint8_t start_addr, uint8_t dst_addr, uint8_t * paths_len);
 
 /**
  * @brief Create a list of nodes for search, excluding starting node. List is single
@@ -80,9 +73,8 @@ uint16_t * trace_back(
  *
  * @return 
  */
-uint8_t create_unvisited_slist(struct node_t *graph, 
-        uint8_t graph_size, sys_slist_t * lst);
-
+uint8_t create_unvisited_slist(struct node_t *graph,
+			       uint8_t graph_size, sys_slist_t * lst);
 
 /**
  * @brief Free unvisited list from remaining members.
@@ -91,16 +83,16 @@ uint8_t create_unvisited_slist(struct node_t *graph,
  */
 void free_slist(sys_slist_t * lst);
 
-
 /**
  * @brief Removes a member from a list and frees a memory k_malloced for node container.
  *
  * @param lst list to remove a member.
  * @param node_to_remove member to remove.
  */
-void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container ** node_to_remove);
+void remove_unvisited_slist_member(sys_slist_t * lst,
+				   struct node_container **node_to_remove);
 
-#ifdef DEBUG 
+#ifdef DEBUG
 
 /**
  * @brief Print addresses of nodes contained in the list.
@@ -110,4 +102,4 @@ void remove_unvisited_slist_member(sys_slist_t * lst, struct node_container ** n
 void print_slist(sys_slist_t * lst);
 
 #endif
-#endif 
+#endif
