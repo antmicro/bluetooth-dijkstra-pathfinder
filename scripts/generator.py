@@ -141,12 +141,15 @@ with open(config_file_path, "r") as config:
 
 
 target_file_c_path = "node/src/generated-src/graph_api_generated.c"
-
+if not os.path.exists(target_file_c_path):
+    os.makedirs(os.path.dirname(target_file_c_path), exist_ok=True) 
 with open(target_file_c_path, "w") as filehandle:
     for line in out_c:
         filehandle.write(line)
 
 target_file_h_path = "node/include/graph_api_generated.h"
+if not os.path.exists(target_file_h_path):
+    os.makedirs(os.path.dirname(target_file_h_path), exist_ok=True)
 with open(target_file_h_path, "w") as filehandle:
     for line in out_h:
         filehandle.write(line)
