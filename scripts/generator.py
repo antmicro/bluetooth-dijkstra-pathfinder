@@ -4,6 +4,11 @@ import sys
 from jinja2 import Environment
 
 template_graph_api_h = """
+/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY 
+ * Check Your build options (arguments passed to build_as.sh script) and change
+ * proper config-files/mesh-topology-desc/*.json file. 
+ */
+
 #ifndef GRAPH_API_GENERATED_H 
 #define GRAPH_API_GENERATED_H
 
