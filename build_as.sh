@@ -18,14 +18,12 @@ Generation of graph data structure and in general mesh topology is based on the 
 
     Options:
     -s        - shuffles network for given number of nodes, only available with -r
-    -a        - enable or disable assertions in Zephyr build, available values: 0, 1, 2 with default 1
 
     Example usage:
     $ ./build_as.sh -b                   # Build basic 5 nodes static configuration
     $ ./build_as.sh -r                   # Build random configuration
     $ ./build_as.sh -r -s 10             # Generate new configuration of the network for 10 nodes and build
     $ ./build_as.sh -i example.json      # Build from user provided config file
-    $ ./build_as.sh -b -a 1              # Build with asserts
     "
 }
 
@@ -36,10 +34,9 @@ if [ $# -lt 1 ]; then
 fi
 
 RANDOMIZE=0
-ASSERT_LEVEL=1
 NODES_NUMBER=0
 CONFIGURATION= # May have values b, r, i
-while getopts "bri:s:a:" opt
+while getopts "bri:s:" opt
 do
     case $opt in
         # Build configurations
@@ -75,9 +72,6 @@ do
         s)
             RANDOMIZE=1
             NODES_NUMBER=$OPTARG
-            ;;
-        a)
-            ASSERT_LEVEL=$OPTARG
             ;;
         *)
             usage
@@ -116,13 +110,11 @@ west build -b nrf52840dk_nrf52840 \
         node/ \
         -d node/build \
         -- -DMAX_TTL=3 \
-        -D__ASSERT_ON=$ASSERT_LEVEL
 
 # Build mobile_broadcaster
 west build -b nrf52840dk_nrf52840 \
         mobile_broadcaster \
         -d mobile_broadcaster/build \
-        -D__ASSERT_ON=$ASSERT_LEVEL
 
 
 
