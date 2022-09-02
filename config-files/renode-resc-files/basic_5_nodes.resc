@@ -18,7 +18,6 @@ logLevel -1 wireless
 
 
 # mesh begin
-
 #############################################################
 # sink
 mach add "node0"
@@ -26,7 +25,6 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
 # set unique identification address
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000000 false
-
 
 # Wireless
 connector Connect sysbus.radio wireless
@@ -36,19 +34,8 @@ wireless SetRangeWirelessFunction 490
 # analyzers
 showAnalyzer sysbus.uart0
 
-# logging
-#logLevel -1 sysbus.radio
-#logLevel -1 sysbus.ppi
-#logLevel -1 sysbus.rtc0
-#logLevel -1 sysbus.timer0
-#logLevel -1 sysbus.timer1
-#logLevel -1 sysbus.nvic
-#sysbus LogPeripheralAccess sysbus.nvic
-#sysbus LogPeripheralAccess sysbus.ppi
-#sysbus LogPeripheralAccess sysbus.rtc0
-#sysbus LogPeripheralAccess sysbus.timer0
-#sysbus LogPeripheralAccess sysbus.timer1
-#sysbus LogPeripheralAccess sysbus.radio
+# Load binaries
+sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
 
 #############################################################
 
@@ -59,7 +46,6 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 # set unique identification address
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000001 false
 
-
 # Wireless
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 0 250 0
@@ -68,13 +54,14 @@ wireless SetRangeWirelessFunction 490
 # analyzers
 showAnalyzer sysbus.uart0
 
+# Load binaries
+sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
+
 #############################################################
 
 mach add "node2"
 mach set "node2"
 machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
-
-machine StartGdbServer 3333
 
 # set unique identification address
 sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000002 false
@@ -84,14 +71,13 @@ connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 250 500 0
 wireless SetRangeWirelessFunction 490
 
-# Log
-#logLevel -1 sysbus.radio
-#sysbus LogPeripheralAccess sysbus.radio
-
 # analyzers
 showAnalyzer sysbus.uart0
 
 logLevel 1 sysbus.uart0
+
+# Load binaries
+sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
 
 #############################################################
 
@@ -110,6 +96,9 @@ wireless SetRangeWirelessFunction 490
 # analyzers
 showAnalyzer sysbus.uart0
 
+# Load binaries
+sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
+
 ###########################################################
 # mesh end
 
@@ -126,33 +115,11 @@ wireless SetRangeWirelessFunction 550
 # analyzers
 showAnalyzer sysbus.uart0
 
-
-# PZIE: this is wrong. Reset macro is machine specific. This would lead to reloading elf files for each machine when one is reset.
-macro reset
-"""
-    # mesh begin
-
-    mach set "node0"
-    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
-
-    mach set "node1"
-    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
-
-    mach set "node2"
-    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
-
-    mach set "node4"
-    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
-
-    # mesh end
-
-    mach set "mobile_broadcaster"
-    sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
-"""
+# Load binaries
+sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
 
 i $ORIGIN/../../scripts/renode_commands.py
 load_mb_path $ORIGIN/../mb-paths/square_corners_path.json
-runMacro $reset
 start
 watch "move" 10000
 

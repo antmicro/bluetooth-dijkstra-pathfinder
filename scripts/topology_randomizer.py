@@ -252,7 +252,11 @@ connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio {{ nodes_temp[node]['x'] }} {{ nodes_temp[node]['y'] }} 0
 wireless SetRangeWirelessFunction {{ radio_range }}
 
+# Show uart 
 showAnalyzer sysbus.uart0
+
+# Load binaries
+sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
 {% endfor %}
 
 ###########################################################
@@ -267,26 +271,7 @@ showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 0 0 0
 wireless SetRangeWirelessFunction {{ radio_range }}
-
-macro reset
-\"\"\"
-    pause
-
-    # mesh begin
-    ###########################################################
-    {% for node in nodes_temp %}
-    mach set "{{ node }}"
-    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
-    {% endfor %}
-
-    ###########################################################
-    # mesh end
-
-    mach set "mobile_broadcaster"
-    sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
-
-\"\"\"
-runMacro $reset
+sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
 
 {{ "i $ORIGIN/../../scripts/renode_commands.py" if include_mbmove }}
 {{ "# Included here ^ Renode command written in Python" if include_mbmove }}
