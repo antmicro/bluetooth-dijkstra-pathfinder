@@ -13,11 +13,7 @@ sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" 0x0000000000 false
 # Wireless
 connector Connect sysbus.radio wireless
 
-macro reset
-"""
-#PZIE: did you mention it's a bug in Renode?
-    mach set "test_node"
-    sysbus LoadELF $ORIGIN/../../zephyr-rtos/build/zephyr/zephyr.elf 
-"""
+sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
+
 runMacro $reset
 start
