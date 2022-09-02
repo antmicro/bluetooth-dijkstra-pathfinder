@@ -84,7 +84,8 @@ case $CONFIGURATION in
     ;;
 esac
 
-# Randomize / reshuffle number of nodes specified by user
+# Randomize / reshuffle number of nodes specified by user and generate 
+# corresponding .json topology and .resc file
 if [ $RANDOMIZE -eq 1 ]; then
     python3 scripts/topology_randomizer.py $NODES_NUMBER \
     --mbmove \
@@ -94,12 +95,14 @@ if [ $RANDOMIZE -eq 1 ]; then
     --faulty_nodes 1
 fi
 
+# Generate graph and API 
+python3 scripts/generator.py $TOPOLOGY_PATH
+
 # Build network
 west build -b nrf52840dk_nrf52840 \
         node/ \
         -d node/build \
         -- -DMAX_TTL=3 \
-        -DTOPOLOGY_CONFIG_PATH:STRING=$TOPOLOGY_PATH
 
 # Build mobile_broadcaster
 west build -b nrf52840dk_nrf52840 \
