@@ -1,12 +1,6 @@
 #include <zephyr.h>
-// PZIE: remove commented lines
-//#include <device.h>
-//#include <devicetree.h>
-//#include <drivers/gpio.h>
 #include <sys/printk.h>
-//#include <usb/usb_device.h>
 #include <drivers/uart.h>
-//#include <string.h>
 #include <drivers/hwinfo.h>
 #include <device.h>
 
@@ -14,55 +8,59 @@
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
 
-#define SLEEP_TIME_MS   1000
+// Rtr timings
+#define RTR_TIMER_START_DELAY 2000
+#define RTR_TIMER_PERIOD      60000
 
-/* Threads data */
+// Threads data
 #define SEND_DATA_PACKET_THREAD_S_SIZE 1024
-#define SEND_DATA_PACKET_THREAD_PRIO 2
+#define SEND_DATA_PACKET_THREAD_PRIO   2
 K_THREAD_STACK_DEFINE(send_data_packet_thread_stack,
 		      SEND_DATA_PACKET_THREAD_S_SIZE);
 
 #define SEND_ACK_THREAD_S_SIZE 1024
-#define SEND_ACK_THREAD_PRIO 1
+#define SEND_ACK_THREAD_PRIO   1
 K_THREAD_STACK_DEFINE(send_ack_thread_stack, SEND_ACK_THREAD_S_SIZE);
 
-#define SEND_RT_THREAD_S_SIZE 1024
-#define SEND_RT_THREAD_PRIO 6
-K_THREAD_STACK_DEFINE(send_rt_thread_stack, SEND_RT_THREAD_S_SIZE);
+#define SEND_RTR_THREAD_S_SIZE 1024
+#define SEND_RTR_THREAD_PRIO   6
+K_THREAD_STACK_DEFINE(send_rtr_thread_stack, SEND_RTR_THREAD_S_SIZE);
 
 K_THREAD_DEFINE(send_ack_thread, SEND_ACK_THREAD_S_SIZE,
 		ble_send_ack_thread_entry, NULL, NULL, NULL,
 		SEND_ACK_THREAD_PRIO, 0, 0);
 
+// Timer to add current node to rtr propagation
+K_TIMER_DEFINE(add_self_to_rtr_queue_timer, add_self_to_rtr_queue, NULL);
+
+// Global variable so that other threads or IRQs can wake it up when necessary
 k_tid_t send_data_packet_thread_id;
+
+// Global data structure containing mesh information
 struct node_t graph[MAX_MESH_SIZE];
 
 void main(void)
 {
-	/* Graph Initialization */
-	uint8_t graph_init_error_code = graph_init(graph);
-	if (graph_init_error_code) {
-		printk("Graph initialization failed! \n");
-		return;		// PZIE: what happens on return? Shouldn't there be some assert?
-	}
+	int err;
+	// Graph Initialization
+	err = graph_init(graph);
+	__ASSERT(err == 0, "ERROR: Graph initialization failed (err %d)\n",
+		 err);
+	printk("Mesh contains %d nodes.\n", MAX_MESH_SIZE);
 
-	/* Bluetooth setup */
-	int err = bt_enable(NULL);
-	if (err) {
-		printk("BLE Initialization failed!\n");	//PZIE: And move forward?
-	}
+	// Bluetooth setup
+	err = bt_enable(NULL);
+	__ASSERT(err == 0, "ERROR: BLE initialization failed (err %d)\n", err);
 
+	// Assign mesh id to self
 	err = identify_self_in_graph(graph);
-	if (err) {
-		printk("BLE self identification failed!\n");
-	}
+	__ASSERT(err == 0, "ERROR: Could not identify self in graph (err %d)\n",
+		 err);
 
 	struct bt_le_scan_param scan_params;
 	ble_scan_setup(&scan_params);
 
-	printk("BUILT FOR %d NUMBER OF NODES\n", MAX_MESH_SIZE);	//PZIE: Why caps? What was build for N nodes?
-
-	/* Create Bluetooth LE threads */
+	// Create Bluetooth LE threads
 	struct k_thread send_data_packet_thread;
 	send_data_packet_thread_id = k_thread_create(&send_data_packet_thread,
 						     send_data_packet_thread_stack,
@@ -74,32 +72,22 @@ void main(void)
 						     0, K_NO_WAIT);
 	k_thread_name_set(&send_data_packet_thread, "send_data_packet_thread");
 
-	struct k_thread send_rt_thread;
-	k_tid_t send_rt_thread_id = k_thread_create(&send_rt_thread,
-						    send_rt_thread_stack,
-						    K_THREAD_STACK_SIZEOF
-						    (send_rt_thread_stack),
-						    ble_send_rt_thread_entry,
-						    &graph, NULL, NULL,
-						    SEND_RT_THREAD_PRIO, 0,
-						    K_NO_WAIT);
+	struct k_thread send_rtr_thread;
+	k_thread_create(&send_rtr_thread,
+			send_rtr_thread_stack,
+			K_THREAD_STACK_SIZEOF
+			(send_rtr_thread_stack),
+			ble_send_rtr_thread_entry,
+			&graph, NULL, NULL, SEND_RTR_THREAD_PRIO, 0, K_NO_WAIT);
 
-	// Start counter that will add self to the routing table record propagation thread
-	k_timer_start(&add_self_to_rtr_queue_timer, K_MSEC(2000), K_MSEC(60000));	// PZIE: use defines, especially to name these params
+	// Start counter that will add this node (self) to the routing table record
+	// propagation thread to send to neighbors
+	k_timer_start(&add_self_to_rtr_queue_timer,
+		      K_MSEC(RTR_TIMER_START_DELAY), K_MSEC(RTR_TIMER_PERIOD));
 
-	/* Bluetooth scanning */
+	// Bluetooth scanning
 	err = bt_le_scan_start(&scan_params, NULL);
 	if (err) {
 		printk("BLE scan error code: %d\n", err);
-	}
-
-	/* Debug */
-	while (1) {
-		const struct device *dev;
-		dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-
-		//thread_analyzer_print();
-
-		k_msleep(SLEEP_TIME_MS);
 	}
 }

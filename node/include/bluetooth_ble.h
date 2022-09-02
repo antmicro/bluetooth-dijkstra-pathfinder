@@ -67,7 +67,7 @@ typedef struct {
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 void ble_send_data_packet_thread_entry(struct node_t *graph);
 void ble_send_ack_thread_entry();
-void ble_send_rt_thread_entry(struct node_t *graph);
+void ble_send_rtr_thread_entry(struct node_t *graph);
 
 // callbacks 
 void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
@@ -108,5 +108,5 @@ bool ble_wait_for_ack(int32_t timeout_ms);
 
 void print_msgq_num_used(struct k_msgq *mq, char name[]);
 
-#define MSG_Q_NAME(mq) (#mq)
+#define VAR_NAME(mq) (#mq)
 #endif

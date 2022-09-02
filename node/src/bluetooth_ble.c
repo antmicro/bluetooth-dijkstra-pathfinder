@@ -7,7 +7,6 @@
 #include "../include/bluetooth_ble.h"
 #include "../include/graph_api_generated.h"
 
-/* Queues for message passing and processing */
 // Holds single instance of info about awaited ack message
 K_MSGQ_DEFINE(awaiting_ack, sizeof(ble_sender_info), 1, 4);
 
@@ -16,24 +15,18 @@ K_MSGQ_DEFINE(ack_receivers_q, sizeof(ble_sender_info), 10, 4);
 K_MSGQ_DEFINE(data_packets_to_send_q, sizeof(struct ble_packet_info), 10, 4);
 K_MSGQ_DEFINE(rtr_packets_to_send_q, BLE_RTR_MSG_LEN, 10, 4);
 
-// Queue for messages to send
-K_MSGQ_DEFINE(ready_packets_to_send_q, BLE_DATA_MSG_LEN, 10, 4);
-
-K_MUTEX_DEFINE(ble_send_mutex);
+K_MUTEX_DEFINE(ble_dev_mutex);
 K_MUTEX_DEFINE(graph_mutex);
-
-K_TIMER_DEFINE(add_self_to_rtr_queue_timer, add_self_to_rtr_queue, NULL);
-//K_TIMER_DEFINE(pop_from_cb_timer, , NULL);
 
 // Static initialization of circular buffer with recently received packets
 RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 10);
 
-/* Setup functions */
+
 void ble_scan_setup(struct bt_le_scan_param *scan_params)
 {
 	*(scan_params) = (struct bt_le_scan_param) {
 		.type = BT_LE_SCAN_TYPE_PASSIVE,
-		.options = BT_LE_SCAN_OPT_NONE,	//BT_LE_SCAN_OPT_CODED | 
+		.options = BT_LE_SCAN_OPT_NONE,	//BT_LE_SCAN_OPT_CODED |
 		.interval = 0x0060,
 		.window = 0x0060
 	};
@@ -45,38 +38,36 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params)
 	bt_le_scan_cb_register(&scan_callbacks);
 }
 
-/* Thread entries */
+// Thread entries
 void ble_send_data_packet_thread_entry(struct node_t *graph)
 {
 	while (1) {
-		// Reserved memory for data and array for sending by BLE
-		static struct ble_packet_info pkt_info;
-		static struct bt_data ad_arr[] = {
+		struct ble_packet_info pkt_info;
+		struct bt_data ad_arr[] = {
 			BT_DATA(0xAA, pkt_info.ble_data, BLE_DATA_MSG_LEN)
 		};
+		int err;
 
 		// Get the packet content from the queue
-		int err =
-		    k_msgq_get(&data_packets_to_send_q, &pkt_info, K_FOREVER);
-		if (err) {
-			printk("ERROR: reading from queue: %d \n!\n", err);
-			return;
-		}
+		err = k_msgq_get(&data_packets_to_send_q, &pkt_info, K_FOREVER);
+        __ASSERT(err == 0, "ERROR: Could not get data from data packets messageq (err %d)\n", err);
 
-		/* Message preparation */
+		// Message preparation
 		// Calculate shortest path with Dijkstra algorithm
 		uint8_t dst_mesh_id = pkt_info.ble_data[DST_ADDR_IDX];
 		int next_node_mesh_id =
 		    dijkstra_shortest_path(graph, MAX_MESH_SIZE,
 					   common_self_mesh_id,
 					   dst_mesh_id);
+        // TODO: give some hints on why it failed and handle different scenarios
+        // It may fail because there is no path or there is some critical error
 		if (next_node_mesh_id < 0) {
-			printk("ERROR: Dijkstra algorithm failed.\n");
+			printk("ERROR: Dijkstra algorithm failed (err %d)\n", next_node_mesh_id);
 			continue;
 		}
 		printk("Next hop: %d\n", next_node_mesh_id);
 
-		// Header settings 
+		// Header settings
 		pkt_info.ble_data[SENDER_ID_IDX] = common_self_mesh_id;
 		pkt_info.ble_data[RCV_ADDR_IDX] = next_node_mesh_id;
 		pkt_info.ble_data[TTL_IDX] = 0x01;	// one jump allowed
@@ -89,36 +80,30 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 			.time_stamp = timestamp,
 			.msg_type = 0x0	// Unused here
 		};
-
-		printk("Awaiting for ack from node %d and with timestamp: %d\n",
-		       next_node_mesh_id, timestamp);
 		err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
-		print_msgq_num_used(&awaiting_ack, MSG_Q_NAME(awaiting_ack));
+        __ASSERT_MSG_INFO("ERROR: Failed to put into awaiting_ack q (err %d)\n", err);
+		printk("Awaiting for ack from node %d and with timestamp: %d\n",
+		       ack_info.node_id, ack_info.time_stamp);
 
-		if (err) {
-			printk
-			    ("ERROR: Failed to put into awaiting_ack q : %d.\n",
-			     err);
-			return;
-		}
+        // Print how much free space left in the queue
+        print_msgq_num_used(&awaiting_ack, VAR_NAME(awaiting_ack));
+
 		// Init adv params
-		static struct bt_le_adv_param adv_tx_params =
+		struct bt_le_adv_param adv_tx_params =
 		    BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_IDENTITY,
 					 BT_GAP_ADV_FAST_INT_MIN_1,
 					 BT_GAP_ADV_FAST_INT_MAX_1,
 					 NULL);
 
 		// Lock the ble device
-		k_mutex_lock(&ble_send_mutex, K_FOREVER);
+		k_mutex_lock(&ble_dev_mutex, K_FOREVER);
 
-		/* Sending a data message */
+		// Sending a data message
 		err = bt_le_adv_start(&adv_tx_params,
 				      ad_arr, ARRAY_SIZE(ad_arr), NULL, 0);
-		if (err) {
-			printk("ERROR: could not start advertising : %d\n",
-			       err);
-			return;
-		}
+        // In general there should be no errors in handling BLE device
+        // so we do not recover if one occurs
+        __ASSERT(err == 0, "ERROR: could not start advertising (err %d)\n", err);
 		printk("Started advertising a data packet.\n");
 
 		// Wait for ack
@@ -126,14 +111,11 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		bool got_ack = time_left > 0;
 
 		err = bt_le_adv_stop();
-		if (err) {
-			printk("ERROR: Failed to stop advertising %d.\n", err);
-			return;
-		}
+		__ASSERT(err == 0, "ERROR: Failed to stop advertising (err %d)\n", err);
 		printk("Finished advertising a data packet.\n");
 
-		// Release the device for ack thread to use 
-		k_mutex_unlock(&ble_send_mutex);
+		// Release the device for ack thread or rtr thread to use
+		k_mutex_unlock(&ble_dev_mutex);
 
 		pkt_info.resend_counter++;
 		printk("Resend counter: %d\n", pkt_info.resend_counter);
@@ -175,7 +157,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 				k_msgq_put(&data_packets_to_send_q,
 					   pkt_info.ble_data, K_NO_WAIT);
 			print_msgq_num_used(&data_packets_to_send_q,
-					    MSG_Q_NAME(data_packets_to_send_q));
+					    VAR_NAME(data_packets_to_send_q));
 		}
 		// Wait for the other node acknowledging to finish to so that not to 
 		// flood it with new messages
@@ -226,7 +208,7 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2, void *unused3)
 
 		// Advertise 
 		// Lock the ble device
-		k_mutex_lock(&ble_send_mutex, K_FOREVER);
+		k_mutex_lock(&ble_dev_mutex, K_FOREVER);
 
 		err = bt_le_adv_start(&adv_tx_params,
 				      ad_arr, ARRAY_SIZE(ad_arr), NULL, 0);
@@ -247,11 +229,11 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2, void *unused3)
 		printk("Finished advertising ACK\n");
 
 		// Unlock to allow data sending thread to use BLE
-		k_mutex_unlock(&ble_send_mutex);
+		k_mutex_unlock(&ble_dev_mutex);
 	}
 }
 
-void ble_send_rt_thread_entry(struct node_t *graph)
+void ble_send_rtr_thread_entry(struct node_t *graph)
 {
 	while (true) {
 		static uint8_t ble_data[BLE_RTR_MSG_LEN] = { 0 };
@@ -275,7 +257,7 @@ void ble_send_rt_thread_entry(struct node_t *graph)
 					 BT_GAP_ADV_FAST_INT_MAX_1,
 					 NULL);
 
-		k_mutex_lock(&ble_send_mutex, K_FOREVER);
+		k_mutex_lock(&ble_dev_mutex, K_FOREVER);
 		err = bt_le_adv_start(&adv_tx_params,
 				      add_arr, ARRAY_SIZE(add_arr), NULL, 0);
 		if (err) {
@@ -297,7 +279,7 @@ void ble_send_rt_thread_entry(struct node_t *graph)
 			return;
 		}
 		printk("Finished advertising rtr\n");
-		k_mutex_unlock(&ble_send_mutex);
+		k_mutex_unlock(&ble_dev_mutex);
 	}
 }
 
@@ -374,7 +356,7 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 							       K_NO_WAIT);
 						print_msgq_num_used
 						    (&ack_receivers_q,
-						     MSG_Q_NAME
+						     VAR_NAME
 						     (ack_receivers_q));
 						if (err) {
 							printk
@@ -404,7 +386,7 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 						       &pkt_info, K_NO_WAIT);
 					print_msgq_num_used
 					    (&data_packets_to_send_q,
-					     MSG_Q_NAME
+					     VAR_NAME
 					     (data_packets_to_send_q));
 					if (err) {
 						printk
@@ -466,7 +448,7 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 						       ble_data, K_NO_WAIT);
 					print_msgq_num_used
 					    (&rtr_packets_to_send_q,
-					     MSG_Q_NAME(rtr_packets_to_send_q));
+					     VAR_NAME(rtr_packets_to_send_q));
 					if (err) {
 						printk
 						    ("ERROR: Could not put to RTR to send queue %d \n",
@@ -500,7 +482,7 @@ void add_self_to_rtr_queue(struct k_timer *timer)
 	printk("Putting the self rtr to send queue.\n");
 	int err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
 	print_msgq_num_used(&rtr_packets_to_send_q,
-			    MSG_Q_NAME(rtr_packets_to_send_q));
+			    VAR_NAME(rtr_packets_to_send_q));
 	if (err) {
 		printk("ERROR: Could not put the self RTR to send queue %d\n",
 		       err);
