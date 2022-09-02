@@ -7,18 +7,6 @@ SET(MAX_TTL "9" CACHE STRING "Define max time to live for a packet.")
 SET(TOPOLOGY_CONFIG_PATH "" CACHE STRING 
     "Pass path to topology .json file to c file generator")
 
-# add a custom build target 
-add_custom_target(generator ALL)
-
-# attach command to it
-add_custom_command(
-  TARGET generator
-  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generator.py ${TOPOLOGY_CONFIG_PATH} 
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../${TOPOLOGY_CONFIG_PATH}
-  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/generated-src/graph_api_generated.c
-  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/include/graph_api_generated.h
-  VERBATIM)
-
 set(BOARD nrf52840dk_nrf52840)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
@@ -28,9 +16,6 @@ target_include_directories(app PUBLIC ${include})
 
 # build with max mesh size and max ttl specified as preprocessor #define
 target_compile_definitions(app PUBLIC MAX_TTL=${MAX_TTL})
-
-# add dependency between app target and generator target 
-add_dependencies(app generator)
 
 target_sources(app PRIVATE 
     src/main.c
