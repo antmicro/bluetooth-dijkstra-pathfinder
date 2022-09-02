@@ -36,7 +36,7 @@ CONFIGURATION=$1
 # case statement for picking configuration to run
 case $CONFIGURATION in
   --random)
-    TOPOLOGY_PATH="${PWD}/config-files/mesh-topology-desc/randomized_topology.json"
+    TOPOLOGY_PATH="config-files/mesh-topology-desc/randomized_topology.json"
     if [ $# -eq 3 ]; then
         if [ "$2" == "--randomize" ]; then
             RANDOMIZE=1
@@ -57,13 +57,13 @@ case $CONFIGURATION in
     ;;
 
   --basic)
-    TOPOLOGY_PATH="${PWD}/config-files/mesh-topology-desc/basic_5_nodes.json"
+    TOPOLOGY_PATH="config-files/mesh-topology-desc/basic_5_nodes.json"
     RANDOMIZE=0
     ;;
 
   --input)
     if [ $# -eq 2 ]; then
-        TOPOLOGY_PATH=${PWD}/config-files/mesh-topology-desc/${2}
+        TOPOLOGY_PATH=config-files/mesh-topology-desc/${2}
         if [ ! -f "$TOPOLOGY_PATH" ]; then
             usage
             echo $"ERROR: provided topology file: ${TOPOLOGY_PATH} does not exist."

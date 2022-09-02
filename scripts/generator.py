@@ -112,10 +112,9 @@ if len(sys.argv) < 2:
     sys.exit("Specify path to configuration file!")
 
 # check if file exists
-config_file_path = os.path.realpath(sys.argv[1])
+config_file_path = sys.argv[1]
 if not os.path.isfile(config_file_path):
-    print("ERROR: Provided config file path ", config_file_path)
-    sys.exit("ERROR: Incorrect filepath to .json file with topology config")
+    sys.exit("ERROR: Incorrect filepath to .json file with topology config: {}".format(config_file_path))
 
 # create jinja enviroment and load a template
 env = Environment()
@@ -136,15 +135,13 @@ with open(config_file_path, "r") as config:
     out_h = template_h.render(factors=cost_factors, nodes_n=nodes_n)
 
 
-project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-target_file_c_path = os.path.join(
-    project_dir, "node/src/generated-src/graph_api_generated.c"
-)
+target_file_c_path = "node/src/generated-src/graph_api_generated.c"
+
 with open(target_file_c_path, "w") as filehandle:
     for line in out_c:
         filehandle.write(line)
 
-target_file_h_path = os.path.join(project_dir, "node/include/graph_api_generated.h")
+target_file_h_path = "node/include/graph_api_generated.h"
 with open(target_file_h_path, "w") as filehandle:
     for line in out_h:
         filehandle.write(line)

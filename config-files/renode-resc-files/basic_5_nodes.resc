@@ -151,7 +151,8 @@ macro reset
 """
 
 i $ORIGIN/../../renode-commands/move_radio.py
-load_mb_path '../mb-paths/square_corners_path.json'
+set mb_path_my $ORIGIN/../../config-files/renode-resc-files/basic_5_nodes.resc
+load_mb_path $ORIGIN/../mb-paths/square_corners_path.json
 runMacro $reset
 start
 watch "move" 10000

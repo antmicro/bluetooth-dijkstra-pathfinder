@@ -61,18 +61,14 @@ if not args.mbmove:
         "WARNING: switch --mbmove was not provided so the MB WILL NOT MOVE from it's default position, but depending on provided --mbpathfile and --visualizemb options multiple path points may appear in visualization. If this is intended, ignore this warning."
     )
 
-# root directory of the project
-project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
-
 # mobile broadcaster path config file
-mb_path_file = os.path.join(project_dir, "config-files/mb-paths", args.mbpathfile)
+mb_path_file = os.path.join("config-files/mb-paths", args.mbpathfile)
 if not os.path.exists(mb_path_file):
-    parser.error("ERROR: provided config file does not exist: {}".format(mb_path_file))
+    parser.error("Provided config file does not exist: {}".format(mb_path_file))
 
 # Output topology file path
-topology_config_file_path = os.path.join(
-    project_dir, "config-files/mesh-topology-desc/randomized_topology.json"
-)
+topology_config_file_path = "config-files/mesh-topology-desc/randomized_topology.json"
+
 if not os.path.exists(topology_config_file_path):
     topology_dir = os.path.dirname(topology_config_file_path)
     os.makedirs(topology_dir, exist_ok=True)
@@ -80,9 +76,8 @@ if not os.path.exists(topology_config_file_path):
         pass
 
 # Output Renode's resc file
-resc_file_path = os.path.join(
-    project_dir, "config-files/renode-resc-files/randomized_topology.resc"
-)
+resc_file_path = "config-files/renode-resc-files/randomized_topology.resc"
+
 if not os.path.exists(resc_file_path):
     resc_dir = os.path.dirname(resc_file_path)
     os.makedirs(resc_dir, exist_ok=True)
@@ -295,7 +290,7 @@ runMacro $reset
 
 {{ "i $ORIGIN/../../renode-commands/move_radio.py" if include_mbmove }}
 {{ "# Included here ^ Renode command written in Python" if include_mbmove }} 
-{{ "load_mb_path '" ~ mb_positions_path ~ "'" if include_mbmove }}
+{{ "load_mb_path $ORIGIN/../../" ~ mb_positions_path if include_mbmove }}
 
 start
 
@@ -318,6 +313,3 @@ with open(resc_file_path, "w") as rescfile:
 
 if args.verbose:
     print("Renode's .resc file written to {}".format(resc_file_path))
-
-
-# PZIE: whitespaces
