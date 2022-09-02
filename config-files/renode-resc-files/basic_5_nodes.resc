@@ -150,8 +150,7 @@ macro reset
     sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
 """
 
-i $ORIGIN/../../renode-commands/move_radio.py
-set mb_path_my $ORIGIN/../../config-files/renode-resc-files/basic_5_nodes.resc
+i $ORIGIN/../../scripts/renode_commands.py
 load_mb_path $ORIGIN/../mb-paths/square_corners_path.json
 runMacro $reset
 start

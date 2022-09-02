@@ -1,7 +1,4 @@
-# PZIE: accross the whole project - formatting
-# PZIE: a separate folder for a single command?
 import json
-import sys
 
 counter = 0
 mobile_broadcaster_positions = []

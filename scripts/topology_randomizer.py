@@ -235,19 +235,19 @@ emulation SetGlobalSerialExecution true
 emulation SetSeed 42
 logLevel -1 wireless
 
-# mesh begin  
+# mesh begin
 #############################################################
-{% for node in nodes_temp %} 
+{% for node in nodes_temp %}
 mach add "{{ node }}"
 mach set "{{ node }}"
-machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
-# set unique identification address 
-sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" {{ 
-["0x", ((nodes_temp[node]['addr_bt_le'])|replace(":", "") | replace("C0",""))]|join("") 
+# set unique identification address
+sysbus Tag <0x100000a4, 0x100000a7> "DEVICEADDR[0]" {{
+["0x", ((nodes_temp[node]['addr_bt_le'])|replace(":", "") | replace("C0",""))]|join("")
 }} false
 
-# connect to medium 
+# connect to medium
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio {{ nodes_temp[node]['x'] }} {{ nodes_temp[node]['y'] }} 0
 wireless SetRangeWirelessFunction {{ radio_range }}
@@ -256,12 +256,12 @@ showAnalyzer sysbus.uart0
 {% endfor %}
 
 ###########################################################
-# mesh end 
+# mesh end
 
 mach add "mobile_broadcaster"
 mach set "mobile_broadcaster"
 
-machine LoadPlatformDescription @platforms/cpus/nrf52840.repl 
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
 showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
@@ -271,12 +271,12 @@ wireless SetRangeWirelessFunction {{ radio_range }}
 macro reset
 \"\"\"
     pause
-    
-    # mesh begin 
+
+    # mesh begin
     ###########################################################
     {% for node in nodes_temp %}
     mach set "{{ node }}"
-    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf 
+    sysbus LoadELF $ORIGIN/../../node/build/zephyr/zephyr.elf
     {% endfor %}
 
     ###########################################################
@@ -288,13 +288,13 @@ macro reset
 \"\"\"
 runMacro $reset
 
-{{ "i $ORIGIN/../../renode-commands/move_radio.py" if include_mbmove }}
-{{ "# Included here ^ Renode command written in Python" if include_mbmove }} 
+{{ "i $ORIGIN/../../scripts/renode_commands.py" if include_mbmove }}
+{{ "# Included here ^ Renode command written in Python" if include_mbmove }}
 {{ "load_mb_path $ORIGIN/../../" ~ mb_positions_path if include_mbmove }}
 
 start
 
-{{ 'watch "move" 30000' if include_mbmove }}  
+{{ 'watch "move" 30000' if include_mbmove }}
 """
 
 env = Environment()
