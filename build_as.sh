@@ -50,7 +50,7 @@ do
                 echo $"ERROR: Provide only one build configuration out of -b -r -i."
                 exit 1
             fi
-            TOPOLOGY_PATH="config-files/mesh-topology-desc/randomized_topology.json"
+            TOPOLOGY_PATH="config-files/mesh-topology-desc/basic_5_nodes.json"
             CONFIGURATION=b
             ;;
         r)
