@@ -57,8 +57,9 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		uint8_t dst_mesh_id = pkt_info.ble_data[DST_ADDR_IDX];
 		int next_node_mesh_id =
 		    dijkstra_shortest_path(graph, MAX_MESH_SIZE,
-					   common_self_mesh_id,
-					   dst_mesh_id);
+					   common_self_ptr,
+					   &graph[dst_mesh_id]);
+        struct node_t *next_node = &graph[next_node_mesh_id];
         // TODO: give some hints on why it failed and handle different scenarios
         // It may fail because there is no path or there is some critical error
 		if (next_node_mesh_id < 0) {
@@ -68,7 +69,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		printk("Next hop: %d\n", next_node_mesh_id);
 
 		// Header settings
-		pkt_info.ble_data[SENDER_ID_IDX] = common_self_mesh_id;
+		pkt_info.ble_data[SENDER_ID_IDX] = common_self_ptr->addr;
 		pkt_info.ble_data[RCV_ADDR_IDX] = next_node_mesh_id;
 		pkt_info.ble_data[TTL_IDX] = 0x01;	// one jump allowed
 		uint16_t timestamp =
@@ -81,7 +82,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 			.msg_type = 0x0	// Unused here
 		};
 		err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
-        __ASSERT_MSG_INFO("ERROR: Failed to put into awaiting_ack q (err %d)\n", err);
+        __ASSERT(err == 0,"ERROR: Failed to put into awaiting_ack q (err %d)\n", err);
 		printk("Awaiting for ack from node %d and with timestamp: %d\n",
 		       ack_info.node_id, ack_info.time_stamp);
 
@@ -126,23 +127,32 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 
 		// Cost recalculation and update
 		struct path_t *used_path;
-		for (uint8_t i = 0; i < graph[common_self_mesh_id].paths_size;
+		for (uint8_t i = 0; i < common_self_ptr->paths_size;
 		     i++) {
-			if (graph[common_self_mesh_id].paths[i].addr ==
-			    next_node_mesh_id) {
-				used_path =
-				    &graph[common_self_mesh_id].paths[i];
+			if (common_self_ptr->paths[i].node_ptr == next_node) {
+				used_path = &common_self_ptr->paths[i];
 			}
 		}
+
 		uint16_t signal_str, phy_distance, missed_transmissions;
-		path_t_signal_str_get(used_path, &signal_str);
-		path_t_phy_distance_get(used_path, &phy_distance);
 		path_t_missed_transmissions_get(used_path,
 						&missed_transmissions);
+        path_t_signal_str_get(used_path, &signal_str);
+		path_t_phy_distance_get(used_path, &phy_distance);
+        // If acknowledge was not received increase the number of missed transmissions
+        if(!got_ack) {
+            missed_transmissions += 1;
+            path_t_missed_transmissions_set(used_path, missed_transmissions);
+        }
 		uint16_t new_cost =
 		    calc_cost(signal_str, phy_distance, missed_transmissions);
-		graph_set_cost(graph, common_self_mesh_id, next_node_mesh_id,
-			       new_cost);
+
+		err = graph_set_cost_uni_direction(common_self_ptr, next_node, new_cost);
+        if(err) {
+            printk("WARNING: Could not set transition cost between %d and %d (err %d)", 
+                    common_self_ptr->addr, next_node->addr, err);
+            continue;
+        }
 		printk("New calculated transition cost: %d\n", new_cost);
 
 		// Put the message again into the queue and try to send it again
@@ -187,7 +197,7 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2, void *unused3)
 			0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05
 		};
 
-		ack_data[SENDER_ID_IDX] = common_self_mesh_id;
+		ack_data[SENDER_ID_IDX] = common_self_ptr->addr;
 		ack_data[MSG_TYPE_IDX] = MSG_TYPE_ACK;
 		ack_data[DST_ADDR_IDX] = 0xFF;	//whatever, ignored
 		ack_data[RCV_ADDR_IDX] = ack_info.node_id;	// node to ack to
@@ -303,14 +313,14 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 	// formatting 
 	bin2hex(buf->data, buf->len, data, sizeof(data));
 	bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
-
-	// PZIE #if 0 would be easier to unblock
-	// Debug
-	//static uint64_t messges_received_n = 0;
-	//messges_received_n++;
-	// printk("Received data from node with address: %s\n", addr_str);
-	// printk("Data: %s\n", data);
-	//printk("Number of messages received: %lld\n", messges_received_n);
+    
+    if(false) {
+        static uint64_t messges_received_n = 0;
+        messges_received_n++;
+        printk("Received data from node with address: %s\n", addr_str);
+        printk("Data: %s\n", data);
+        printk("Number of messages received: %lld\n", messges_received_n);
+    }
 
 	// Strip the buffer into simple byte array
 	uint8_t ble_data[BLE_RTR_MSG_LEN] = { 0 };
@@ -332,8 +342,8 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 		// If packet was not received before, process it 
 		if (!rcv_pkts_cb_is_in_cb
 		    (&rcv_pkts_circular_buffer, &sender_info)) {
-			// Decrease a TTL counter for the packet for further processing //PZIE: why commented out? the comment suggests it's important!
-			//ble_data[TTL_IDX]--;
+			// Decrease a TTL counter for the packet for further processing 
+			ble_data[TTL_IDX]--;
 
 			// Also add it to the recently received packets memory 
 			rcv_pkts_cb_push(&rcv_pkts_circular_buffer,
@@ -401,8 +411,7 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
 			case MSG_TYPE_ACK:
 				{
-					// Check if message's header content is correct 
-					// with awaited //PZIE: don't understand
+					// Check if received message's header matches the one we await
 					ble_sender_info a_info;
 					err =
 					    k_msgq_peek(&awaiting_ack, &a_info);
@@ -509,7 +518,6 @@ void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 	// If head catches tail, shift tail and put it at the start if relapse
 	// also decrease count, as one element was added with the cost of another 
 	if (cb->head == cb->tail) {
-		printk("Hi\n");	//PZIE G'day
 		cb->tail++;
 		cb->count--;
 		if (cb->tail == cb->buff_end)

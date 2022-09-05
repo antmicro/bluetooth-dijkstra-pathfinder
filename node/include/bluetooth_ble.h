@@ -64,7 +64,15 @@ typedef struct {
 	ble_sender_info *tail;
 } rcv_pkts_cb;
 
+
+/**
+ * @brief Set BLE scan parameters which will be then used to start BLE scan. 
+ * Register callback that will trigger on packet reception.
+ *
+ * @param scan_params - buffer to which params will be loaded.
+ */
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
+
 void ble_send_data_packet_thread_entry(struct node_t *graph);
 void ble_send_ack_thread_entry();
 void ble_send_rtr_thread_entry(struct node_t *graph);
