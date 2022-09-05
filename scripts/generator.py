@@ -26,7 +26,7 @@ template_graph_api_h = """
 // addr and cost fields are always present, rest is defined in topology.json 
 // file and loaded automatically
 struct path_t {
-    uint8_t addr;
+    struct node_t *node_ptr;
     uint16_t cost;
     struct k_mutex path_mutex;
     {% for factor in factors -%}
@@ -58,6 +58,7 @@ template_graph_api_c = """
 
 #include "../../include/graph_api_generated.h"
 #include "../../include/graph.h"
+#include "../../include/dijkstra.h"
 
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %}) {
     return {% for factor in factors %}{% if loop.index0 != 0 %} + {% endif %}{{ factor.factor }} * {{ factor.name }}{% endfor %};
