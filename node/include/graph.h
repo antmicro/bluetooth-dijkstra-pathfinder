@@ -7,7 +7,6 @@
 #include <bluetooth/addr.h>
 #include "graph_api_generated.h"
 
-#define INF 65535		// PZIE: If you're aiming for a "max number" then at least go with hex
 
 struct node_t {
 	struct k_mutex node_mutex;
@@ -24,7 +23,7 @@ struct node_t {
 };
 
 // PZIE: I'd say this is a nice place to put comments in
-extern uint8_t common_self_mesh_id;
+extern struct node_t *common_self_ptr;
 extern struct node_t graph[MAX_MESH_SIZE];
 
 uint8_t graph_init(struct node_t *graph);
@@ -40,21 +39,89 @@ int node_t_tentative_distance_get(struct node_t *node, uint16_t * ret_val);
 int path_t_cost_set(struct path_t *path, uint16_t new_val);
 int path_t_cost_get(struct path_t *path, uint16_t * ret_val);
 
-void graph_set_cost(struct node_t *graph,
-		    uint8_t mesh_id_1, uint8_t mesh_id_2, uint8_t new_cost);
-void node_update_missed_transmissions(struct node_t *node,
-				      bool transmission_success);
-uint16_t calc_distance_from_missed_transmissions(uint64_t missed_transmissions);
 
+/**
+ * @brief Set cost from one node to another. Works in one way i.e. modifies
+ * only path from node1 to node2 but not the other way around. Nodes should not
+ * too eagerly change the costs for their peers on the basis of their own 
+ * calculation, but rather wait for routing table record and read transition 
+ * costs of peers from it.
+ *
+ * @param node1 - pointer to node which will have it's paths modified with new cost.
+ * @param node2 - pointer that will be searched in paths of node1 to which cost will be altered.
+ * @param new_cost - new cost value.
+ *
+ * @return - error code, 0 on success and > on mutex failure or when no such 
+ * path bewteen specified nodes was found then EINVAL.
+ */
+int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uint8_t new_cost);
+
+
+/**
+ * @brief Convert node's address, paths and paths size into the byte array 
+ * suitable for sending with BLE.
+ *
+ * @param node - pointer to node which will be sent as byte array.
+ * @param buffer][] - buffer to store the byte array.
+ * @param buffer_size - size of a buffer.
+ */
 void node_to_byte_array(struct node_t *node, uint8_t buffer[],
 			uint8_t buffer_size);
-size_t node_get_size_in_bytes(struct node_t *node);
-void load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size);
-void load_node_info(struct node_t *node, uint8_t neigh_addr, uint8_t cost);
+
+/**
+ * @brief Load information received from peer about it's connections, received as a byte array, to 
+ * current node own graph data structure.
+ * Each buffer is encoded as: 
+ *   B1    |        B2       |      B3    |      B4    |      B5    |     B6
+ *  addr   | number of peers | peer1 addr | peer1 cost | peer2 addr | peer2 cost 
+ *
+ * @param graph[] - data structure to which information will be loaded.
+ * @param buff[] - buffer with received data.
+ * @param size - size of that buffer.
+ *
+ * @return - EINVAL in case value of neighs_n field in the buffer (buff[1]) was
+ * too big and indexing value would be bigger than buffer size or 
+ * graph_set_cost_uni_direction function failed, 0 on success and 
+ * > on mutex failure 
+ */
+int load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size);
+
+
+/**
+ * @brief Print the graph structure with connections in between nodes and 
+ * corresponding costs.
+ *
+ * @param graph[] - array of struct node_t.
+ */
 void print_graph(struct node_t graph[]);
 
-uint8_t identify_self_in_graph(struct node_t *graph);
+
+/**
+ * @brief Finds default identity of the device (BLE address), then checks in 
+ * the graph data structure for mesh id corresponding to that identity. It will
+ * set the value of global pointer - common_self_ptr that points to the self in
+ * the graph data structure.
+ *
+ * @param graph - Array with nodes.
+ * @param identity_str[] - buffer that will be filled with identity string.
+ * @param len - length of the buffer to fill. Should be at least 17 to handle
+ * entire BLE address.
+ */
+void identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t len);
+
+
+/**
+ * @brief Iterate over graph data structure and set ptr to point to the node in
+ * graph with matching ble_addr.
+ *
+ * @param graph - array of nodes.
+ * @param ble_addr - valid BLE address matching one of the addresses in the graph
+ * data structure.
+ * @param ptr - pointer to pointer that will point to the resultant node.
+ *
+ * @return - 0 on success and EINVAL on failure.
+ */
 uint8_t get_mesh_id_by_ble_addr(struct node_t *graph, char *ble_addr,
-				uint8_t * mesh_id);
+				struct node_t **ptr);
 
 #endif

@@ -8,6 +8,8 @@
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
 
+#define BLE_ADDR_LEN          17
+
 // Rtr timings
 #define RTR_TIMER_START_DELAY 2000
 #define RTR_TIMER_PERIOD      60000
@@ -52,10 +54,11 @@ void main(void)
 	err = bt_enable(NULL);
 	__ASSERT(err == 0, "ERROR: BLE initialization failed (err %d)\n", err);
 
-	// Assign mesh id to self
-	err = identify_self_in_graph(graph);
-	__ASSERT(err == 0, "ERROR: Could not identify self in graph (err %d)\n",
-		 err);
+	// Load common_self_ptr 
+    char default_identity[BLE_ADDR_LEN];
+	identify_self_in_graph(graph, default_identity, BLE_ADDR_LEN);
+    printk("Identified self with mesh id: %d and BLE address: %s", 
+            common_self_ptr->addr, default_identity); 
 
 	struct bt_le_scan_param scan_params;
 	ble_scan_setup(&scan_params);
