@@ -11,9 +11,9 @@
  * @param lst - pointer to sys_slist_t data structure.
  * @param container_buffer - return buffer.
  *
- * @return - status code, EINVAL on failure or 0 on success.
+ * @return - status code, -EINVAL on failure or 0 on success.
  */
-static uint8_t get_smallest_td_node(sys_slist_t * lst,
+static int get_smallest_td_node(sys_slist_t * lst,
 			     struct node_container **container_buffer);
 
 /**
@@ -23,9 +23,9 @@ static uint8_t get_smallest_td_node(sys_slist_t * lst,
  *
  * @param current_node - pointer to the node of which neighbors should be checked.
  *
- * @return - 0 on success and > 0 if mutex locking / unlocking fails.
+ * @return - 0 on success and other on failure.
  */
-static uint8_t recalculate_td_for_neighbours(struct node_t *current_node);
+static int recalculate_td_for_neighbours(struct node_t *current_node);
 
 /**
  * @brief After calculating tentative_distances with Dijkstra algorithm, 
@@ -37,7 +37,7 @@ static uint8_t recalculate_td_for_neighbours(struct node_t *current_node);
  * @param paths_len - return buffer storing the length of the path. 
  *
  * @return - malloced array of consequent nodes mesh ids. It is user's 
- * responsibility to call free(). On failure 0.
+ * responsibility to call free(). On failure NULL.
  */
 static uint8_t *trace_back(struct node_t *start_node, struct node_t *dst_node, uint8_t * paths_len);
 
@@ -50,9 +50,9 @@ static uint8_t *trace_back(struct node_t *start_node, struct node_t *dst_node, u
  * @param graph_size - size of the graph.
  * @param lst - pointer to uninitialized list that will be initialized.
  *
- * @return - 0 on success > 0 on failure.
+ * @return - 0 on success != 0 on failure.
  */
-static uint8_t create_unvisited_slist(struct node_t graph[],
+static int create_unvisited_slist(struct node_t graph[],
 			       uint8_t graph_size, sys_slist_t * lst);
 
 
@@ -79,6 +79,8 @@ int dijkstra_shortest_path(struct node_t graph[],
 			   struct node_t *start_node, struct node_t *dst_node)
 {
 	int err;
+    if(!graph || !start_node || !dst_node) return -EINVAL;
+
 	// check if right node was picked
 	if (!start_node->reserved || dst_node->reserved) {
 		printk("ERROR: Node address not used!\n");
@@ -95,18 +97,18 @@ int dijkstra_shortest_path(struct node_t graph[],
 	err = node_t_tentative_distance_set(start_node, 0);
 	if (err) {
 		printk("ERROR: Could not set tentative distance\n");
-		return -err;
+		return err;
 	}
 
 	sys_slist_t lst;
 	err = create_unvisited_slist(graph, graph_size, &lst);
     if(err) {
         printk("ERROR: Could not create list of unvisited nodes\n");
-        return -err;
+        return err;
     }
 
 	// get smallest_td node and process it in a loop
-	uint8_t smallest_td_node_found_code;
+	int smallest_td_node_found_code;
 	struct node_container *smallest_td_node_container;
 	while (!(smallest_td_node_found_code =
 		 get_smallest_td_node(&lst, &smallest_td_node_container))) {
@@ -115,7 +117,7 @@ int dijkstra_shortest_path(struct node_t graph[],
 			return -EINVAL;
 		}
 		// visit a smallest_td node and update its neighbours td
-        recalculate_td_for_neighbours(smallest_td_node_container->node);
+        err = recalculate_td_for_neighbours(smallest_td_node_container->node);
         if (err) return err;
 
         // If found destination
@@ -151,7 +153,8 @@ int dijkstra_shortest_path(struct node_t graph[],
 	}
 
 	// make all tentative_distances to INF again for future calculations
-	reset_td_visited(graph);
+	err = reset_td_visited(graph, MAX_MESH_SIZE);
+    __ASSERT(err == 0, "ERROR: Could not reset tentative_distances in the graph (err %d)\n", err);
 
 	// path is in reverse order, so next node from current one is
 	// one before last one (last is start node)
@@ -160,17 +163,18 @@ int dijkstra_shortest_path(struct node_t graph[],
 	return next_node_id;
 }
 
-uint8_t get_smallest_td_node(sys_slist_t * lst,
+int get_smallest_td_node(sys_slist_t * lst,
 			     struct node_container **container_buffer)
 {
-    uint8_t err;
+    int err;
 	uint16_t smallest_td = INF;
 	struct node_container *iterator;
-	
+    
+    if(!lst || !container_buffer) return -EINVAL;
+
 	*container_buffer = NULL;
 	if (sys_slist_is_empty(lst)) {
-		printk("ERROR: List empty, returning\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	// find lowest_td_node
@@ -185,15 +189,15 @@ uint8_t get_smallest_td_node(sys_slist_t * lst,
 		}
 	}
 
-	if (!container_buffer) {
-        return EINVAL;
-    }
+	if (!container_buffer) return -EINVAL;
+    
 	return 0;
 }
 
-static uint8_t recalculate_td_for_neighbours(struct node_t *current_node)
+static int recalculate_td_for_neighbours(struct node_t *current_node)
 {
-    uint8_t err;
+    int err;
+    if(!current_node) return -EINVAL;
 	for (uint8_t i = 0; i < current_node->paths_size; i++) {
 		struct node_t *neighbour = (current_node->paths + i)->node_ptr;
 
@@ -232,10 +236,12 @@ static uint8_t recalculate_td_for_neighbours(struct node_t *current_node)
 static uint8_t *trace_back(struct node_t *start_node, struct node_t *dst_node, uint8_t * paths_len)
 {
     uint8_t index = 0;
-    uint8_t err;
+    int err;
 	struct node_t *current_node = dst_node;
 
-	// array to store longest path possible, it will be realloc'ed in the end to correct size
+    if(!start_node || !dst_node) return NULL;
+	
+    // array to store longest path possible, it will be realloc'ed in the end to correct size
 	uint8_t *path = k_malloc(sizeof(uint8_t) * MAX_MESH_SIZE);
     __ASSERT(path != NULL, "ERROR: Could not allocate memory for path tracing\n");
 
@@ -280,9 +286,10 @@ static uint8_t *trace_back(struct node_t *start_node, struct node_t *dst_node, u
 	return path;
 }
 
-static uint8_t create_unvisited_slist(struct node_t graph[],
+static int create_unvisited_slist(struct node_t graph[],
 			       uint8_t graph_size, sys_slist_t * lst)
 {
+    if(!graph || !lst) return -EINVAL;
 	sys_slist_init(lst);
 	for (uint8_t i = 0; i < graph_size; i++) {
 		if (graph[i].reserved) {
