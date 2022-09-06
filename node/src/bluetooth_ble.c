@@ -60,10 +60,9 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 					   common_self_ptr,
 					   &graph[dst_mesh_id]);
         struct node_t *next_node = &graph[next_node_mesh_id];
-        // TODO: give some hints on why it failed and handle different scenarios
-        // It may fail because there is no path or there is some critical error
 		if (next_node_mesh_id < 0) {
-			printk("ERROR: Dijkstra algorithm failed (err %d)\n", next_node_mesh_id);
+			printk("Dijkstra algorithm failed (err %d)\n", next_node_mesh_id);
+            __ASSERT(next_node_mesh_id == -ENOPATH, "ERROR: Critical fail in Dijkstra's algorithm\n", err);
 			continue;
 		}
 		printk("Next hop: %d\n", next_node_mesh_id);
@@ -144,7 +143,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
             missed_transmissions += 1;
         }
         else {
-            if(missed_transmissions > 0) {
+            if(missed_transmissions > 1) {
                 missed_transmissions -= 1;
             }
         }
