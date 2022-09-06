@@ -24,7 +24,8 @@ struct node_container {
  * @param start_node - pointer to the start node.
  * @param dst_node - pointer to destination node.
  *
- * @return - Mesh id of the next node or < 0 on failure.
+ * @return - Mesh id of the next node or < 0 on failure. -ENOPATH is not 
+ * critical error, it just means that there was no path found.
  */
 int dijkstra_shortest_path(struct node_t graph[],
 			   uint8_t graph_size,
