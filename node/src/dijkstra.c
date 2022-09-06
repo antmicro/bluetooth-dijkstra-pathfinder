@@ -136,8 +136,7 @@ int dijkstra_shortest_path(struct node_t graph[],
 	path = trace_back(start_node, dst_node, &paths_size);
 
 	if (!path) {
-		printk("ERROR: Path was not found\n");
-		return -EINVAL;
+		return -ENOPATH;
 	}
     
     // Visualize path
