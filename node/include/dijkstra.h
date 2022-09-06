@@ -5,6 +5,10 @@
 
 #define INF 0xFFFF
 
+// Error code returned by dijkstra_shortest_path that is not critical and just
+// means that there is no connection found between nodes.
+#define ENOPATH 150 
+
 struct node_container {
 	sys_snode_t next_container_node_ptr;
 	struct node_t *node;
