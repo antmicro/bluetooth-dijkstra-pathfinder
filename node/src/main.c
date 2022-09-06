@@ -8,7 +8,7 @@
 #include "../include/dijkstra.h"
 #include "../include/bluetooth_ble.h"
 
-#define BLE_ADDR_LEN          17
+#define BLE_ADDR_LEN          18
 
 // Rtr timings
 #define RTR_TIMER_START_DELAY 2000
@@ -55,7 +55,7 @@ void main(void)
 	__ASSERT(err == 0, "ERROR: BLE initialization failed (err %d)\n", err);
 
 	// Load common_self_ptr 
-    char default_identity[BLE_ADDR_LEN];
+    char default_identity[BLE_ADDR_LEN] = { 0 };
 	err = identify_self_in_graph(graph, default_identity, BLE_ADDR_LEN);
     __ASSERT(err == 0, "ERROR: Could not identify_self_in_graph (err %d)", err);
     printk("Identified self with mesh id: %d and BLE address: %s", 
