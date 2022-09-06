@@ -192,12 +192,12 @@ int identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t le
     if(!graph || !identity_str) return -EINVAL;
 	// get all configured identities 
 	bt_addr_le_t identities[CONFIG_BT_ID_MAX];
-	size_t *count = NULL;
+	size_t count = 0;
     
-	bt_id_get(NULL, count);	
-    printk("count %d\n", *count);
-	bt_id_get(identities, count);
-    if(*count == 0) return -EINVAL;
+	bt_id_get(NULL, &count);	
+    printk("count %d\n", count);
+	bt_id_get(identities, &count);
+    if(count == 0) return -EINVAL;
 
 	bt_addr_le_to_str(&identities[0], identity_str, len);
 
