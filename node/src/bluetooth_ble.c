@@ -516,13 +516,7 @@ void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 	if (cb->head == cb->buff_end) {	// we dont write to end, its not valid 
 		// In next call, write to the beginning of the buffer 
 		cb->head = cb->buff_start;
-
-		// This means, discard the first element -> shift tail if it points to 
-		// that element
-		if (cb->tail == cb->buff_start)
-			cb->tail++;
-
-	}
+    }
 	// If head catches tail, shift tail and put it at the start if relapse
 	// also decrease count, as one element was added with the cost of another 
 	if (cb->head == cb->tail) {
