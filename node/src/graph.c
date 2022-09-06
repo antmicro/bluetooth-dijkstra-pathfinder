@@ -195,7 +195,6 @@ int identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t le
 	size_t count = 0;
     
 	bt_id_get(NULL, &count);	
-    printk("count %d\n", count);
 	bt_id_get(identities, &count);
     if(count == 0) return -EINVAL;
 
@@ -211,9 +210,7 @@ int get_ptr_to_node_by_ble_addr(struct node_t *graph,
 				char *ble_addr, struct node_t **ptr)
 {
     if(!graph || !ble_addr || !ptr) return -EINVAL;
-
 	for (uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
-        printk("graph addr %s compared %s\n", graph[i].addr_bt_le, ble_addr);
 		if (!memcmp(graph[i].addr_bt_le, ble_addr, 17)) {
 			*ptr = (graph + i);
 			return 0;
