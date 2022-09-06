@@ -11,20 +11,23 @@
  */
 struct node_t *common_self_ptr = NULL;
 
-void reset_td_visited(struct node_t graph[])
+int reset_td_visited(struct node_t graph[], uint8_t size)
 {
-	for (uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
+    if(!graph) return -EINVAL;
+	for (uint8_t i = 0; i < size; i++) {
 		if ((graph + i)->reserved) {
 			node_t_tentative_distance_set(graph + i, INF);
 			node_t_visited_set(graph + i, false);
 		}
 	}
+    return 0;
 }
 
 // Setters and getters respecting the mutex access
 int node_t_visited_set(struct node_t *node, bool new_val)
 {
 	int err;
+    if(!node) return -EINVAL;
 	err = k_mutex_lock(&node->node_mutex, K_FOREVER);
 	if (err)
 		return err;
@@ -38,6 +41,7 @@ int node_t_visited_set(struct node_t *node, bool new_val)
 int node_t_visited_get(struct node_t *node, bool *ret_val)
 {
 	int err;
+    if(!node || !ret_val) return -EINVAL;
 	err = k_mutex_lock(&node->node_mutex, K_FOREVER);
 	if (err)
 		return err;
@@ -51,6 +55,7 @@ int node_t_visited_get(struct node_t *node, bool *ret_val)
 int node_t_tentative_distance_set(struct node_t *node, uint16_t new_val)
 {
 	int err;
+    if(!node) return -EINVAL;
 	err = k_mutex_lock(&node->node_mutex, K_FOREVER);
 	if (err)
 		return err;
@@ -64,6 +69,7 @@ int node_t_tentative_distance_set(struct node_t *node, uint16_t new_val)
 int node_t_tentative_distance_get(struct node_t *node, uint16_t * ret_val)
 {
 	int err;
+    if(!node || !ret_val) return -EINVAL;
 	err = k_mutex_lock(&node->node_mutex, K_FOREVER);
 	if (err)
 		return err;
@@ -77,6 +83,7 @@ int node_t_tentative_distance_get(struct node_t *node, uint16_t * ret_val)
 int path_t_cost_set(struct path_t *path, uint16_t new_val)
 {
 	int err;
+    if(!path) return -EINVAL;
 	err = k_mutex_lock(&path->path_mutex, K_FOREVER);
 	if (err)
 		return err;
@@ -90,6 +97,7 @@ int path_t_cost_set(struct path_t *path, uint16_t new_val)
 int path_t_cost_get(struct path_t *path, uint16_t * ret_val)
 {
 	int err;
+    if(!path || !ret_val) return -EINVAL;
 	err = k_mutex_lock(&path->path_mutex, K_FOREVER);
 	if (err)
 		return err;
@@ -114,13 +122,12 @@ int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uin
 }
 
 
-void node_to_byte_array(struct node_t *node, uint8_t buffer[],
+int node_to_byte_array(struct node_t *node, uint8_t buffer[],
 			uint8_t buffer_size)
 {
 	// First two fields in buffer are always the same and identify the node 
 	// with relation to which the rest of connections is made
-	// PZIE: in general, you lack at least trivial checking, e.g. if buffer is not null. I'd say it's low prio
-    __ASSERT(buffer != NULL, "ERROR: Provided buffer is NULL\n");
+    if(!node || !buffer) return -EINVAL;
 
 	buffer[0] = node->addr;
 	buffer[1] = node->paths_size;
@@ -129,16 +136,23 @@ void node_to_byte_array(struct node_t *node, uint8_t buffer[],
 	for (uint8_t i = 0; i < node->paths_size; i++) {
 		uint8_t neighbor_addr_idx = 2 * i + 2 + 0;
 		uint8_t neighbor_dist_idx = 2 * i + 2 + 1;
+        
+        if(neighbor_dist_idx > node->paths_size - 1 || neighbor_dist_idx > node->paths_size - 1) {
+            return -EINVAL;
+        }
+
 		uint16_t cost;
 		path_t_cost_get(node->paths + i, &cost);
 		buffer[neighbor_addr_idx] = (node->paths + i)->node_ptr->addr;
 		buffer[neighbor_dist_idx] = cost;
 	}
+    return 0;
 }
 
 
 int load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size)
 {
+    if(!graph || !buff) return -EINVAL;
 	// First two bytes of each rtr are self addr and n neighs
 	uint8_t node_addr = buff[0];
 	uint8_t neighs_n = buff[1];
@@ -147,8 +161,6 @@ int load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size)
 	for (uint8_t j = 0; j < neighs_n; j++) {
 		uint8_t idx = 1 + 1 + (2 * j);
 		if (idx > size) {
-			printk
-			    ("ERROR: index out of bounds when loading routing table.\n");
 			return EINVAL;
 		}
 		uint8_t neigh_addr = buff[idx];
@@ -161,6 +173,7 @@ int load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size)
 
 void print_graph(struct node_t graph[])
 {
+    __ASSERT(graph != NULL, "ERROR: Graph is NULL\n");
 	printk("Mesh topology:\n");
 	uint16_t cost;
 	for (uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
@@ -174,31 +187,35 @@ void print_graph(struct node_t graph[])
 	}
 }
 
-void identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t len)
+int identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t len)
 {
+    if(!graph || !identity_str) return -EINVAL;
 	// get all configured identities 
 	bt_addr_le_t identities[CONFIG_BT_ID_MAX];
 	size_t *count = NULL;
     
 	bt_id_get(NULL, count);	
 	bt_id_get(identities, count);
-    __ASSERT(count != 0, "ERROR: Could not get default BLE identity\n");
+    if(!count) return -EINVAL;
 
 	bt_addr_le_to_str(&identities[0], identity_str, len);
 
-	uint8_t err = get_mesh_id_by_ble_addr(graph, identity_str, &common_self_ptr);
-    __ASSERT(err == 0, "ERROR: Could not identify self in the graph\n");
+	uint8_t err = get_ptr_to_node_by_ble_addr(graph, identity_str, &common_self_ptr);
+    if(err) return err;
+    return 0;
 }
 
 
-uint8_t get_ptr_to_node_by_ble_addr(struct node_t *graph,
+int get_ptr_to_node_by_ble_addr(struct node_t *graph,
 				char *ble_addr, struct node_t **ptr)
 {
+    if(!graph || !ble_addr || !ptr) return -EINVAL;
+
 	for (uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
 		if (!memcmp(graph[i].addr_bt_le, ble_addr, 17)) {
 			*ptr = graph + i;
 			return 0;
 		}
 	}
-	return EINVAL;
+	return -EINVAL;
 }
