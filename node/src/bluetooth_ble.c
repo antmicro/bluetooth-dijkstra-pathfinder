@@ -142,8 +142,13 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
         // If acknowledge was not received increase the number of missed transmissions
         if(!got_ack) {
             missed_transmissions += 1;
-            path_t_missed_transmissions_set(used_path, missed_transmissions);
         }
+        else {
+            if(missed_transmissions > 0) {
+                missed_transmissions -= 1;
+            }
+        }
+        path_t_missed_transmissions_set(used_path, missed_transmissions);
 		uint16_t new_cost =
 		    calc_cost(signal_str, phy_distance, missed_transmissions);
 
@@ -294,8 +299,7 @@ void ble_send_rtr_thread_entry(struct node_t *graph)
 }
 
 /* Callbacks */
-void
-bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
+void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 		   struct net_buf_simple *buf)
 {
 	char addr_str[BT_ADDR_LE_STR_LEN];
@@ -327,7 +331,7 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 	memcpy(ble_data, &(buf->data[2]), BLE_LONGEST_MSG_LEN);
 
 	// Check if is receiver, proceed if yes
-	if (ble_is_receiver(ble_data, common_self_mesh_id)) {
+	if (ble_is_receiver(ble_data, common_self_ptr->addr)) {
 		int err;
 		uint8_t msg_type = ble_data[MSG_TYPE_IDX];
 
@@ -378,7 +382,7 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
 					uint8_t dst_mesh_id =
 					    ble_data[DST_ADDR_IDX];
-					if (dst_mesh_id == common_self_mesh_id) {
+					if (dst_mesh_id == common_self_ptr->addr) {
 						printk
 						    ("FINAL DESTINATION REACHED\n");
 						// Do something with the data
@@ -472,24 +476,25 @@ bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 	}
 }
 
-/* Utility functions */
 void add_self_to_rtr_queue(struct k_timer *timer)
 {
+    int err;
+    __ASSERT(timer != NULL, "ERROR: Timer pointer is NULL\n");
 	uint8_t buffer[BLE_RTR_MSG_LEN] = { 0 };
 
 	// Initialize a header 
-	buffer[SENDER_ID_IDX] = common_self_mesh_id;
+	buffer[SENDER_ID_IDX] = common_self_ptr->addr;
 	buffer[MSG_TYPE_IDX] = MSG_TYPE_ROUTING_TAB;
 	buffer[DST_ADDR_IDX] = 0xFF;
 	buffer[RCV_ADDR_IDX] = BROADCAST_ADDR;
 	ble_add_packet_timestamp(buffer);
 	buffer[TTL_IDX] = MAX_TTL;
 
-	node_to_byte_array(graph + common_self_mesh_id, buffer + HEADER_SIZE,
+	err = node_to_byte_array(common_self_ptr, buffer + HEADER_SIZE,
 			   BLE_RTR_MSG_LEN - HEADER_SIZE);
 
 	printk("Putting the self rtr to send queue.\n");
-	int err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
+	err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
 	print_msgq_num_used(&rtr_packets_to_send_q,
 			    VAR_NAME(rtr_packets_to_send_q));
 	if (err) {
@@ -500,6 +505,9 @@ void add_self_to_rtr_queue(struct k_timer *timer)
 
 void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 {
+    __ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
+    __ASSERT(item != NULL, "ERROR: sender info is NULL\n");
+
 	*(cb->head) = *item;
 	cb->head++;
 
@@ -552,15 +560,17 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item)
 	return false;
 }
 
-bool ble_is_receiver(uint8_t data[], uint8_t common_self_mesh_id)
+bool ble_is_receiver(uint8_t data[], uint8_t id)
 {
+    __ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
 	bool rec = data[RCV_ADDR_IDX] == BROADCAST_ADDR ||
-	    data[RCV_ADDR_IDX] == common_self_mesh_id;
+	    data[RCV_ADDR_IDX] == id;
 	return rec;
 }
 
 uint16_t ble_add_packet_timestamp(uint8_t data[])
 {
+    __ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
 	uint8_t timestamp_lower, timestamp_upper;
 	uint32_t cycles32 = k_cycle_get_32();
 

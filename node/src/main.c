@@ -56,7 +56,8 @@ void main(void)
 
 	// Load common_self_ptr 
     char default_identity[BLE_ADDR_LEN];
-	identify_self_in_graph(graph, default_identity, BLE_ADDR_LEN);
+	err = identify_self_in_graph(graph, default_identity, BLE_ADDR_LEN);
+    __ASSERT(err == 0, "ERROR: Could not identify_self_in_graph (err %d)", err);
     printk("Identified self with mesh id: %d and BLE address: %s", 
             common_self_ptr->addr, default_identity); 
 

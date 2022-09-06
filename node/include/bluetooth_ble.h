@@ -73,22 +73,89 @@ typedef struct {
  */
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
 
+
+/**
+ * @brief Consumer thread that will take data packets from 
+ * data_packets_to_send_q and process them. This thread handles sending of data
+ * packets and path calculations. Few major steps it performs:
+ * - Prepares a message, sets the header and data fields.
+ * - Sets the flag indicating on what ACK it is currently waiting.
+ * - Locks with mutex BLE device and sends the packet.
+ * - Then it will wait for the ACK.
+ * - It will then recalculate transition cost.
+ * - And if necessary wait until the neighbor finishes advertising so it will not be overwhelmed.
+ *
+ * @param graph - array with nodes.
+ */
 void ble_send_data_packet_thread_entry(struct node_t *graph);
+
+
+/**
+ * @brief Consumer thread that will take ACK packets from ack_receivers_q and 
+ * process them. It will send the proper header, lock the BLE device and send the
+ * ACK packet.
+ */
 void ble_send_ack_thread_entry();
+
+
+/**
+ * @brief Consumer thread with two main tasks: it will either send routing table
+ * record (rtr) of self (self connections to other nodes and costs of those connections) 
+ * or it will propagate received rtr from it's peers. Both of those are picked
+ * from rtr_packets_to_send_q.
+ *
+ * @param graph - array with nodes.
+ */
 void ble_send_rtr_thread_entry(struct node_t *graph);
 
 // callbacks 
+
+/**
+ * @brief Callback triggered on BLE packet reception. It keeps track of recently
+ * received messages and ignores duplicates. It will convert the message to simple
+ * byte array and then decide on what type of message it is and what routine 
+ * should be triggered:
+ * - MSG_TYPE_DATA
+ * - MSG_TYPE_ERROR
+ * - MSG_TYPE_ROUTING_TAB
+ *
+ * @param info - holds information about address of the sender.
+ * @param buf - contains message data.
+ */
 void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 			struct net_buf_simple *buf);
 
-void ble_scanned(struct bt_le_ext_adv *adv,
-		 struct bt_le_ext_adv_scanned_info *info);
-
-void ble_sent(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_sent_info *info);
-
 /* Utility functions */
-bool ble_is_receiver(uint8_t data[], uint8_t common_self_mesh_id);
+
+/**
+ * @brief Check the received data packet if the node with given id is receiver of that
+ * packet.
+ *
+ * @param data][] - buffer with data.
+ * @param common_self_mesh_id - id of current node.
+ *
+ * @return true if node is receiver and false if it's not.
+ */
+bool ble_is_receiver(uint8_t data[], uint8_t id);
+
+
+/**
+ * @brief Stamp a data packet with current time stamp in correct fields of the 
+ * header. 
+ *
+ * @param data][] - Provided data buffer, when function exits it will be stamped.
+ *
+ * @return - lower 32 bits of the current time stamp.
+ */
 uint16_t ble_add_packet_timestamp(uint8_t data[]);
+
+/**
+ * @brief Take the data buffer and extract from it time stamp.
+ *
+ * @param data][] - data buffer.
+ *
+ * @return - extracted timestamp.
+ */
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
 
 // Timer callbacks

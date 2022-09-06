@@ -195,12 +195,13 @@ int identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t le
 	size_t *count = NULL;
     
 	bt_id_get(NULL, count);	
+    printk("count %d\n", *count);
 	bt_id_get(identities, count);
-    if(!count) return -EINVAL;
+    if(*count == 0) return -EINVAL;
 
 	bt_addr_le_to_str(&identities[0], identity_str, len);
 
-	uint8_t err = get_ptr_to_node_by_ble_addr(graph, identity_str, &common_self_ptr);
+	int err = get_ptr_to_node_by_ble_addr(graph, identity_str, &common_self_ptr);
     if(err) return err;
     return 0;
 }
@@ -212,8 +213,9 @@ int get_ptr_to_node_by_ble_addr(struct node_t *graph,
     if(!graph || !ble_addr || !ptr) return -EINVAL;
 
 	for (uint8_t i = 0; i < MAX_MESH_SIZE; i++) {
+        printk("graph addr %s compared %s\n", graph[i].addr_bt_le, ble_addr);
 		if (!memcmp(graph[i].addr_bt_le, ble_addr, 17)) {
-			*ptr = graph + i;
+			*ptr = (graph + i);
 			return 0;
 		}
 	}

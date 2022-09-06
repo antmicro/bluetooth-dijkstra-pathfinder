@@ -78,7 +78,7 @@ uint8_t graph_init(struct node_t *graph){
     graph[{{ node.addr }}].paths = k_malloc(sizeof(struct path_t) * graph[{{node.addr}}].paths_size);
     if(graph[{{ node.addr }}].paths == NULL) return 1;
     {% for path in node.paths %}
-    (graph[{{ node.addr }}].paths + {{loop.index0}})->addr = 0x{{ path.addr }};
+    (graph[{{ node.addr }}].paths + {{loop.index0}})->node_ptr = graph + {{ path.addr }};
     (graph[{{ node.addr }}].paths + {{loop.index0}})->cost = calc_cost({% for factor in path.factors %}{% if loop.index0 != 0 %}, {% endif %}{{ factor.value }}{% endfor %});
     {%- set outer_loop = loop -%}
     {%- for factor in path.factors %}
@@ -93,6 +93,7 @@ uint8_t graph_init(struct node_t *graph){
 {% for factor in factors %}
 int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val) {
     int err;
+    if(!path) return -EINVAL;
     err = k_mutex_lock(&path->path_mutex, K_FOREVER);
     if(err) return err;
     path->{{ factor.name }} = new_val;
@@ -102,6 +103,7 @@ int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val) {
 }
 int path_t_{{ factor.name }}_get(struct path_t *path, uint16_t *ret_val) {
     int err;
+    if(!path || !ret_val) return -EINVAL;
     err = k_mutex_lock(&path->path_mutex, K_FOREVER);
     if(err) return err;
     *ret_val = path->{{ factor.name }};
