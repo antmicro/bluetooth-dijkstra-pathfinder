@@ -82,7 +82,7 @@ int dijkstra_shortest_path(struct node_t graph[],
     if(!graph || !start_node || !dst_node) return -EINVAL;
 
 	// check if right node was picked
-	if (!start_node->reserved || dst_node->reserved) {
+	if (!start_node->reserved || !dst_node->reserved) {
 		printk("ERROR: Node address not used!\n");
 		printk("Provided addresses %d and %d\n", start_node->addr, dst_node->addr);
 		return -EINVAL;
