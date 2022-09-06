@@ -419,9 +419,9 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 					err =
 					    k_msgq_peek(&awaiting_ack, &a_info);
 					if (err) {
-						// This can happen when ack was received and flag was removed already, it's okay. //PZIE: so.... ERROR?
+						// This can happen when ack was received and flag was removed already, it's okay. 
 						printk
-						    ("ERROR: No info about awaited ack!\n");
+						    ("WARNING: No info about awaited ack!\n");
 						printk("Data: %s\n", data);
 						return;
 					}
@@ -545,7 +545,7 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item)
 		if (item->node_id == ptr->node_id &&
 		    item->time_stamp == ptr->time_stamp &&
 		    item->msg_type == ptr->msg_type)
-			return true;	//PZIE: :%s/\s\+$//e
+			return true;
 		ptr++;
 		if (ptr == cb->buff_end)
 			ptr = cb->buff_start;
