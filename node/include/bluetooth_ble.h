@@ -66,7 +66,7 @@ typedef struct {
 
 
 /**
- * @brief Set BLE scan parameters which will be then used to start BLE scan. 
+ * @brief Set BLE scan parameters which will be then used to start BLE scan.
  * Register callback that will trigger on packet reception.
  *
  * @param scan_params - buffer to which params will be loaded.
@@ -75,7 +75,7 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params);
 
 
 /**
- * @brief Consumer thread that will take data packets from 
+ * @brief Consumer thread that will take data packets from
  * data_packets_to_send_q and process them. This thread handles sending of data
  * packets and path calculations. Few major steps it performs:
  * - Prepares a message, sets the header and data fields.
@@ -91,7 +91,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph);
 
 
 /**
- * @brief Consumer thread that will take ACK packets from ack_receivers_q and 
+ * @brief Consumer thread that will take ACK packets from ack_receivers_q and
  * process them. It will send the proper header, lock the BLE device and send the
  * ACK packet.
  */
@@ -100,7 +100,7 @@ void ble_send_ack_thread_entry();
 
 /**
  * @brief Consumer thread with two main tasks: it will either send routing table
- * record (rtr) of self (self connections to other nodes and costs of those connections) 
+ * record (rtr) of self (self connections to other nodes and costs of those connections)
  * or it will propagate received rtr from it's peers. Both of those are picked
  * from rtr_packets_to_send_q.
  *
@@ -108,12 +108,10 @@ void ble_send_ack_thread_entry();
  */
 void ble_send_rtr_thread_entry(struct node_t *graph);
 
-// callbacks 
-
 /**
  * @brief Callback triggered on BLE packet reception. It keeps track of recently
  * received messages and ignores duplicates. It will convert the message to simple
- * byte array and then decide on what type of message it is and what routine 
+ * byte array and then decide on what type of message it is and what routine
  * should be triggered:
  * - MSG_TYPE_DATA
  * - MSG_TYPE_ERROR
@@ -125,7 +123,38 @@ void ble_send_rtr_thread_entry(struct node_t *graph);
 void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 			struct net_buf_simple *buf);
 
-/* Utility functions */
+/**
+ * @brief Queue routing table record of self to the queue that is consumed by
+ * send rtr thread.
+ *
+ * @param timer - timer which will trigger the function.
+ */
+void add_self_to_rtr_queue(struct k_timer *timer);
+
+/**
+ * @brief Add ble sender information to the circullar buffer at head.
+ *
+ * @param cb - circullar buffer to add to.
+ * @param item - ble sender information that will be added.
+ */
+void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item);
+
+/**
+ * @brief Remove from circullar buffer at tail.
+ *
+ * @param cb - circullar buffer to remove from.
+ */
+void rcv_pkts_cb_pop(rcv_pkts_cb * cb);
+
+/**
+ * @brief Check if provided item is in circullar buffer.
+ *
+ * @param cb - circullar buffer to check.
+ * @param item - item to check for in the buffer.
+ *
+ * @return - true if the item is in the buffer or false if not.
+ */
+bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item);
 
 /**
  * @brief Check the received data packet if the node with given id is receiver of that
@@ -140,8 +169,8 @@ bool ble_is_receiver(uint8_t data[], uint8_t id);
 
 
 /**
- * @brief Stamp a data packet with current time stamp in correct fields of the 
- * header. 
+ * @brief Stamp a data packet with current time stamp in correct fields of the
+ * header.
  *
  * @param data][] - Provided data buffer, when function exits it will be stamped.
  *
@@ -158,11 +187,15 @@ uint16_t ble_add_packet_timestamp(uint8_t data[]);
  */
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
 
-// Timer callbacks
-void add_self_to_rtr_queue(struct k_timer *timer);
 
-// Circular buffer 
-// Static initialization
+/**
+ * @brief Statically initialize a circullar buffer.
+ *
+ * @param cb_name - name of a circullar buffer.
+ * @param cb_capacity - capacity of circullar buffrer.
+ *
+ * @return - nothing.
+ */
 #define RCV_PKTS_DEFINE(cb_name, cb_capacity) \
     ble_sender_info arr[cb_capacity]; \
     rcv_pkts_cb cb_name = {  \
@@ -173,15 +206,19 @@ void add_self_to_rtr_queue(struct k_timer *timer);
         .head = arr, \
         .tail = arr\
     }
-// head and tail set to arr_ptr are overkill but its done for the buff
 
-void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item);
-void rcv_pkts_cb_pop(rcv_pkts_cb * cb);
-bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item);
 
-bool ble_wait_for_ack(int32_t timeout_ms);
-
+/**
+ * @brief Print how much space was used in message queue.
+ *
+ * @param mq - pointer to message queue.
+ * @param name[] - name of the queue to be used in print.
+ */
 void print_msgq_num_used(struct k_msgq *mq, char name[]);
 
+/**
+ * @brief Get the name of the variable.
+ */
 #define VAR_NAME(mq) (#mq)
+
 #endif
