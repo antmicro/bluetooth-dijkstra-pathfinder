@@ -22,7 +22,6 @@ struct node_t {
 	struct path_t *paths;
 };
 
-// PZIE: I'd say this is a nice place to put comments in
 extern struct node_t *common_self_ptr;
 extern struct node_t graph[MAX_MESH_SIZE];
 
@@ -54,13 +53,12 @@ int path_t_cost_get(struct path_t *path, uint16_t * ret_val);
  * @return - error code, 0 on success and > on mutex failure or when no such
  * path bewteen specified nodes was found then EINVAL.
  */
-int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uint8_t new_cost);
+int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uint16_t new_cost);
 
 
 /**
  * @brief Convert node's address, paths and paths size into the byte array
- * suitable for sending with BLE.
- *
+ * suitable for sending with BLE.  
  * @param node - pointer to node which will be sent as byte array.
  * @param buffer][] - buffer to store the byte array.
  * @param buffer_size - size of a buffer.
