@@ -92,6 +92,7 @@ uint8_t graph_init(struct node_t *graph){
 
 {% for factor in factors %}
 int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val) {
+    if(!path) return -EINVAL;
     int err;
     if(!path) return -EINVAL;
     err = k_mutex_lock(&path->path_mutex, K_FOREVER);
