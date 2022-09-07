@@ -4,17 +4,17 @@ import sys
 from jinja2 import Environment
 
 template_graph_api_h = """
-/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY 
+/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY
  * Check Your build options (arguments passed to build_as.sh script) and change
- * proper config-files/mesh-topology-desc/*.json file. 
+ * proper config-files/mesh-topology-desc/*.json file.
  */
 
-#ifndef GRAPH_API_GENERATED_H 
+#ifndef GRAPH_API_GENERATED_H
 #define GRAPH_API_GENERATED_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kernel.h> 
+#include <kernel.h>
 #include <bluetooth/addr.h>
 
 #define MAX_MESH_SIZE {{ nodes_n }}
@@ -23,7 +23,7 @@ template_graph_api_h = """
 #define {{ factor.name.upper() }} {{ factor.factor }}
 {% endfor -%}
 
-// addr and cost fields are always present, rest is defined in topology.json 
+// addr and cost fields are always present, rest is defined in topology.json
 // file and loaded automatically
 struct path_t {
     struct node_t *node_ptr;
@@ -36,7 +36,7 @@ struct path_t {
 
 uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endif %}uint16_t {{ factor.name }}{% endfor %});
 
-// Setters and getters respecting mutex access 
+// Setters and getters respecting mutex access
 {% for factor in factors %}
 int path_t_{{ factor.name }}_set(struct path_t *path, uint16_t new_val);
 int path_t_{{ factor.name }}_get(struct path_t *path, uint16_t *ret_val);
@@ -47,9 +47,9 @@ int path_t_{{ factor.name }}_get(struct path_t *path, uint16_t *ret_val);
 
 
 template_graph_api_c = """
-/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY 
+/* THIS FILE IS AUTO GENERATED - DO NOT MODIFY DIRECTLY
  * Check Your build options (arguments passed to build_as.sh script) and change
- * proper config-files/mesh-topology-desc/*.json file. 
+ * proper config-files/mesh-topology-desc/*.json file.
  */
 
 #include <stdint.h>
@@ -64,9 +64,9 @@ uint16_t calc_cost({% for factor in factors %}{% if loop.index0 != 0 %}, {% endi
     return {% for factor in factors %}{% if loop.index0 != 0 %} + {% endif %}{{ factor.factor }} * {{ factor.name }}{% endfor %};
 }
 
-uint8_t graph_init(struct node_t *graph){ 
+uint8_t graph_init(struct node_t *graph){
     {% for node in nodes.values() %}
-    // node {{ node.addr }} 
+    // node {{ node.addr }}
     graph[{{ node.addr }}].addr = {{ node.addr }};
     strncpy(graph[{{ node.addr }}].addr_bt_le, "{{ node.addr_bt_le }}", 18);
     graph[{{ node.addr }}].reserved = {% if node.reserved %}true{% else %}false{% endif %};
@@ -146,7 +146,7 @@ with open(config_file_path, "r") as config:
 
 target_file_c_path = "node/src/generated-src/graph_api_generated.c"
 if not os.path.exists(target_file_c_path):
-    os.makedirs(os.path.dirname(target_file_c_path), exist_ok=True) 
+    os.makedirs(os.path.dirname(target_file_c_path), exist_ok=True)
 with open(target_file_c_path, "w") as filehandle:
     for line in out_c:
         filehandle.write(line)

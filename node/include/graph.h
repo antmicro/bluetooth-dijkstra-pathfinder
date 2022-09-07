@@ -7,7 +7,6 @@
 #include <bluetooth/addr.h>
 #include "graph_api_generated.h"
 
-
 struct node_t {
 	struct k_mutex node_mutex;
 	uint8_t addr;
@@ -38,7 +37,6 @@ int node_t_tentative_distance_get(struct node_t *node, uint16_t * ret_val);
 int path_t_cost_set(struct path_t *path, uint16_t new_val);
 int path_t_cost_get(struct path_t *path, uint16_t * ret_val);
 
-
 /**
  * @brief Set cost from one node to another. Works in one way i.e. modifies
  * only path from node1 to node2 but not the other way around. Nodes should not
@@ -53,12 +51,12 @@ int path_t_cost_get(struct path_t *path, uint16_t * ret_val);
  * @return - error code, 0 on success and > on mutex failure or when no such
  * path bewteen specified nodes was found then EINVAL.
  */
-int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uint16_t new_cost);
-
+int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2,
+				 uint16_t new_cost);
 
 /**
  * @brief Convert node's address, paths and paths size into the byte array
- * suitable for sending with BLE.  
+ * suitable for sending with BLE.
  * @param node - pointer to node which will be sent as byte array.
  * @param buffer][] - buffer to store the byte array.
  * @param buffer_size - size of a buffer.
@@ -66,7 +64,7 @@ int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uin
  * @return - 0 on success and -EINVAL on failure.
  */
 int node_to_byte_array(struct node_t *node, uint8_t buffer[],
-			uint8_t buffer_size);
+		       uint8_t buffer_size);
 
 /**
  * @brief Load information received from peer about it's connections, received as a byte array, to
@@ -83,18 +81,16 @@ int node_to_byte_array(struct node_t *node, uint8_t buffer[],
  */
 int load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size);
 
-
 /**
- * @brief Print the graph structure with connections in between nodes and 
+ * @brief Print the graph structure with connections in between nodes and
  * corresponding costs.
  *
  * @param graph[] - array of struct node_t.
  */
 void print_graph(struct node_t graph[]);
 
-
 /**
- * @brief Finds default identity of the device (BLE address), then checks in 
+ * @brief Finds default identity of the device (BLE address), then checks in
  * the graph data structure for mesh id corresponding to that identity. It will
  * set the value of global pointer - common_self_ptr that points to the self in
  * the graph data structure.
@@ -106,8 +102,8 @@ void print_graph(struct node_t graph[]);
  *
  * @return - 0 on success and -EINVAL on failure.
  */
-int identify_self_in_graph(struct node_t *graph, char identity_str[], uint8_t len);
-
+int identify_self_in_graph(struct node_t *graph, char identity_str[],
+			   uint8_t len);
 
 /**
  * @brief Iterate over graph data structure and set ptr to point to the node in

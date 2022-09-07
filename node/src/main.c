@@ -55,11 +55,12 @@ void main(void)
 	__ASSERT(err == 0, "ERROR: BLE initialization failed (err %d)\n", err);
 
 	// Load common_self_ptr 
-    char default_identity[BLE_ADDR_LEN] = { 0 };
+	char default_identity[BLE_ADDR_LEN] = { 0 };
 	err = identify_self_in_graph(graph, default_identity, BLE_ADDR_LEN);
-    __ASSERT(err == 0, "ERROR: Could not identify_self_in_graph (err %d)", err);
-    printk("Identified self with mesh id: %d and BLE address: %s", 
-            common_self_ptr->addr, default_identity); 
+	__ASSERT(err == 0, "ERROR: Could not identify_self_in_graph (err %d)",
+		 err);
+	printk("Identified self with mesh id: %d and BLE address: %s",
+	       common_self_ptr->addr, default_identity);
 
 	struct bt_le_scan_param scan_params;
 	ble_scan_setup(&scan_params);

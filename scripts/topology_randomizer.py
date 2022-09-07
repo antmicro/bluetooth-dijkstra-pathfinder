@@ -140,7 +140,7 @@ def euclidean_distance(x1, y1, x2, y2):
 
 # add edges between nodes within RADIO_RANGE
 RADIO_RANGE = int(1.0 / float(args.nodes_n) * 500 * 4)
-print("RADIO_RANGE: {}".format(RADIO_RANGE))  # TODO: change to verbose
+print("RADIO_RANGE: {}".format(RADIO_RANGE))
 for node in mesh.values():
     for neigh in mesh.values():
         # Do not connect to self
@@ -158,7 +158,7 @@ for node in mesh.values():
         # Nodes are connected based on physical distance between them, but cost
         # used in Dijkstra calculation is different than pure physical distance,
         # it also may include other factors like signal strength etc.
-        # Limit number of connections, more than 7 won't fit in BLE packet 
+        # Limit number of connections, more than 7 won't fit in BLE packet
         # during rtr propagation
         if d < RADIO_RANGE and node["paths_size"] <= MAX_PATHS_N:
             node["paths_size"] += 1
@@ -255,7 +255,7 @@ connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio {{ nodes_temp[node]['x'] }} {{ nodes_temp[node]['y'] }} 0
 wireless SetRangeWirelessFunction {{ radio_range }}
 
-# Show uart 
+# Show uart
 showAnalyzer sysbus.uart0
 
 # Load binaries

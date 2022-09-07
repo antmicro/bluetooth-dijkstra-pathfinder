@@ -64,7 +64,6 @@ typedef struct {
 	ble_sender_info *tail;
 } rcv_pkts_cb;
 
-
 /**
  * @brief Set BLE scan parameters which will be then used to start BLE scan.
  * Register callback that will trigger on packet reception.
@@ -72,7 +71,6 @@ typedef struct {
  * @param scan_params - buffer to which params will be loaded.
  */
 void ble_scan_setup(struct bt_le_scan_param *scan_params);
-
 
 /**
  * @brief Consumer thread that will take data packets from
@@ -89,14 +87,12 @@ void ble_scan_setup(struct bt_le_scan_param *scan_params);
  */
 void ble_send_data_packet_thread_entry(struct node_t *graph);
 
-
 /**
  * @brief Consumer thread that will take ACK packets from ack_receivers_q and
  * process them. It will send the proper header, lock the BLE device and send the
  * ACK packet.
  */
 void ble_send_ack_thread_entry();
-
 
 /**
  * @brief Consumer thread with two main tasks: it will either send routing table
@@ -167,7 +163,6 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item);
  */
 bool ble_is_receiver(uint8_t data[], uint8_t id);
 
-
 /**
  * @brief Stamp a data packet with current time stamp in correct fields of the
  * header.
@@ -187,7 +182,6 @@ uint16_t ble_add_packet_timestamp(uint8_t data[]);
  */
 uint16_t ble_get_packet_timestamp(uint8_t data[]);
 
-
 /**
  * @brief Statically initialize a circullar buffer.
  *
@@ -206,7 +200,6 @@ uint16_t ble_get_packet_timestamp(uint8_t data[]);
         .head = arr, \
         .tail = arr\
     }
-
 
 /**
  * @brief Print how much space was used in message queue.

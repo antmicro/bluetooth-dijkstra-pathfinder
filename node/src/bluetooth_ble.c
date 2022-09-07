@@ -21,7 +21,6 @@ K_MUTEX_DEFINE(graph_mutex);
 // Static initialization of circular buffer with recently received packets
 RCV_PKTS_DEFINE(rcv_pkts_circular_buffer, 10);
 
-
 void ble_scan_setup(struct bt_le_scan_param *scan_params)
 {
 	*(scan_params) = (struct bt_le_scan_param) {
@@ -50,7 +49,9 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 
 		// Get the packet content from the queue
 		err = k_msgq_get(&data_packets_to_send_q, &pkt_info, K_FOREVER);
-        __ASSERT(err == 0, "ERROR: Could not get data from data packets messageq (err %d)\n", err);
+		__ASSERT(err == 0,
+			 "ERROR: Could not get data from data packets messageq (err %d)\n",
+			 err);
 
 		// Message preparation
 		// Calculate shortest path with Dijkstra algorithm
@@ -59,10 +60,13 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		    dijkstra_shortest_path(graph, MAX_MESH_SIZE,
 					   common_self_ptr,
 					   &graph[dst_mesh_id]);
-        struct node_t *next_node = &graph[next_node_mesh_id];
+		struct node_t *next_node = &graph[next_node_mesh_id];
 		if (next_node_mesh_id < 0) {
-			printk("Dijkstra algorithm failed (err %d)\n", next_node_mesh_id);
-            __ASSERT(next_node_mesh_id == -ENOPATH, "ERROR: Critical fail in Dijkstra's algorithm\n", err);
+			printk("Dijkstra algorithm failed (err %d)\n",
+			       next_node_mesh_id);
+			__ASSERT(next_node_mesh_id == -ENOPATH,
+				 "ERROR: Critical fail in Dijkstra's algorithm\n",
+				 err);
 			continue;
 		}
 		printk("Next hop: %d\n", next_node_mesh_id);
@@ -81,12 +85,14 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 			.msg_type = 0x0	// Unused here
 		};
 		err = k_msgq_put(&awaiting_ack, &ack_info, K_NO_WAIT);
-        __ASSERT(err == 0,"ERROR: Failed to put into awaiting_ack q (err %d)\n", err);
+		__ASSERT(err == 0,
+			 "ERROR: Failed to put into awaiting_ack q (err %d)\n",
+			 err);
 		printk("Awaiting for ack from node %d and with timestamp: %d\n",
 		       ack_info.node_id, ack_info.time_stamp);
 
-        // Print how much free space left in the queue
-        print_msgq_num_used(&awaiting_ack, VAR_NAME(awaiting_ack));
+		// Print how much free space left in the queue
+		print_msgq_num_used(&awaiting_ack, VAR_NAME(awaiting_ack));
 
 		// Init adv params
 		struct bt_le_adv_param adv_tx_params =
@@ -101,9 +107,10 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		// Sending a data message
 		err = bt_le_adv_start(&adv_tx_params,
 				      ad_arr, ARRAY_SIZE(ad_arr), NULL, 0);
-        // In general there should be no errors in handling BLE device
-        // so we do not recover if one occurs
-        __ASSERT(err == 0, "ERROR: could not start advertising (err %d)\n", err);
+		// In general there should be no errors in handling BLE device
+		// so we do not recover if one occurs
+		__ASSERT(err == 0,
+			 "ERROR: could not start advertising (err %d)\n", err);
 		printk("Started advertising a data packet.\n");
 
 		// Wait for ack
@@ -111,7 +118,8 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		bool got_ack = time_left > 0;
 
 		err = bt_le_adv_stop();
-		__ASSERT(err == 0, "ERROR: Failed to stop advertising (err %d)\n", err);
+		__ASSERT(err == 0,
+			 "ERROR: Failed to stop advertising (err %d)\n", err);
 		printk("Finished advertising a data packet.\n");
 
 		// Release the device for ack thread or rtr thread to use
@@ -126,8 +134,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 
 		// Cost recalculation and update
 		struct path_t *used_path;
-		for (uint8_t i = 0; i < common_self_ptr->paths_size;
-		     i++) {
+		for (uint8_t i = 0; i < common_self_ptr->paths_size; i++) {
 			if (common_self_ptr->paths[i].node_ptr == next_node) {
 				used_path = &common_self_ptr->paths[i];
 			}
@@ -136,27 +143,30 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 		uint16_t signal_str, phy_distance, missed_transmissions;
 		path_t_missed_transmissions_get(used_path,
 						&missed_transmissions);
-        path_t_signal_str_get(used_path, &signal_str);
+		path_t_signal_str_get(used_path, &signal_str);
 		path_t_phy_distance_get(used_path, &phy_distance);
-        // If acknowledge was not received increase the number of missed transmissions
-        if(!got_ack) {
-            missed_transmissions += 1;
-        }
-        else {
-            if(missed_transmissions > 1) {
-                missed_transmissions -= 1;
-            }
-        }
-        path_t_missed_transmissions_set(used_path, missed_transmissions);
+		// If acknowledge was not received increase the number of missed transmissions
+		if (!got_ack) {
+			missed_transmissions += 1;
+		} else {
+			if (missed_transmissions > 1) {
+				missed_transmissions -= 1;
+			}
+		}
+		path_t_missed_transmissions_set(used_path,
+						missed_transmissions);
 		uint16_t new_cost =
 		    calc_cost(signal_str, phy_distance, missed_transmissions);
 
-		err = graph_set_cost_uni_direction(common_self_ptr, next_node, new_cost);
-        if(err) {
-            printk("WARNING: Could not set transition cost between %d and %d (err %d)", 
-                    common_self_ptr->addr, next_node->addr, err);
-            continue;
-        }
+		err =
+		    graph_set_cost_uni_direction(common_self_ptr, next_node,
+						 new_cost);
+		if (err) {
+			printk
+			    ("WARNING: Could not set transition cost between %d and %d (err %d)",
+			     common_self_ptr->addr, next_node->addr, err);
+			continue;
+		}
 		printk("New calculated transition cost: %d\n", new_cost);
 
 		// Put the message again into the queue and try to send it again
@@ -173,7 +183,7 @@ void ble_send_data_packet_thread_entry(struct node_t *graph)
 			print_msgq_num_used(&data_packets_to_send_q,
 					    VAR_NAME(data_packets_to_send_q));
 		}
-		// Wait for the other node acknowledging to finish to so that not to 
+		// Wait for the other node acknowledging to finish to so that not to
 		// flood it with new messages
 		uint32_t data_adv_time = DATA_ADV_TIME_MS - time_left;
 		if (data_adv_time < ACK_ADV_TIME_MS) {
@@ -220,7 +230,7 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2, void *unused3)
 					 BT_GAP_ADV_FAST_INT_MAX_1,
 					 NULL);
 
-		// Advertise 
+		// Advertise
 		// Lock the ble device
 		k_mutex_lock(&ble_dev_mutex, K_FOREVER);
 
@@ -299,32 +309,32 @@ void ble_send_rtr_thread_entry(struct node_t *graph)
 
 /* Callbacks */
 void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
-		   struct net_buf_simple *buf)
+			struct net_buf_simple *buf)
 {
 	char addr_str[BT_ADDR_LE_STR_LEN];
 	char data[BLE_LONGEST_MSG_LEN * 2 + 1];
 
-	// Check if circular buffer should be popped 
+	// Check if circular buffer should be popped
 	static int64_t prev_t = 0;
 	int64_t current_t = k_uptime_get();
 	int64_t delta = current_t - prev_t;
-	if (delta > CB_POP_TIME_MS) {	// TODO: Adjust timing of this operation 
+	if (delta > CB_POP_TIME_MS) {
 		rcv_pkts_cb_pop(&rcv_pkts_circular_buffer);
 	}
 	prev_t = current_t;
 
-	// formatting 
+	// formatting
 	bin2hex(buf->data, buf->len, data, sizeof(data));
 	bt_addr_le_to_str(info->addr, addr_str, sizeof(addr_str));
-    
-    if(false) {
-        static uint64_t messges_received_n = 0;
-        messges_received_n++;
-        printk("Received data from node with address: %s\n", addr_str);
-        printk("Data: %s\n", data);
-        printk("Number of messages received: %lld\n", messges_received_n);
-    }
 
+	if (false) {
+		static uint64_t messges_received_n = 0;
+		messges_received_n++;
+		printk("Received data from node with address: %s\n", addr_str);
+		printk("Data: %s\n", data);
+		printk("Number of messages received: %lld\n",
+		       messges_received_n);
+	}
 	// Strip the buffer into simple byte array
 	uint8_t ble_data[BLE_RTR_MSG_LEN] = { 0 };
 	memcpy(ble_data, &(buf->data[2]), BLE_LONGEST_MSG_LEN);
@@ -334,21 +344,21 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 		int err;
 		uint8_t msg_type = ble_data[MSG_TYPE_IDX];
 
-		// Extract sender id, timestamp and msg type to determine processing 
-		// path and check if it is a duplicate 
+		// Extract sender id, timestamp and msg type to determine processing
+		// path and check if it is a duplicate
 		ble_sender_info sender_info = {
 			.node_id = ble_data[SENDER_ID_IDX],
 			.time_stamp = ble_get_packet_timestamp(ble_data),
 			.msg_type = msg_type
 		};
 
-		// If packet was not received before, process it 
+		// If packet was not received before, process it
 		if (!rcv_pkts_cb_is_in_cb
 		    (&rcv_pkts_circular_buffer, &sender_info)) {
-			// Decrease a TTL counter for the packet for further processing 
+			// Decrease a TTL counter for the packet for further processing
 			ble_data[TTL_IDX]--;
 
-			// Also add it to the recently received packets memory 
+			// Also add it to the recently received packets memory
 			rcv_pkts_cb_push(&rcv_pkts_circular_buffer,
 					 &sender_info);
 			switch (msg_type) {
@@ -369,8 +379,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 							       K_NO_WAIT);
 						print_msgq_num_used
 						    (&ack_receivers_q,
-						     VAR_NAME
-						     (ack_receivers_q));
+						     VAR_NAME(ack_receivers_q));
 						if (err) {
 							printk
 							    ("ERROR: Failed to put to ack \
@@ -381,7 +390,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
 					uint8_t dst_mesh_id =
 					    ble_data[DST_ADDR_IDX];
-					if (dst_mesh_id == common_self_ptr->addr) {
+					if (dst_mesh_id ==
+					    common_self_ptr->addr) {
 						printk
 						    ("FINAL DESTINATION REACHED\n");
 						// Do something with the data
@@ -399,8 +409,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 						       &pkt_info, K_NO_WAIT);
 					print_msgq_num_used
 					    (&data_packets_to_send_q,
-					     VAR_NAME
-					     (data_packets_to_send_q));
+					     VAR_NAME(data_packets_to_send_q));
 					if (err) {
 						printk
 						    ("Error queue put: %d, queue purged\n",
@@ -419,7 +428,7 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 					err =
 					    k_msgq_peek(&awaiting_ack, &a_info);
 					if (err) {
-						// This can happen when ack was received and flag was removed already, it's okay. 
+						// This can happen when ack was received and flag was removed already, it's okay.
 						printk
 						    ("WARNING: No info about awaited ack!\n");
 						printk("Data: %s\n", data);
@@ -447,10 +456,12 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 				}
 
 			case MSG_TYPE_ROUTING_TAB:
-                // Do not interpret or load rtr sent from current node
-                if(ble_data[SENDER_ID_IDX] == common_self_ptr->addr) break;
+				// Do not interpret or load rtr sent from current node
+				if (ble_data[SENDER_ID_IDX] ==
+				    common_self_ptr->addr)
+					break;
 
-                // Send it further if time to live is not zero
+				// Send it further if time to live is not zero
 				printk("RECEIVED RTR FROM %d\n",
 				       ble_data[SENDER_ID_IDX]);
 				load_rtr(graph, ble_data + HEADER_SIZE,
@@ -480,8 +491,8 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 
 void add_self_to_rtr_queue(struct k_timer *timer)
 {
-    int err;
-    __ASSERT(timer != NULL, "ERROR: Timer pointer is NULL\n");
+	int err;
+	__ASSERT(timer != NULL, "ERROR: Timer pointer is NULL\n");
 	uint8_t buffer[BLE_RTR_MSG_LEN] = { 0 };
 
 	// Initialize a header
@@ -491,10 +502,11 @@ void add_self_to_rtr_queue(struct k_timer *timer)
 	buffer[RCV_ADDR_IDX] = BROADCAST_ADDR;
 	ble_add_packet_timestamp(buffer);
 	buffer[TTL_IDX] = MAX_TTL;
-    //https://stackoverflow.com/questions/1053572
+	//https://stackoverflow.com/questions/1053572
 	err = node_to_byte_array(common_self_ptr, buffer + HEADER_SIZE,
-			   BLE_RTR_MSG_LEN - HEADER_SIZE);
-    __ASSERT(err == 0, "ERROR: Could not convert node to byte array to send\n");
+				 BLE_RTR_MSG_LEN - HEADER_SIZE);
+	__ASSERT(err == 0,
+		 "ERROR: Could not convert node to byte array to send\n");
 	printk("Putting the self rtr to send queue.\n");
 	err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
 	print_msgq_num_used(&rtr_packets_to_send_q,
@@ -507,8 +519,8 @@ void add_self_to_rtr_queue(struct k_timer *timer)
 
 void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 {
-    __ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
-    __ASSERT(item != NULL, "ERROR: sender info is NULL\n");
+	__ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
+	__ASSERT(item != NULL, "ERROR: sender info is NULL\n");
 
 	*(cb->head) = *item;
 	cb->head++;
@@ -518,7 +530,7 @@ void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 	if (cb->head == cb->buff_end) {	// we dont write to end, its not valid
 		// In next call, write to the beginning of the buffer
 		cb->head = cb->buff_start;
-    }
+	}
 	// If head catches tail, shift tail and put it at the start if relapse
 	// also decrease count, as one element was added with the cost of another
 	if (cb->head == cb->tail) {
@@ -533,7 +545,7 @@ void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 
 void rcv_pkts_cb_pop(rcv_pkts_cb * cb)
 {
-    __ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
+	__ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
 	if (cb->count > 0) {
 		cb->tail++;
 		if (cb->tail == cb->buff_end)
@@ -544,8 +556,8 @@ void rcv_pkts_cb_pop(rcv_pkts_cb * cb)
 
 bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item)
 {
-    __ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
-    __ASSERT(item != NULL, "ERROR: sender info is NULL\n");
+	__ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
+	__ASSERT(item != NULL, "ERROR: sender info is NULL\n");
 	ble_sender_info *ptr = cb->tail;
 	while (ptr != cb->head) {
 		if (item->node_id == ptr->node_id &&
@@ -561,7 +573,7 @@ bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item)
 
 bool ble_is_receiver(uint8_t data[], uint8_t id)
 {
-    __ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
+	__ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
 	bool rec = data[RCV_ADDR_IDX] == BROADCAST_ADDR ||
 	    data[RCV_ADDR_IDX] == id;
 	return rec;
@@ -569,7 +581,7 @@ bool ble_is_receiver(uint8_t data[], uint8_t id)
 
 uint16_t ble_add_packet_timestamp(uint8_t data[])
 {
-    __ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
+	__ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
 	uint8_t timestamp_lower, timestamp_upper;
 	uint32_t cycles32 = k_cycle_get_32();
 
@@ -583,7 +595,7 @@ uint16_t ble_add_packet_timestamp(uint8_t data[])
 
 uint16_t ble_get_packet_timestamp(uint8_t data[])
 {
-    __ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
+	__ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
 	uint16_t timestamp = (data[TIME_STAMP_MSB_IDX] << 8) |
 	    data[TIME_STAMP_LSB_IDX];
 	return timestamp;
@@ -591,8 +603,8 @@ uint16_t ble_get_packet_timestamp(uint8_t data[])
 
 void print_msgq_num_used(struct k_msgq *mq, char name[])
 {
-    __ASSERT(mq != NULL, "ERROR: mq ptr is NULL\n");
-    __ASSERT(name != NULL, "ERROR: Name buffer is NULL\n");
+	__ASSERT(mq != NULL, "ERROR: mq ptr is NULL\n");
+	__ASSERT(name != NULL, "ERROR: Name buffer is NULL\n");
 	uint32_t used = k_msgq_num_used_get(mq);
 	uint32_t free = k_msgq_num_free_get(mq);
 	uint32_t total_size = used + free;
