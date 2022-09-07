@@ -24,7 +24,7 @@
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          },
@@ -45,7 +45,7 @@
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          }
@@ -74,7 +74,7 @@
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          },
@@ -95,7 +95,7 @@
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          }
@@ -124,7 +124,7 @@
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          },
@@ -139,13 +139,13 @@
                },
                {
                   "name":"phy_distance",
-                  "value":354,
+                  "value":350,
                   "factor":1
                },
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          }
@@ -177,13 +177,13 @@
                },
                {
                   "name":"phy_distance",
-                  "value":354,
+                  "value":350,
                   "factor":1
                },
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          },
@@ -204,7 +204,7 @@
                {
                   "name":"missed_transmissions",
                   "value":0,
-                  "factor":1
+                  "factor":3
                }
             ]
          }
