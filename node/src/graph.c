@@ -108,7 +108,7 @@ int path_t_cost_get(struct path_t *path, uint16_t * ret_val)
 	return 0;
 }
 
-int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uint8_t new_cost)
+int graph_set_cost_uni_direction(struct node_t *node1, struct node_t *node2, uint16_t new_cost)
 {
     int err;
 	for (uint8_t i = 0; i < node1->paths_size; i++) {
@@ -134,17 +134,30 @@ int node_to_byte_array(struct node_t *node, uint8_t buffer[],
 
 	// Rest of fields represent the connections of that node
 	for (uint8_t i = 0; i < node->paths_size; i++) {
-		uint8_t neighbor_addr_idx = 2 * i + 2 + 0;
-		uint8_t neighbor_dist_idx = 2 * i + 2 + 1;
+		uint8_t neighbor_addr_idx = 3 * i + 2 + 0;
+		uint8_t neighbor_cost_idx_msb = 3 * i + 2 + 1;
+        uint8_t neighbor_cost_idx_lsb = 3 * i + 2 + 2;
         
-        if(neighbor_dist_idx > node->paths_size - 1 || neighbor_dist_idx > node->paths_size - 1) {
+        // It is enough to check addr, if it is too big the other will also be
+        if(neighbor_addr_idx > buffer_size - 1) {
             return -EINVAL;
         }
 
 		uint16_t cost;
-		path_t_cost_get(node->paths + i, &cost);
+        if(k_is_in_isr()){
+            // If in isr it should not use graph access API as that API uses mutexes,
+            // which may involve waiting (which is not legal for irs). ISR is 
+            // also uninterruptable and interrupted thread will only resume if
+            // ISR finishes all the work, so it should be thread safe.
+            // https://docs.zephyrproject.org/2.6.0/reference/kernel/other/interrupts.html
+            cost = (node->paths + i)->cost;
+        }
+        else {
+		    path_t_cost_get(node->paths + i, &cost);
+        }
 		buffer[neighbor_addr_idx] = (node->paths + i)->node_ptr->addr;
-		buffer[neighbor_dist_idx] = cost;
+        buffer[neighbor_cost_idx_msb] = (cost & 0xFF00) >> 8;
+		buffer[neighbor_cost_idx_lsb] = cost & 0x00FF;
 	}
     return 0;
 }
@@ -159,12 +172,14 @@ int load_rtr(struct node_t graph[], uint8_t buff[], uint8_t size)
     
 	// Then iterate over node neighs 
 	for (uint8_t j = 0; j < neighs_n; j++) {
-		uint8_t idx = 1 + 1 + (2 * j);
+		uint8_t idx = 1 + 1 + (3 * j);
 		if (idx > size) {
 			return EINVAL;
 		}
 		uint8_t neigh_addr = buff[idx];
-		uint8_t cost_to_neigh = buff[idx + 1];
+		uint8_t cost_to_neigh_msb = buff[idx + 1];
+        uint8_t cost_to_neigh_lsb = buff[idx + 2];
+        uint16_t cost_to_neigh = (cost_to_neigh_msb << 8) | cost_to_neigh_lsb;
         int err = graph_set_cost_uni_direction(&graph[node_addr], &graph[neigh_addr], cost_to_neigh);
         if(err) return err;
 	}
