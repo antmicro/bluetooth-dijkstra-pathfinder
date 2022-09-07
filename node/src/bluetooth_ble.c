@@ -208,7 +208,7 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2, void *unused3)
 		ack_data[TIME_STAMP_MSB_IDX] =
 		    (0xFF00 & ack_info.time_stamp) >> 8;
 		ack_data[TIME_STAMP_LSB_IDX] = 0x00FF & ack_info.time_stamp;
-		ack_data[TTL_IDX] = 0x01;	// One jump only is allowed
+		ack_data[TTL_IDX] = MAX_TTL;
 
 		static struct bt_data ad_arr[] = {
 			BT_DATA(0xAA, ack_data, BLE_ACK_MSG_LEN)
@@ -447,7 +447,10 @@ void bt_msg_received_cb(const struct bt_le_scan_recv_info *info,
 				}
 
 			case MSG_TYPE_ROUTING_TAB:
-				// Send it further if time to live is not zero 
+                // Do not interpret or load rtr sent from current node
+                if(ble_data[SENDER_ID_IDX] == common_self_ptr->addr) break;
+
+                // Send it further if time to live is not zero
 				printk("RECEIVED RTR FROM %d\n",
 				       ble_data[SENDER_ID_IDX]);
 				load_rtr(graph, ble_data + HEADER_SIZE,
@@ -481,17 +484,17 @@ void add_self_to_rtr_queue(struct k_timer *timer)
     __ASSERT(timer != NULL, "ERROR: Timer pointer is NULL\n");
 	uint8_t buffer[BLE_RTR_MSG_LEN] = { 0 };
 
-	// Initialize a header 
+	// Initialize a header
 	buffer[SENDER_ID_IDX] = common_self_ptr->addr;
 	buffer[MSG_TYPE_IDX] = MSG_TYPE_ROUTING_TAB;
 	buffer[DST_ADDR_IDX] = 0xFF;
 	buffer[RCV_ADDR_IDX] = BROADCAST_ADDR;
 	ble_add_packet_timestamp(buffer);
 	buffer[TTL_IDX] = MAX_TTL;
-
+    //https://stackoverflow.com/questions/1053572
 	err = node_to_byte_array(common_self_ptr, buffer + HEADER_SIZE,
 			   BLE_RTR_MSG_LEN - HEADER_SIZE);
-
+    __ASSERT(err == 0, "ERROR: Could not convert node to byte array to send\n");
 	printk("Putting the self rtr to send queue.\n");
 	err = k_msgq_put(&rtr_packets_to_send_q, buffer, K_NO_WAIT);
 	print_msgq_num_used(&rtr_packets_to_send_q,
@@ -512,12 +515,12 @@ void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 
 	// Increase count
 	cb->count++;
-	if (cb->head == cb->buff_end) {	// we dont write to end, its not valid 
-		// In next call, write to the beginning of the buffer 
+	if (cb->head == cb->buff_end) {	// we dont write to end, its not valid
+		// In next call, write to the beginning of the buffer
 		cb->head = cb->buff_start;
     }
 	// If head catches tail, shift tail and put it at the start if relapse
-	// also decrease count, as one element was added with the cost of another 
+	// also decrease count, as one element was added with the cost of another
 	if (cb->head == cb->tail) {
 		cb->tail++;
 		cb->count--;
@@ -530,6 +533,7 @@ void rcv_pkts_cb_push(rcv_pkts_cb * cb, ble_sender_info * item)
 
 void rcv_pkts_cb_pop(rcv_pkts_cb * cb)
 {
+    __ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
 	if (cb->count > 0) {
 		cb->tail++;
 		if (cb->tail == cb->buff_end)
@@ -540,6 +544,8 @@ void rcv_pkts_cb_pop(rcv_pkts_cb * cb)
 
 bool rcv_pkts_cb_is_in_cb(rcv_pkts_cb * cb, ble_sender_info * item)
 {
+    __ASSERT(cb != NULL, "ERROR: circullar buffer is NULL\n");
+    __ASSERT(item != NULL, "ERROR: sender info is NULL\n");
 	ble_sender_info *ptr = cb->tail;
 	while (ptr != cb->head) {
 		if (item->node_id == ptr->node_id &&
@@ -577,20 +583,16 @@ uint16_t ble_add_packet_timestamp(uint8_t data[])
 
 uint16_t ble_get_packet_timestamp(uint8_t data[])
 {
+    __ASSERT(data != NULL, "ERROR: Data buffer is NULL\n");
 	uint16_t timestamp = (data[TIME_STAMP_MSB_IDX] << 8) |
 	    data[TIME_STAMP_LSB_IDX];
 	return timestamp;
 }
 
-bool ble_wait_for_ack(int32_t timeout_ms)
-{
-	int32_t time_remaining = k_msleep(timeout_ms);
-	printk("Time remaining %d\n", time_remaining);	//PZIE: stretch goal - use Zephyr's logging infra
-	return time_remaining > 0;
-}
-
 void print_msgq_num_used(struct k_msgq *mq, char name[])
 {
+    __ASSERT(mq != NULL, "ERROR: mq ptr is NULL\n");
+    __ASSERT(name != NULL, "ERROR: Name buffer is NULL\n");
 	uint32_t used = k_msgq_num_used_get(mq);
 	uint32_t free = k_msgq_num_free_get(mq);
 	uint32_t total_size = used + free;
