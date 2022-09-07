@@ -10,6 +10,7 @@ import warnings
 # constants
 AREA_X_DIM = 500
 AREA_Y_DIM = 500
+MAX_PATHS_N = 7
 
 # validate input
 parser = argparse.ArgumentParser(
@@ -157,7 +158,9 @@ for node in mesh.values():
         # Nodes are connected based on physical distance between them, but cost
         # used in Dijkstra calculation is different than pure physical distance,
         # it also may include other factors like signal strength etc.
-        if d < RADIO_RANGE:
+        # Limit number of connections, more than 7 won't fit in BLE packet 
+        # during rtr propagation
+        if d < RADIO_RANGE and node["paths_size"] <= MAX_PATHS_N:
             node["paths_size"] += 1
             node["paths"].append(
                 dict(
