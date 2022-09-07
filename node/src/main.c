@@ -11,7 +11,7 @@
 #define BLE_ADDR_LEN          18
 
 // Rtr timings
-#define RTR_TIMER_START_DELAY 2000
+#define RTR_TIMER_START_DELAY 2500
 #define RTR_TIMER_PERIOD      60000
 
 // Threads data
