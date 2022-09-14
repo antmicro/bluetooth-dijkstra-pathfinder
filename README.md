@@ -83,6 +83,7 @@ This is used for user validation of path finding. Few features of this build:
 * Packets are initially sent from mobile broadcaster and are addressed by default to node 0.
 
 Example visualization of randomized topology from pyvis:
+
 ![Example random config from pyvis](./example_pyvis.png)
 
 **Note 1**: nodes in the visualization are not placed in their exact coordinates, but
