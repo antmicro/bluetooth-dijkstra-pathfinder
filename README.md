@@ -1,229 +1,157 @@
 ### PZIE: didn't read, sorry. But I think we can have our graphics team redraw the images
 ### PZIE: also please look into our repositories that have the antmicro open source badge - prepare your readme in a similar way
-# Bluetooth Dijkstra Pathfinder 
-This repository contains project files of custom Bluetooth ad - hoc mesh 
-implementation, with Dijkstra's as routing algorithm.
+# Bluetooth Dijkstra Pathfinder
 
-In folder dijkstra\_shortest\_path is my implementation of Dijkstra's shortest 
-path algorithm. It does work, although there is still a lot of room for improvements. 
-Algorithm was tested on examplary graph: 
-![Dijkstra graph example](./dijkstra_graph.png)
+[![badge](https://img.shields.io/badge/View%20on-Antmicro%20Open%20Source%20Portal-332d37?style=flat-square)](https://opensource.antmicro.com)
 
+This repository contains project files of custom Bluetooth mesh
+implementation for nRF52840, with Dijkstra's algorithm as routing algorithm. Application
+is based on Zephyr RTOS and it's BLE stack and it was tested with Renode in
+multinode configurations.
 
-In folder zephyr\_project You can find Zephyr project files. Destination platform
-of this project is nRF52840 Dongle with Zephyr RTOS. For now it is tested on 
-Renode platform.
+Proposed solution tries to extend possibilities of standard BLE mesh, that is based
+on principle of flooding and is not suitable for data transfer, but rather for
+simple state propagation.
 
+Project, apart from main application, also contains bunch of helper utilities,
+that ease the development:
+* Mobile broadcaster application, it is simplified advertising node, that initiates the transmission.
+* build\_as.sh script for building the application in multiple configurations.
+* Ready to use .resc files for Renode testing.
+* Generator script, that will take a .json file with provided topology and initialize in code initial routing table (or graph) and generate a thread safe API to access it.
+* Randomizer script that will "reshuffle" nodes and visualize the output.
+* Few robot tests.
+* Renode command, extended with Python, that will move the mobile broadcaster.
 
+## Dependencies
 
-Default Dijkstra graph used in zephyr version is:
+### Zephyr RTOS
+The application is based on Zephyr RTOS in version 2.7.99 so it should be installed
+according to [documentation](https://docs.zephyrproject.org/2.7.0/getting_started/index.html).
 
-In brackets are distances between nodes and without brackets are nodes addresses. 
-This information is contained in graph.c file in initialization function.
-This setup allows for simplest case where shortest path must be found. Solution to reach
-node 2 from node 0 is path through 0, 1, 2 with total distance of 2.
+### Renode
+Application is tested using very convinient Renode multinode simulation. To install
+renode, follow the guide on official [github site](https://github.com/renode/renode).
 
-### Short description of a demo 
-It is possible to easily build project in 2 essential configurations, one 
-is basic 5 node configuration on which most of the development was performed 
-and another is a randomized configuration where user specifies a number of nodes
-that will be in the mesh and script randomizes it and builds the application.
+### Python dependencies
+Few utilities are used for generator and randomizer scripts. Install them with following:
+```
+pip install Jinja2==2.11.3
+pip install pyvis
+```
 
-In both configurations there is mobile broadcaster that is not a part of the 
-mesh, but it initiates a communication. The message from this broadcaster is 
-directed to node with mesh id = 2. It is the first recipient of the message in 
-both build configurations.
+## Build the application
+To build the application, use the build\_as.sh script. When in doubt on how to
+use it, run `./build_as.sh` without any options to display help and example
+usage. There are few configurations to choose from:
 
-#### Basic 5 node configuration
-This configuration consists of 5 nodes in configuration described below that 
-create a BLE mesh. 
+### Build as basic 5 nodes
+This configuration is suitable for development, as it is constant, it has simple
+to understand paths. Few features of this configuration:
+* Packets are sent by mobile broadcaster and are all adressed to node 0 (sink).
+* Node 3 is node that is not reserved, it is an address in the mesh that is not used.
+* Node 4 represents inactive node, it is included in the mesh topology, but it is not added to Renode simulation, so it will not receive or ACK any packets. This will force neighbors, to adjust the path.
+* Mobile broadcaster is moving on the corners of 500x500 rectangle, at one time it is in range of two nodes simultaneously.
+
+Below is presented visualization of that configuration:
 
 ![Basic 5 node configuration](./diagram_basic5node.png)
 
-#### Randomized
-In this configuration user has to provide number of nodes that will be
-randomized and script will randomize connections between them. Available range 
-is from 3 to 64 nodes, although in **current state only up to 9 nodes work in 
-simulation.**
-
-### Communication scheme
-In current state, communication cycle looks as following:
-1. Mobile broadcaster sends a message which is marked with destination - node 0.
-Message is directly advertised to node 2. Payload of this message is broadcast 
-start time (just zeros).
-2. Node 2 after reception, should calculate dijkstra algorithm and decide to 
-send the packet to node 1
-3. Node 1 executes the same procedure as node 2
-4. Message gets to node 0 that is destination of the packet so message is not 
-passed anymore.
-5. Here begins second cycle of communication, with exactly the same path but
-different payload in the message.
-
-### Short description of a packet transmission routine
-#### Bluetooth setup description
-Bluetooth advertising and scanning is set up in two functions: ble_scan_setup and 
-ble_adv_sets_setup. Currently BLE is set to send directed messages, in extended
-mode and continously and passively scan for advertisements.
-
-#### Bluetooth packet "passing" routine 
-* bt_direct_msg_received_cb - is a callback that fires when node succesfully 
-scans a message. Its job is to print to the console that this event happened and 
-put that message to a message queue for processing by thread (basically offloading
-work from ISR)
-* create_packet_thread_entry is a thread responsible for getting packets from 
-message queue and processing them. Processing involves:
-    * identifying what is the destination node of the packet (first byte of payload)
-    * checking if the current node is dst node
-    * calculate dijkstra algorithm
-    * create a packet and add information what address next hop should be 
-    * add this packet to FIFO for sending
-* ble_send_packet_thread_entry is a thread that advertises the processed messages:
-    * it gets the packet from FIFO (sleeps when fifo is empty)
-    * on the basis of next node ID pick a proper advertising set
-    * create a proper bluetooth packet
-    * set it to advertising set 
-    * wait for peripheral to be free and then advertise 
-
-Threads are initialized in main and there also their priorities are set.
-
-### Building the application
-It is possible to build the project in three ways described below.
-For standard builds, convinience script was prepared. It is called build_as.sh
-and is located in the root directory of the project. Below is presented a way 
-how to use this script.
-
-When building the application for the first time, user also should run:
-
-```
-west init && west update
+To build and run the application in this configuration, run the following commands:
+```bash
+$ ./build_as.sh -b
+$ renode config-files/mesh-topology-desc/basic_5_nodes.json
 ```
 
-#### As basic 5 node application
-This build will use a standard 5 node configuration file - basic_5_nodes.json 
-located
-in config-files/mesh-topology-desc directory. This file will be fed into a 
-script that generates contents of graph initialization function and then 
-application will be built. Corresponding .resc file resides in 
-config-files/renode-resc-files.
+We expect that node 2 will try to send to node 4, as path through node 4 is the
+shortest path to node 0. It will try to send the messages, but will never receive
+an ACK, which will increase a cost of transition to that node. When the cost will
+be high enough, Dijkstra's algorithm will start routing the packets in different
+way and node 4 will be bypassed.
 
-```
-cd bluetooth-dijkstra-pathfinder
-./build_as.sh --basic
-```
+### Randomized
+This configuration is suitable for testing bigger meshes and testing overall
+performance of the network. It will generate a topology .json file with randomly
+placed nodes on 500x500 grid. Depending on the number of nodes, the radio range
+will be adjusted. This build will also be visualized by pyvis in output .html file.
+This is used for user validation of path finding. Few features of this build:
+* There is always 1 inactive node, node 0 can not be inactive.
+* User can specify number of nodes to generate.
+* Radio range is adjusted to accomodate for different number of nodes on the grid.
+* Mobile broadcaster will move on the corners of 500x500 square.
+* It is not always guaranteed, that the randomized topology will have a valid path to destination node, so check that with visualization.
+* Packets are initially sent from mobile broadcaster and are addressed by default to node 0.
 
-Mobile broadcaster is built automatically.
+Example visualization of randomized topology from pyvis:
+![Example random config from pyvis](./example_pyvis.png)
 
-This build is mainly for application development, as it provides minimal use
-case scenario where Dijkstra's algorithm can calculate shortest path out of two
-possibilities.
+**Note 1**: nodes in the visualization are not placed in their exact coordinates, but
+rather they are more or less placed and the pyvis adds physics, so they
+attract / repel each other. This allows for better visualization but does not
+give exact positions. On the other hand, mobile broadcaster is positioned in
+exact x, y coordinates.
 
-#### As randomized mesh
-When building as randomized mesh, script has to do a little bit more work. It 
-takes as an argument number of nodes that user wants to generate and passes it 
-to topology_randomizer.py script. This script creates configuration json file 
-with randomly connected nodes. This file also resides in 
-the config-files/mesh-topology-desc directory. The same script also generates 
-corresponding .resc file, in config-files/renode-resc-files. 
+**Note 2**: to see transition cost between nodes, hover Your mouse over the edge.
 
-To build, run:
-```
-cd bluetooth-dijkstra-pathfinder
-./build_as.sh --randomized \<number of nodes - [3, 64]\>
-```
+To build and run the application in this configuration, run the following commands:
+```bash
+# Use the -s option to reshuffle nodes, or if You run that build for a first time, generate a new topology .json file.
+$ ./build_as.sh -r -s <number of nodes>
 
-Mobile broadcaster is built automatically.
-
-This build config is meant for performance testing.
-
-#### Custom build
-If one is developing the application for specific use scenario, neither of 
-mentioned builds will be of much use, so to build with custom configuration
-one must take care of setting up topology_configuration.json file that is fed 
-to graph initialization function and also .resc Renode file that will be used
-to start the simulation. When this is done, run:
-```
-west build -b nrf52840dk_nrf52840 \
-        $SRC_DIR \
-        -d $BUILD_DIR \
-        -- -DMAX_MESH_SIZE=<your mesh size> \
-        -DTOPOLOGY_CONFIG_PATH:STRING=config-files/mesh-topology-desc/your_topology.json
-```
-Short description of arguments passed to build command (args after "--" are 
-pased to CMake):
-* -b nrf52840dk_nrf52840 app was designed for nRF52840 chip.
-* SRC_DIR and BUILD_DIR are optional if command is not run from this 
-applications zephyr project root dir (/node).
-* -DMAX_MESH_SIZE - defines a size of the mesh, it has to be declared here 
-as this is then included in build process as preprocessor #define and used in 
-the application extensively.
-* DTOPOLOGY_CONFIG_PATH - path to topology_configuration.json file for
-graph_init function.
-
-When using this build method, mobile_broadcaster is **not** built automatically
-so it should be built with:
-
-```
-west build -b nrf52840dk_nrf52840 \
-        $MB_SRC_DIR\
-        -d $MB_BUILD_DIR
-```
-Where:
-* MB_SRC_DIR is directory with source for mobile broadcaster.
-* MB_BUILD_DIR directory where build files will be outputed.
-
-### Running the application 
-Application should be run with Renode software, so it is necessary to pass a 
-.resc file corresponding to chosen build configuration:
-
-```
-./renode /path/to/configuration.resc
+# Output .resc file is under following path
+$ renode config-files/renode-resc-files/randomized_topology.resc
 ```
 
-For example, when building basic 5 nodes:
+### Custom configuration
+The build\_as.sh script can be used with custom topology, declared as a valid .json.
+For examples on how to prepare such file, refer to config-files/mesh-topology-desc.
+There You will find proper topology descriptions. You will also have to pair topology
+file with .resc file (examples in config-files/renode-resc-files) and such
+combination can be build and run with:
 
-```
-./renode /path/to/bluetooth-dijkstra-pathfinder/config-files/renode-resc-files/basic_5_nodes.resc
-```
+```bash
+# Provide topology json file
+$ ./build_as.sh -i example.json
 
-#### Running tests with Robot testing framework 
-
-For now, there are few tests that can be performed on the application.
-Test should be run with Renode's renode-test script.
-
-##### Packet propagation time test
-This test will measure time between packet being sent and arriving to the 
-destination node. It expects that provided .resc file will have 
-mobile_broadcaster and sink nodes, as it sets up the terminal testers for this
-machines.
-
-The script has few default values inside, so it has to be run 
-with command line arguments to overwrite this defaults:
-```
-./renode-test /path/to/test_packet_travel_time.robot \
-    --variable SCRIPT_PATH:/path/to/resc/file.resc \
-    --variable LOG_PATH:/path/to/valid/log/file.log
+# Run the simulation with your .resc files
+$ renode config-files/renode-resc-files/your_resc_file.resc
 ```
 
-Above is completely valid way to run the test, but the script was written with 
-a goal in mind to test average propagation times in the randomized mesh. So to 
-achieve that, tests_runner script was developed which will repeat that test 
-specified amount of times for randomized topologies to find an average 
-propagation times. To use it run:
-```
-./tests_runner.sh <number of nodes> /path/to/renode/rootdir
-```
-This will run tests multiple times and save result of each run into the folder
-in project directory tests/out/\<number of nodes\>nodes.log.
+The topology file should be placed in config-files/renode-resc-files, as the
+script will search in that directory for file with given name.
 
-**As mentioned above, mesh does not function properly for mesh sizes bigger than
-9.**
+## Configuration files
 
-##### Dijkstra algorithm test
-**This test has to be slightly changed to work with current version of the 
-application.**
-This test will run the app in Renode headless mode and wait for the outputed 
-path on UART analyzer. If the path is correct for current nodes configuration
-it will succed.
+### Renode's .resc files
+Contained in config-files/renode-resc-files they describe the topology in Renode
+simulation. This file will describe each node involved in the network:
+* It's hardware with .repl file
+* Radio and radio range
+* Physical position of the node in X, Y, Z
+* Identification address (default BLE identity of the device)
+* Analyzers connected to it
+* Binaries associated with that node
+* etc, for more refer to examples in config-files/renode-resc-files or [Renode documentation](https://renode.readthedocs.io/en/latest/)
+
+### Topology .json files
+Contained in config-files/mesh-topology-desc directory, they are used to:
+* Define positions of the node on X, Y plane
+* Define the BLE address of the device
+* Define paths connecting the device with neighbors
+* Each path contains information about the mesh ID of the neighbor, transition cost (can be zero it will be calculated later), factors i.e. properties taken into account when calculating transition cost for Dijkstra's algorithm (signal strength, physical distance, number of missed transmissions) and weight of each of those factors
+
+Examples are in config-files/mesh-topology-desc.
+
+### Mobile broadcaster paths .json files
+Contained in config-files/mb-paths, are very simple files containing consequent positions of mobile broadcaster
+during the simulation. Such files are loaded by a Renode's command added with Python (see scripts/renode\_commands.py).
+This file is basically an array of pairs of values, representing consequent X, Y coordinates of the mobile broadcaster.
+
+## Utility scripts
+Few scripts are included to help with development and support build process:
+* generator.py - script that will take as an input a .json with topology description and generate .c and .h files for the application with description of graph / mesh and thread safe API for accessing fields of this data structure.
+* topology\_randomizer.py - script that will generate random topology and output a .json, .resc files with the topology and also .html file with visualization.
+* renode\_commands - script with 2 commands for Renode, to allow moving a mobile broadcaster and loading it's path.
 
 
 
