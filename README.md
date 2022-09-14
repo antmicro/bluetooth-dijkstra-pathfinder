@@ -154,8 +154,13 @@ Few scripts are included to help with development and support build process:
 * topology\_randomizer.py - script that will generate random topology and output a .json, .resc files with the topology and also .html file with visualization.
 * renode\_commands - script with 2 commands for Renode, to allow moving a mobile broadcaster and loading it's path.
 
+## Communication scheme
+Nodes have a 3 ways of communicating with each other:
+* Data transmission - BLE packet with a data to be propagated to the receiver.
+* Data acknowledge (ACK) - each data transmission must be ACK'ed by the receiver, so that transmitter will deem it responsive and will not increase the cost of transition to it.
+* Routing table record propagation - in contrary to previous types, this type of message is not directed to certain peer, but rather broadcasted to everyone that listens and should be rebroadcasted as many times as the TTL (time to live) field specifies. This type of message contains current node's neighbors and connections to them with transition costs and will be loaded to internal topology representation.
 
-
+Each of this tasks is handled by separate thread.
 
 
 
