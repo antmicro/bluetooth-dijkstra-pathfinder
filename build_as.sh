@@ -113,8 +113,8 @@ west build -b nrf52840dk_nrf52840 \
 
 # Build mobile_broadcaster
 west build -b nrf52840dk_nrf52840 \
-        mobile_broadcaster \
-        -d mobile_broadcaster/build \
+        mobile-broadcaster \
+        -d mobile-broadcaster/build \
 
 
 

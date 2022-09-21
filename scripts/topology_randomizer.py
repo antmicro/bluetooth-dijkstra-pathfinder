@@ -274,7 +274,7 @@ showAnalyzer sysbus.uart0
 connector Connect sysbus.radio wireless
 wireless SetPosition sysbus.radio 0 0 0
 wireless SetRangeWirelessFunction {{ radio_range }}
-sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
+sysbus LoadELF $ORIGIN/../../mobile-broadcaster/build/zephyr/zephyr.elf
 
 {{ "i $ORIGIN/../../scripts/renode_commands.py" if include_mbmove }}
 {{ "# Included here ^ Renode command written in Python" if include_mbmove }}

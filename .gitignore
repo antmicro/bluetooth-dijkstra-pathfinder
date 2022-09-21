@@ -105,7 +105,7 @@ dkms.conf
 # ignore build dirs
 /dijkstra_shortest_path/build/
 /node/build
-/mobile_broadcaster/build
+/mobile-broadcaster/build
 /build
 
 # auto generated files
@@ -118,7 +118,7 @@ dkms.conf
 
 # caches
 /node/.cache
-/mobile_broadcaster/.cache
+/mobile-broadcaster/.cache
 
 # swap files
 *.swp

@@ -117,7 +117,7 @@ wireless SetRangeWirelessFunction 550
 showAnalyzer sysbus.uart0
 
 # Load binaries
-sysbus LoadELF $ORIGIN/../../mobile_broadcaster/build/zephyr/zephyr.elf
+sysbus LoadELF $ORIGIN/../../mobile-broadcaster/build/zephyr/zephyr.elf
 
 i $ORIGIN/../../scripts/renode_commands.py
 load_mb_path $ORIGIN/../mb-paths/square_corners_path.json
