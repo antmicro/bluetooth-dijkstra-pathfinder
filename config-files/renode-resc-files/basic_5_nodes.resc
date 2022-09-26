@@ -110,7 +110,7 @@ machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
 
 # Wireless
 connector Connect sysbus.radio wireless
-wireless SetPosition sysbus.radio 0 0 0
+wireless SetPosition sysbus.radio 250 500 0
 wireless SetRangeWirelessFunction 550
 
 # analyzers
