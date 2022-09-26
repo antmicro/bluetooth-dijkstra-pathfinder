@@ -291,7 +291,6 @@ static uint8_t *trace_back(struct node_t *start_node, struct node_t *dst_node,
 
 	*paths_len = index + 1;
 	realloc(path, (*paths_len) * sizeof(uint8_t));
-	printk("Memory %d\n", sizeof(uint8_t) * (*paths_len));
 	__ASSERT(path != NULL,
 		 "ERROR: Could not reallocate memory for path tracing\n");
 	return path;
