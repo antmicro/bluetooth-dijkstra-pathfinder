@@ -67,6 +67,15 @@ an ACK, which will increase a cost of transition to that node. When the cost wil
 be high enough, Dijkstra's algorithm will start routing the packets in different
 way and node 4 will be bypassed.
 
+There is also a robot test, that will automatically test above scenario. To run
+it issue following command:
+```bash
+renode-test tests/test_dijkstra_path_finding.robot
+```
+
+It will check path calculation and also path replanning in case when the peer
+node (node 4) is not acknowledging the messages.
+
 ### Randomized
 This configuration is suitable for testing bigger meshes and testing overall
 performance of the network. It will generate a topology .json file with randomly
