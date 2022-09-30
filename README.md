@@ -29,7 +29,7 @@ according to [documentation](https://docs.zephyrproject.org/2.7.0/getting_starte
 
 ### Renode
 Application is tested using very convinient Renode multinode simulation. To install
-renode, follow the guide on official [github site](https://github.com/renode/renode).
+Renode, follow the guide on official [github site](https://github.com/renode/renode).
 
 ### Python dependencies
 Few utilities are used for generator and randomizer scripts. Install them with following:
@@ -41,7 +41,8 @@ pip install pyvis
 ## Build the application
 To build the application, use the build\_as.sh script. When in doubt on how to
 use it, run `./build_as.sh` without any options to display help and example
-usage. There are few configurations to choose from:
+usage. Remember also to [activate Zephyr environment](https://docs.zephyrproject.org/3.0.0/guides/env_vars.html)
+and Python virtual environment with `west`. There are few configurations to choose from:
 
 ### Build as basic 5 nodes
 This configuration is suitable for development, as it is constant, it has simple
@@ -164,7 +165,3 @@ Nodes have a 3 ways of communicating with each other:
 * Routing table record propagation - in contrary to previous types, this type of message is not directed to certain peer, but rather broadcasted to everyone that listens and should be rebroadcasted as many times as the TTL (time to live) field specifies. This type of message contains current node's neighbors and connections to them with transition costs and will be loaded to internal topology representation.
 
 Each of this tasks is handled by separate thread.
-
-
-
-
