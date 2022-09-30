@@ -243,7 +243,7 @@ void ble_send_ack_thread_entry(void *unused1, void *unused2, void *unused3)
 		}
 		printk("Sending ACK to %d\n", ack_info.node_id);
 
-		k_msleep(ACK_ADV_TIME_MS);	//PZIE: controversial
+		k_msleep(ACK_ADV_TIME_MS);
 
 		err = bt_le_adv_stop();
 		if (err) {

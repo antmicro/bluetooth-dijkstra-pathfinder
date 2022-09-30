@@ -1,5 +1,3 @@
-### PZIE: didn't read, sorry. But I think we can have our graphics team redraw the images
-### PZIE: also please look into our repositories that have the antmicro open source badge - prepare your readme in a similar way
 # Bluetooth Dijkstra Pathfinder
 
 [![badge](https://img.shields.io/badge/View%20on-Antmicro%20Open%20Source%20Portal-332d37?style=flat-square)](https://opensource.antmicro.com)

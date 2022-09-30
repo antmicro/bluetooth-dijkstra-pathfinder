@@ -14,7 +14,6 @@ struct node_container {
 	struct node_t *node;
 };
 
-// PZIE: These could, actually, use a language check. But it's nice we have comments!
 /**
  * @brief Use Dijkstra's algorithm to find the node that will be next hop for a packet.
  * Both start and destination nodes should be in the same graph data structure.
