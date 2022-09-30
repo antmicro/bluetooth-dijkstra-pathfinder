@@ -48,12 +48,8 @@ This configuration is suitable for development, as it is constant, it has simple
 to understand paths. Few features of this configuration:
 * Packets are sent by mobile broadcaster and are all adressed to node 0 (sink).
 * Node 3 is node that is not reserved, it is an address in the mesh that is not used.
-* Node 4 represents inactive node, it is included in the mesh topology, but it is not added to Renode simulation, so it will not receive or ACK any packets. This will force neighbors, to adjust the path.
+* Node 4 represents inactive node, it is included in the mesh topology, but it is not added to Renode simulation, so it will not send ACK any packets. This will force neighbors, to adjust the path to bypass that node.
 * Mobile broadcaster is moving on the corners of 500x500 rectangle, at one time it is in range of two nodes simultaneously.
-
-Below is presented visualization of that configuration:
-
-![Basic 5 node configuration](./diagram_basic5node.png)
 
 To build and run the application in this configuration, run the following commands:
 ```bash
