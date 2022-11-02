@@ -1,7 +1,5 @@
 # Bluetooth Dijkstra Pathfinder
 
-[![badge](https://img.shields.io/badge/View%20on-Antmicro%20Open%20Source%20Portal-332d37?style=flat-square)](https://opensource.antmicro.com)
-
 This repository contains project files of custom Bluetooth mesh
 implementation for nRF52840, with Dijkstra's pathfinding algorithm as a routing algorithm.<br>
 The application is based on [Zephyr RTOS](https://github.com/zephyrproject-rtos) and it's BLE stack.<br>
