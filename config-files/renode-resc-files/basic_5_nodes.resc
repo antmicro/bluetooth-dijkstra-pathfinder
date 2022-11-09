@@ -10,7 +10,6 @@ logLevel 3
 emulation CreateBLEMedium "wireless"
 emulation SetGlobalQuantum "0.00001"
 emulation SetGlobalSerialExecution true
-emulation LogBLETraffic
 logLevel -1 wireless
 
 
